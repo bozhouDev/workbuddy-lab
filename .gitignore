@@ -1,0 +1,22 @@
+# Dependencies & build
+node_modules/
+dist/
+.next/
+out/
+.vite/
+.turbo/
+.astro/
+
+# Local env & OS
+.env
+.env.local
+.DS_Store
+
+# 私有资料：规划文档、参考原文、运营策略（仓库会开源，绝不提交）
+_private/
+reference/
+
+# 本地 AI 协作约定与本机配置
+/AGENTS.md
+/CLAUDE.md
+.claude/settings.local.json
