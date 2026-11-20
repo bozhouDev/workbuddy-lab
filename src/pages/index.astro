@@ -1,0 +1,523 @@
+---
+// 首页：单独写 Astro 页面（零 React，仅用极简原生脚本处理手机菜单和复制链接）
+import '../styles/global.css';
+import HeroSimPreview from '../components/HeroSimPreview.astro';
+import { SITE } from '../site.config.mjs';
+
+const steps = [
+  { n: '01', t: '是什么', d: '泊舟用一两句话说清它管什么，先看原来的样子。' },
+  { n: '02', t: '动手', d: '不遮罩、不答选择题，直接在 5.11.3 真界面里点蓝圈按钮。' },
+  { n: '03', t: '看结果', d: '真机同款流式执行与产物区滑出，亲眼看设了和没设的差别。' },
+  { n: '04', t: '记住', d: '10 秒实景小验证 + 一句话记住，回到真机立刻上手。' },
+];
+
+const mistakes = [
+  {
+    f: '分组',
+    bad: '不选分组就发任务，文件散在默认临时目录里找不到。',
+    good: '一件事一个分组，发任务前先看一眼输入框下方。',
+    href: '/simulator/?route=groups',
+    cta: '去试一下 →',
+  },
+  {
+    f: '个性化指令',
+    bad: '没写全局指令就让它整理群聊，它编出负责人和截止时间。',
+    good: '写好 5 条做事红线，资料里没写的统一标注「未明确」。',
+    href: '/simulator/?route=personalization',
+    cta: '去试一下 →',
+  },
+  {
+    f: '记忆与进化',
+    bad: '昨晚帮朋友写过英文邮件被记歪，今天中文周报突然飙英文。',
+    good: '打开双记忆，发现跑偏第一时间去「管理云端记忆」删掉。',
+    href: '/simulator/?route=memory',
+    cta: '去试一下 →',
+  },
+  {
+    f: '模型与积分',
+    bad: '拿 1.00x 极致档整理 300 字会议记录，效果一样积分多烧几倍。',
+    good: '简单活选限时免费或快速档，复杂代码和方案再切高倍率。',
+    href: '/simulator/?route=models-credits',
+    cta: '去试一下 →',
+  },
+  {
+    f: '模式与权限',
+    bad: '需求模糊就用默认模式，或开着完全访问让它批量清理文件。',
+    good: '大改动先开 Plan 看方案，新手始终保持「默认权限」。',
+    href: '/features/send-task/mode/',
+    cta: '看避坑图文 →',
+  },
+];
+
+type ChapterItem = { t: string; href?: string; sim?: boolean };
+const chapters: { n: string; t: string; items: ChapterItem[] }[] = [
+  {
+    n: '00',
+    t: '入门',
+    items: [
+      { t: 'WorkBuddy 是什么', href: '/features/basics/what-is/' },
+      { t: '下载安装', href: '/features/basics/install/' },
+      { t: '登录与新手福利', href: '/features/basics/login/' },
+      { t: '认识界面', href: '/features/basics/interface/', sim: true },
+    ],
+  },
+  {
+    n: '01',
+    t: '开局设置',
+    items: [
+      { t: '系统设置', href: '/features/setup/settings/', sim: true },
+      { t: '分组与文件夹规划', href: '/features/setup/groups/', sim: true },
+      { t: '记忆', href: '/features/setup/memory/', sim: true },
+      { t: '个性化', href: '/features/setup/personalization/', sim: true },
+      { t: '模型与积分', href: '/features/setup/models-credits/', sim: true },
+    ],
+  },
+  {
+    n: '02',
+    t: '发任务',
+    items: [
+      { t: '添加资料：+ 和 @', href: '/features/send-task/attach/' },
+      { t: '模式：默认 / Plan / Ask', href: '/features/send-task/mode/' },
+      { t: '权限', href: '/features/send-task/permission/' },
+      { t: '写清任务：5 要素与采访法', href: '/features/send-task/task-brief/' },
+      { t: '看执行过程', href: '/features/send-task/execution/' },
+      { t: '检查结果', href: '/features/send-task/review/' },
+      { t: '二次修改', href: '/features/send-task/revise/' },
+    ],
+  },
+  {
+    n: '03',
+    t: '能力扩展',
+    items: [
+      { t: '怎么选：专家 / 技能 / 连接器', href: '/features/extend/choose/' },
+      { t: '专家', href: '/features/extend/experts/' },
+      { t: '技能 Skill', href: '/features/extend/skills/' },
+      { t: '连接器', href: '/features/extend/connectors/' },
+      { t: '资料库', href: '/features/extend/library/' },
+    ],
+  },
+  {
+    n: '04',
+    t: '自动化',
+    items: [
+      { t: '定时任务', href: '/features/automation/schedule/' },
+      { t: '助理：手机遥控电脑', href: '/features/automation/assistant/' },
+    ],
+  },
+];
+
+const cases = [
+  {
+    n: '实战 1',
+    tag: '图文 + 模拟器',
+    t: '数据分析与看板',
+    d: '先让它发现问题再计算，口径先确认，公式留在表里，最后出一个能点的 HTML 看板。',
+    ph: '真机看板案例筹备中',
+  },
+  {
+    n: '实战 2',
+    tag: '图文',
+    t: '汇报 PPT',
+    d: '先定大纲、找参考，用技能和专家生成，再局部修改指定页面。',
+    ph: 'PPT 实测案例筹备中',
+  },
+  {
+    n: '实战 3',
+    tag: '图文',
+    t: '健身打卡小程序',
+    d: '需求、HTML 原型、调 Skills 实现、真机测试、备案上线，走一遍 AI 编程完整流程。',
+    ph: '小程序原型筹备中',
+  },
+  {
+    n: '实战 4',
+    tag: '图文',
+    t: '定时任务 + 手机遥控',
+    d: '手动跑满意 3 次再设成自动，出门用手机微信发任务让家里电脑干活。',
+    ph: '自动化案例筹备中',
+  },
+];
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{SITE.name} — 先在网页里，把 WorkBuddy 用一遍</title>
+    <meta
+      name="description"
+      content="免费的 WorkBuddy 互动功能模拟器与实战图文教程，对应 5.11.3 版本。试错不花积分，也不会动你电脑里的文件。"
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="m-0 bg-gray-50 text-gray-900 font-sans antialiased">
+    <!-- 顶部常驻非官方声明 -->
+    <div class="bg-gray-900 text-[#c9cbd1] text-[12px] sm:text-[12.5px] py-2 px-4 sm:px-6 text-center tracking-[0.02em]">
+      <span class="hidden sm:inline">{SITE.disclaimer}</span>
+      <span class="sm:hidden">{SITE.disclaimerShort}</span>
+    </div>
+
+    <!-- 顶部导航 -->
+    <header class="sticky top-0 z-30 border-b border-[#eeeeeb] bg-gray-50/95 backdrop-blur-sm">
+      <nav class="max-w-[1200px] mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-4">
+        <a href="/" class="inline-flex items-center gap-2.5 text-gray-900 no-underline">
+          <svg width="26" height="26" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+            <path d="M9 52H23V38H37V24" stroke="#111318" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+            <circle cx="50" cy="15" r="7" fill="#3355E0" />
+          </svg>
+          <span class="text-[15.5px] sm:text-[16px] font-bold tracking-[-0.01em]">
+            WorkBuddy <span class="text-gray-500 font-medium">Lab</span>
+          </span>
+        </a>
+
+        <!-- 电脑端导航链接 -->
+        <div class="hidden md:flex items-center gap-8 text-[14px]">
+          <a href="#features" class="text-gray-600 hover:text-gray-900 no-underline">功能教程</a>
+          <a href="#cases" class="text-gray-600 hover:text-gray-900 no-underline">实战</a>
+          <a href="#mistakes" class="text-gray-600 hover:text-gray-900 no-underline">用错了会怎样</a>
+          <a href={SITE.repoUrl} target="_blank" rel="noreferrer" class="text-gray-600 hover:text-gray-900 no-underline">GitHub</a>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <a
+            href="/simulator/?route=interface"
+            class="hidden sm:inline-flex items-center h-[38px] px-4 rounded-[10px] bg-gray-900 text-white text-[14px] font-semibold no-underline hover:bg-[#2a2d35]"
+          >
+            打开泊舟陪练
+          </a>
+
+          <!-- 手机端菜单按钮（触控区 44×44px） -->
+          <button
+            id="mobile-menu-btn"
+            type="button"
+            aria-label="打开菜单"
+            aria-expanded="false"
+            aria-controls="mobile-menu"
+            class="md:hidden w-11 h-11 -mr-2 border-0 bg-transparent inline-flex items-center justify-center text-gray-900 cursor-pointer"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M3 6h14M3 10h14M3 14h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+      </nav>
+
+      <!-- 手机端展开抽屉 -->
+      <div id="mobile-menu" hidden class="md:hidden border-t border-[#eeeeeb] bg-white px-4 py-3">
+        <div class="flex flex-col text-[15px]">
+          <a href="#features" class="py-3 text-gray-800 no-underline border-b border-[#f0f0ed]">功能教程</a>
+          <a href="#cases" class="py-3 text-gray-800 no-underline border-b border-[#f0f0ed]">实战</a>
+          <a href="#mistakes" class="py-3 text-gray-800 no-underline border-b border-[#f0f0ed]">用错了会怎样</a>
+          <a href="/features/basics/what-is/" class="py-3 text-accent-600 font-semibold no-underline border-b border-[#f0f0ed]">从第 0 章读起 →</a>
+          <a href={SITE.repoUrl} target="_blank" rel="noreferrer" class="py-3 text-gray-600 no-underline">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <!-- 首屏 Hero -->
+      <section class="max-w-[1200px] mx-auto px-4 sm:px-6 pt-10 sm:pt-24 pb-7 sm:pb-14 flex flex-col items-start sm:items-center sm:text-center gap-4 sm:gap-6">
+        <div class="inline-flex items-center gap-2 h-[30px] px-3 rounded-full border border-[#e2e2de] bg-white text-[12px] sm:text-[13px] text-gray-600">
+          <span class="w-1.5 h-1.5 rounded-full bg-accent-600"></span>
+          免费 · 源码公开 · 对应 WorkBuddy {SITE.clientVersion}
+        </div>
+        <h1 class="m-0 text-[34px] sm:text-[56px] lg:text-[60px] leading-[1.2] sm:leading-[1.12] font-bold tracking-[-0.025em] sm:tracking-[-0.03em] max-w-[880px]">
+          先在网页里，<br />把 WorkBuddy 用一遍
+        </h1>
+        <p class="m-0 text-[16px] sm:text-[19px] leading-[1.75] text-gray-600 max-w-[640px]">
+          一个对照 5.11.3 真机还原的 WorkBuddy 模拟器，带你一步步认识每个功能，也让你看到用错了会怎样。试错不花积分，也不会动你电脑里的文件。
+        </p>
+        <div class="hidden sm:flex gap-3 flex-wrap justify-center mt-2">
+          <a
+            href="/simulator/?route=interface"
+            class="inline-flex items-center gap-2 h-12 px-[22px] rounded-[10px] bg-gray-900 text-white text-[15px] font-semibold no-underline hover:bg-[#2a2d35]"
+          >
+            打开泊舟陪练
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M6 3.5 10.5 8 6 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </a>
+          <a
+            href="/features/basics/what-is/"
+            class="inline-flex items-center gap-2 h-12 px-5 rounded-[10px] border border-gray-300 bg-white text-gray-900 text-[15px] font-medium no-underline hover:border-[#b9b9b4]"
+          >
+            从第 0 章读起
+          </a>
+        </div>
+      </section>
+
+      <!-- 电脑端：首屏高还原 5.11.3 产品预览图 -->
+      <section class="hidden lg:block max-w-[1200px] mx-auto px-6 pb-28">
+        <HeroSimPreview />
+        <p class="mt-4 mb-0 text-center text-[13px] text-gray-500">
+          模拟器里的界面严格对照 WorkBuddy {SITE.clientVersion} 布局与交互还原，回到真机能直接找到同一个位置。
+        </p>
+      </section>
+
+      <!-- 手机与小屏平板：降级为演示卡 + 复制链接发到电脑 -->
+      <section class="lg:hidden max-w-[680px] mx-auto px-4 sm:px-6 pb-8">
+        <div class="rounded-[14px] overflow-hidden border border-[#e2e2de] bg-white">
+          <div class="aspect-[16/10] bg-[#f1f1ef] flex flex-col items-center justify-center gap-2.5 text-gray-500 text-[13px] px-4 text-center">
+            <span class="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M5 3v10l8-5-8-5Z" fill="#FFFFFF" />
+              </svg>
+            </span>
+            <span>15 秒演示：选错模式直接覆盖原文件 vs 先开 Plan</span>
+          </div>
+          <div class="p-4 flex flex-col gap-3">
+            <div class="text-[14px] leading-[1.65] text-gray-800">
+              <strong>模拟器要在电脑上打开</strong>，手机屏幕放不下完整的桌面工作台。图文教程手机上可以直接读。
+            </div>
+            <div class="flex flex-col sm:flex-row gap-2.5">
+              <button
+                id="copy-sim-link"
+                type="button"
+                class="h-12 flex-1 rounded-[10px] border-0 bg-gray-900 text-white text-[15px] font-semibold inline-flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <rect x="5" y="5" width="8" height="8" rx="1.5" stroke="#FFFFFF" stroke-width="1.4" />
+                  <path d="M3 10.5V4a1 1 0 0 1 1-1h6.5" stroke="#FFFFFF" stroke-width="1.4" stroke-linecap="round" />
+                </svg>
+                <span id="copy-sim-label">复制链接，发到电脑</span>
+              </button>
+              <a
+                href="/features/basics/what-is/"
+                class="h-12 sm:px-5 rounded-[10px] border border-gray-300 bg-white text-gray-900 text-[15px] font-medium inline-flex items-center justify-center no-underline"
+              >
+                先读图文教程
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 怎么带你走：6 步 -->
+      <section class="border-t border-[#eeeeeb] bg-white">
+        <div class="max-w-[1200px] mx-auto px-4 sm:px-6 py-16 sm:py-24 flex flex-col gap-8 sm:gap-12">
+          <div class="flex justify-between items-end gap-6 flex-wrap">
+            <div class="flex flex-col gap-2.5 max-w-[560px]">
+              <div class="font-mono text-[12px] text-accent-600 tracking-[0.06em]">泊舟陪练怎么带你学</div>
+              <h2 class="m-0 text-[24px] sm:text-[36px] leading-[1.25] tracking-[-0.02em] font-bold">
+                每节陪练，固定走这 4 段
+              </h2>
+            </div>
+            <p class="m-0 max-w-[420px] text-[15px] leading-[1.75] text-gray-600">
+              左边是不压暗的 WorkBuddy 5.11.3 真界面，右边是泊舟实时陪练。界面里哪里都能点，点了就告诉你那是什么。
+            </p>
+          </div>
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-6 border-t border-gray-900 pt-5">
+            {steps.map((s) => (
+              <div class="flex flex-col gap-2">
+                <span class="font-mono text-[12px] text-gray-500">{s.n}</span>
+                <span class="text-[17px] sm:text-[18px] font-semibold text-gray-900">{s.t}</span>
+                <span class="text-[14px] leading-[1.7] text-gray-600">{s.d}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <!-- 用错了会怎样 -->
+      <section id="mistakes" class="max-w-[1200px] mx-auto py-16 sm:py-28 flex flex-col gap-6 sm:gap-10">
+        <div class="px-4 sm:px-6 flex flex-col gap-2.5 max-w-[640px]">
+          <div class="font-mono text-[12px] text-warn tracking-[0.06em]">用错了会怎样</div>
+          <h2 class="m-0 text-[22px] sm:text-[36px] leading-[1.3] sm:leading-[1.25] tracking-[-0.02em] font-bold">
+            这些坑，在真机上踩一次很疼，<br class="hidden sm:inline" />在这里踩不花钱
+          </h2>
+        </div>
+
+        <!-- 电脑端对照表（表头和行使用同一套网格，修复设计稿错位问题） -->
+        <div class="hidden md:block px-6">
+          <div class="border border-gray-200 rounded-2xl bg-white overflow-hidden">
+            <div class="grid grid-cols-[140px_minmax(0,1fr)_minmax(0,1fr)_120px] gap-6 px-7 py-3.5 bg-[#f7f7f6] text-[12.5px] text-gray-500 border-b border-[#eeeeeb]">
+              <span>功能</span>
+              <span>如果你这样做</span>
+              <span>正确做法</span>
+              <span></span>
+            </div>
+            {mistakes.map((m) => (
+              <div class="grid grid-cols-[140px_minmax(0,1fr)_minmax(0,1fr)_120px] gap-6 px-7 py-5 border-t border-[#eeeeeb] items-start">
+                <span class="text-[15px] font-semibold text-gray-900">{m.f}</span>
+                <span class="text-[14.5px] leading-[1.7] text-gray-800">
+                  <span class="text-warn font-semibold">✕ </span>{m.bad}
+                </span>
+                <span class="text-[14.5px] leading-[1.7] text-gray-800">
+                  <span class="text-accent-600 font-semibold">✓ </span>{m.good}
+                </span>
+                <a href={m.href} class="text-[13.5px] font-medium text-accent-600 hover:text-accent-700 no-underline justify-self-end whitespace-nowrap">
+                  {m.cta}
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- 手机端横向滑动卡片 -->
+        <div class="md:hidden flex gap-3 overflow-x-auto px-4 pb-2 snap-x">
+          {mistakes.map((m) => (
+            <a
+              href={m.href}
+              class="snap-start flex-none w-[268px] p-4 rounded-[14px] bg-white border border-gray-200 flex flex-col gap-2.5 text-gray-900 no-underline"
+            >
+              <span class="text-[12px] font-semibold text-gray-500">{m.f}</span>
+              <span class="text-[14px] leading-[1.65]">
+                <span class="text-warn font-bold">✕ </span>{m.bad}
+              </span>
+              <span class="text-[14px] leading-[1.65] text-gray-800">
+                <span class="text-accent-600 font-bold">✓ </span>{m.good}
+              </span>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <!-- 功能篇目录 -->
+      <section id="features" class="border-t border-[#eeeeeb] bg-white">
+        <div class="max-w-[1200px] mx-auto px-4 sm:px-6 py-16 sm:py-28 flex flex-col gap-10 sm:gap-12">
+          <div class="flex justify-between items-end gap-4 flex-wrap">
+            <div class="flex flex-col gap-2.5">
+              <div class="font-mono text-[12px] text-accent-600 tracking-[0.06em]">功能篇 · 23 节已全部上线（6 节可进模拟器实操）</div>
+              <h2 class="m-0 text-[22px] sm:text-[36px] leading-[1.25] tracking-[-0.02em] font-bold">
+                从装好软件，到把它用顺
+              </h2>
+            </div>
+            <div class="flex items-center gap-4 text-[13px] text-gray-600">
+              <span class="inline-flex items-center gap-1.5">
+                <span class="text-[11px] font-semibold text-accent-600 border border-accent-200 bg-accent-50 rounded-[6px] px-1.5 py-[1px]">可试</span>
+                已开放模拟器路线
+              </span>
+              <span>其余为图文</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-10">
+            {chapters.map((c) => (
+              <div class="flex flex-col">
+                <div class="flex items-baseline gap-2.5 pb-3">
+                  <span class="font-mono text-[13px] text-gray-500">{c.n}</span>
+                  <span class="text-[18px] sm:text-[19px] font-bold text-gray-900">{c.t}</span>
+                </div>
+                {c.items.map((it) =>
+                  it.href ? (
+                    <a
+                      href={it.href}
+                      class="flex items-center justify-between gap-3 min-h-[44px] py-2.5 border-t border-[#eeeeeb] text-gray-800 hover:text-accent-600 text-[15px] no-underline"
+                    >
+                      <span>{it.t}</span>
+                      {it.sim && (
+                        <>
+                          <span class="hidden sm:inline-block text-[11px] font-semibold text-accent-600 border border-accent-200 bg-accent-50 rounded-[6px] px-1.5 py-[1px] shrink-0">
+                            可试
+                          </span>
+                          <span class="sm:hidden text-[11px] text-gray-500 border border-[#e2e2de] rounded-[6px] px-1.5 py-[1px] shrink-0">
+                            电脑上可试
+                          </span>
+                        </>
+                      )}
+                    </a>
+                  ) : (
+                    <div class="flex items-center justify-between gap-3 min-h-[44px] py-2.5 border-t border-[#eeeeeb] text-gray-500 text-[15px]">
+                      <span>{it.t}</span>
+                      <span class="text-[11px] text-gray-500 border border-gray-200 rounded-[6px] px-1.5 py-[1px] shrink-0">
+                        撰写中
+                      </span>
+                    </div>
+                  )
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <!-- 实战篇 -->
+      <section id="cases" class="max-w-[1200px] mx-auto px-4 sm:px-6 py-16 sm:py-28 flex flex-col gap-6 sm:gap-10">
+        <div class="flex flex-col gap-2.5 max-w-[640px]">
+          <div class="font-mono text-[12px] text-accent-600 tracking-[0.06em]">实战篇</div>
+          <h2 class="m-0 text-[22px] sm:text-[36px] leading-[1.25] tracking-[-0.02em] font-bold">
+            学完功能，做 4 件真东西
+          </h2>
+          <p class="m-0 text-[15px] leading-[1.75] text-gray-600">
+            案例都会在真机上跑通，做出来的 HTML 看板和原型直接嵌在文章里，能点能用。
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {cases.map((k) => (
+            <div class="flex sm:flex-col gap-3.5 p-3.5 sm:p-6 border border-gray-200 rounded-[14px] bg-white text-gray-900">
+              <div class="w-16 h-16 sm:w-full sm:h-[132px] shrink-0 rounded-[10px] bg-gray-100 border border-[#eeeeeb] flex items-center justify-center text-[11px] sm:text-[12px] text-gray-500 text-center px-2">
+                <span class="hidden sm:inline">{k.ph}</span>
+                <span class="sm:hidden font-mono">{k.n}</span>
+              </div>
+              <div class="flex flex-col gap-1.5 sm:gap-2.5 min-w-0">
+                <div class="hidden sm:flex items-center justify-between">
+                  <span class="font-mono text-[12px] text-gray-500">{k.n}</span>
+                  <span class="text-[11px] font-semibold text-gray-600 border border-[#e2e2de] rounded-[6px] px-1.5 py-[1px]">
+                    {k.tag}
+                  </span>
+                </div>
+                <span class="text-[16px] sm:text-[18px] font-bold">{k.t}</span>
+                <span class="text-[13.5px] sm:text-[14px] leading-[1.65] text-gray-600">{k.d}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="border-t border-[#eeeeeb] bg-white">
+      <div class="max-w-[1200px] mx-auto px-4 sm:px-6 py-10 sm:py-14 flex justify-between gap-8 flex-wrap text-[13px] leading-[1.8] text-gray-500">
+        <div class="flex flex-col gap-1.5 max-w-[520px]">
+          <span class="text-[14px] font-bold text-gray-900">
+            WorkBuddy <span class="text-gray-500 font-medium">Lab</span>
+          </span>
+          <span>个人教学项目，与 WorkBuddy 官方无关。模拟器是教学还原，不收集任何账号信息。</span>
+          <span>教程内容 CC BY-NC-SA 4.0 · 代码 PolyForm Noncommercial 1.0.0</span>
+        </div>
+        <div class="flex gap-7 items-start">
+          <a href={SITE.repoUrl} target="_blank" rel="noreferrer" class="text-gray-600 hover:text-gray-900 no-underline">GitHub</a>
+          <a href={SITE.issueUrl} target="_blank" rel="noreferrer" class="text-gray-600 hover:text-gray-900 no-underline">内容过时了？反馈</a>
+          <a href="/features/basics/what-is/" class="text-gray-600 hover:text-gray-900 no-underline">开始阅读</a>
+        </div>
+      </div>
+    </footer>
+
+    <script is:inline>
+      // 手机端导航抽屉切换
+      const menuBtn = document.getElementById('mobile-menu-btn');
+      const menuEl = document.getElementById('mobile-menu');
+      if (menuBtn && menuEl) {
+        menuBtn.addEventListener('click', () => {
+          const open = menuEl.hasAttribute('hidden');
+          if (open) {
+            menuEl.removeAttribute('hidden');
+            menuBtn.setAttribute('aria-expanded', 'true');
+          } else {
+            menuEl.setAttribute('hidden', '');
+            menuBtn.setAttribute('aria-expanded', 'false');
+          }
+        });
+      }
+
+      // 手机端一键复制模拟器链接
+      const copyBtn = document.getElementById('copy-sim-link');
+      const copyLabel = document.getElementById('copy-sim-label');
+      if (copyBtn && copyLabel) {
+        copyBtn.addEventListener('click', async () => {
+          const url = new URL('/simulator/?route=interface', window.location.origin).href;
+          try {
+            await navigator.clipboard.writeText(url);
+            copyLabel.textContent = '已复制，粘贴到电脑浏览器打开';
+            setTimeout(() => {
+              copyLabel.textContent = '复制链接，发到电脑';
+            }, 2400);
+          } catch {
+            copyLabel.textContent = url;
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

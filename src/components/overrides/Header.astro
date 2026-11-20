@@ -1,0 +1,143 @@
+---
+import Search from 'virtual:starlight/components/Search';
+import { SITE } from '../../site.config.mjs';
+---
+
+<div class="wbl-header-wrap">
+  <!-- 顶部常驻声明条 -->
+  <div class="wbl-disclaimer">
+    <span class="hidden sm:inline">{SITE.disclaimer}</span>
+    <span class="sm:hidden">{SITE.disclaimerShort}</span>
+  </div>
+
+  <!-- 主导航栏 -->
+  <div class="wbl-nav-bar">
+    <div class="wbl-nav-left">
+      <a href="/" class="wbl-brand" aria-label={SITE.name}>
+        <svg width="26" height="26" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <path d="M9 52H23V38H37V24" stroke="#111318" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="50" cy="15" r="7" fill="#3355E0" />
+        </svg>
+        <span class="wbl-brand-text">
+          WorkBuddy <span class="wbl-brand-sub">Lab</span>
+        </span>
+      </a>
+
+      <div class="wbl-search-slot print:hidden">
+        <Search />
+      </div>
+    </div>
+
+    <div class="wbl-nav-right hidden md:flex print:hidden">
+      <a href="/features/basics/what-is/" class="wbl-nav-link">功能教程</a>
+      <a href="/#cases" class="wbl-nav-link">实战</a>
+      <a href="/#mistakes" class="wbl-nav-link">用错了会怎样</a>
+      <a href="/simulator/?route=interface" class="wbl-sim-btn">打开泊舟陪练</a>
+    </div>
+  </div>
+</div>
+
+<style>
+  .wbl-header-wrap {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+  }
+
+  .wbl-disclaimer {
+    background: #111318;
+    color: #c9cbd1;
+    font-size: 12.5px;
+    line-height: 1.4;
+    padding: 8px 16px;
+    text-align: center;
+    letter-spacing: 0.02em;
+  }
+
+  .wbl-nav-bar {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0 24px;
+    min-height: 60px;
+    background: #ffffff;
+  }
+
+  @media (max-width: 50rem) {
+    .wbl-nav-bar {
+      padding: 0 56px 0 16px; /* 给 Starlight 移动端菜单按钮留出右侧空间 */
+    }
+  }
+
+  .wbl-nav-left {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    min-width: 0;
+  }
+
+  .wbl-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: #111318;
+    flex-shrink: 0;
+  }
+
+  .wbl-brand-text {
+    font-size: 15.5px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+
+  .wbl-brand-sub {
+    color: #6b7079;
+    font-weight: 500;
+  }
+
+  .wbl-search-slot {
+    display: flex;
+    align-items: center;
+  }
+
+  .wbl-nav-right {
+    align-items: center;
+    gap: 22px;
+    flex-shrink: 0;
+  }
+
+  .wbl-nav-link {
+    font-size: 14px;
+    color: #4a4f57;
+    text-decoration: none;
+    transition: color 120ms ease;
+  }
+
+  .wbl-nav-link:hover {
+    color: #111318;
+  }
+
+  .wbl-sim-btn {
+    display: inline-flex;
+    align-items: center;
+    height: 36px;
+    padding: 0 15px;
+    border-radius: 9px;
+    background: #111318;
+    color: #ffffff;
+    font-size: 13.5px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 120ms ease;
+  }
+
+  .wbl-sim-btn:hover {
+    background: #2a2d35;
+    color: #ffffff;
+  }
+</style>

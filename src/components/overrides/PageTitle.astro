@@ -1,0 +1,214 @@
+---
+import { getEntry } from 'astro:content';
+import { SITE } from '../../site.config.mjs';
+
+const { entry } = Astro.locals.starlightRoute;
+const data = entry.data;
+
+// 根据文章路径推导章节面包屑
+const id = entry.id;
+let groupLabel = '功能篇';
+let chapterLabel = '';
+if (id.startsWith('features/basics')) chapterLabel = '00 入门';
+else if (id.startsWith('features/setup')) chapterLabel = '01 开局设置';
+else if (id.startsWith('features/send-task')) chapterLabel = '02 发任务';
+else if (id.startsWith('features/extend')) chapterLabel = '03 能力扩展';
+else if (id.startsWith('features/automation')) chapterLabel = '04 自动化';
+else if (id.startsWith('tutorials/')) {
+  groupLabel = '实战篇';
+  chapterLabel = '真机案例';
+}
+
+// 估算中文阅读时长（按约 400 字/分钟）
+const rawBody = entry.body ?? '';
+const plainChars = rawBody.replace(/```[\s\S]*?```/g, '').replace(/[#>*_`|\-\[\]()]/g, '').trim().length;
+const readMinutes = Math.max(2, Math.round(plainChars / 420));
+
+const verifiedDate = data.verifiedAt
+  ? new Date(data.verifiedAt).toISOString().slice(0, 10)
+  : null;
+
+const clientVersion = data.clientVersion || SITE.clientVersion;
+
+// 如果文章绑定了模拟器路线，读取路线元数据
+const simRouteEntry = data.simRoute ? await getEntry(data.simRoute) : null;
+---
+
+<div class="wbl-page-head">
+  {chapterLabel && (
+    <div class="wbl-breadcrumb">
+      <span>{groupLabel}</span>
+      <span aria-hidden="true">/</span>
+      <span>{chapterLabel}</span>
+    </div>
+  )}
+
+  <h1 id="_top" class="wbl-h1">{data.title}</h1>
+
+  {data.description && <p class="wbl-lead">{data.description}</p>}
+
+  <div class="wbl-meta">
+    <span>
+      适用版本 <strong class="wbl-meta-strong">{clientVersion}</strong>
+    </span>
+    {verifiedDate && <span>核对于 {verifiedDate}</span>}
+    <span>阅读约 {readMinutes} 分钟</span>
+  </div>
+
+  {simRouteEntry && (
+    <a href={`/simulator/?route=${simRouteEntry.id}`} class="wbl-sim-card not-content">
+      <img
+        src="/avatar-bozhou.jpg"
+        alt="泊舟头像"
+        width="48"
+        height="48"
+        class="wbl-coach-avatar"
+      />
+      <div class="wbl-sim-body">
+        <span class="wbl-sim-title">泊舟带你实操一遍：{simRouteEntry.data.title}</span>
+        <span class="wbl-sim-desc">不压暗、不锁死，在 5.11.3 模拟界面里亲手点开菜单、发任务看结果（约 2 分钟）。</span>
+      </div>
+      <span class="wbl-sim-cta">去陪练 →</span>
+    </a>
+  )}
+</div>
+
+<style>
+  .wbl-page-head {
+    margin-bottom: 1.5rem;
+  }
+
+  .wbl-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #6b7079;
+    margin-bottom: 12px;
+  }
+
+  .wbl-h1 {
+    margin: 0 0 14px;
+    font-size: clamp(28px, 4vw, 40px);
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+    font-weight: 700;
+    color: #111318;
+  }
+
+  .wbl-lead {
+    margin: 0 0 18px;
+    font-size: 17.5px;
+    line-height: 1.75;
+    color: #4a4f57;
+  }
+
+  .wbl-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    font-size: 13px;
+    color: #6b7079;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #eeeeeb;
+  }
+
+  .wbl-meta-strong {
+    color: #111318;
+    font-weight: 600;
+  }
+
+  .wbl-sim-card {
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 16px;
+    border: 1px solid #c9d3f7;
+    background: #f3f5fe;
+    border-radius: 14px;
+    color: #111318;
+    text-decoration: none;
+    transition: border-color 140ms ease, background-color 140ms ease;
+  }
+
+  .wbl-sim-card:hover {
+    border-color: #3355e0;
+    background: #edf1fe;
+  }
+
+  .wbl-coach-avatar {
+    flex: none;
+    width: 48px;
+    height: 48px;
+    border-radius: 999px;
+    object-fit: cover;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 8px rgba(17, 19, 24, 0.12);
+  }
+
+  @media (max-width: 560px) {
+    .wbl-sim-thumb {
+      display: none;
+    }
+  }
+
+  .wbl-sim-thumb-side {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 30px;
+    background: #f4f4f2;
+    border-right: 1px solid #eeeeeb;
+  }
+
+  .wbl-sim-thumb-box {
+    position: absolute;
+    left: 44px;
+    right: 12px;
+    top: 28px;
+    height: 22px;
+    border-radius: 6px;
+    border: 1px solid #e2e2de;
+  }
+
+  .wbl-sim-thumb-spot {
+    position: absolute;
+    left: 44px;
+    top: 56px;
+    width: 34px;
+    height: 8px;
+    border-radius: 3px;
+    box-shadow: 0 0 0 2px #3355e0;
+    background: #ffffff;
+  }
+
+  .wbl-sim-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .wbl-sim-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #111318;
+  }
+
+  .wbl-sim-desc {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: #4a4f57;
+  }
+
+  .wbl-sim-cta {
+    flex: none;
+    font-size: 14px;
+    font-weight: 600;
+    color: #3355e0;
+    white-space: nowrap;
+  }
+</style>

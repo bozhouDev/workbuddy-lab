@@ -1,0 +1,161 @@
+---
+import { getCollection } from 'astro:content';
+import MobileMenuFooter from 'virtual:starlight/components/MobileMenuFooter';
+
+const { sidebar } = Astro.locals.starlightRoute;
+
+// 收集所有带 simRoute 的文章路径，在侧栏自动显示「可试」标记
+const allDocs = await getCollection('docs');
+const simHrefSet = new Set(
+  allDocs
+    .filter((doc) => Boolean(doc.data.simRoute))
+    .map((doc) => `/${doc.id.replace(/\/index$/, '')}/`)
+);
+
+function normalizeHref(href: string) {
+  return href.endsWith('/') ? href : `${href}/`;
+}
+
+function splitGroupLabel(label: string): { num: string | null; text: string } {
+  const m = label.match(/^(\d{2}|实战)\s+(.+)$/);
+  if (m) return { num: m[1], text: m[2] };
+  return { num: null, text: label };
+}
+---
+
+<nav class="wbl-sidebar" aria-label="课程章节导航">
+  {sidebar.map((entry) => {
+    if (entry.type === 'link') {
+      const hasSim = simHrefSet.has(normalizeHref(entry.href));
+      return (
+        <a
+          href={entry.href}
+          aria-current={entry.isCurrent ? 'page' : undefined}
+          class:list={['wbl-side-link', { 'is-current': entry.isCurrent }]}
+        >
+          <span>{entry.label}</span>
+          {hasSim && <span class="wbl-sim-tag">可试</span>}
+        </a>
+      );
+    }
+
+    const { num, text } = splitGroupLabel(entry.label);
+    return (
+      <div class="wbl-side-group">
+        <div class="wbl-side-group-title">
+          {num && <span class="wbl-side-num">{num}</span>}
+          <span>{text}</span>
+        </div>
+        <ul class="wbl-side-list">
+          {entry.entries.map((sub) => {
+            if (sub.type !== 'link') return null;
+            const hasSim = simHrefSet.has(normalizeHref(sub.href));
+            return (
+              <li>
+                <a
+                  href={sub.href}
+                  aria-current={sub.isCurrent ? 'page' : undefined}
+                  class:list={['wbl-side-link', { 'is-current': sub.isCurrent }]}
+                >
+                  <span class="wbl-side-link-text">{sub.label}</span>
+                  {hasSim && (
+                    <span class="wbl-sim-tag" title="有互动模拟器路线">
+                      可试
+                    </span>
+                  )}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    );
+  })}
+</nav>
+
+<div class="md:sl-hidden">
+  <MobileMenuFooter />
+</div>
+
+<style>
+  .wbl-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding: 8px 4px 32px;
+  }
+
+  .wbl-side-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .wbl-side-group-title {
+    padding: 0 10px 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #111318;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .wbl-side-num {
+    font-family: var(--font-mono);
+    font-weight: 400;
+    color: #6b7079;
+  }
+
+  .wbl-side-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .wbl-side-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: 7px;
+    color: #4a4f57;
+    font-size: 13.5px;
+    line-height: 1.45;
+    text-decoration: none;
+    transition: background-color 120ms ease, color 120ms ease;
+  }
+
+  .wbl-side-link:hover {
+    background: #f4f4f2;
+    color: #111318;
+  }
+
+  .wbl-side-link.is-current {
+    background: #eef2ff;
+    color: #2443c2;
+    font-weight: 600;
+  }
+
+  .wbl-side-link-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .wbl-sim-tag {
+    flex: none;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: #3355e0;
+    background: #f3f5fe;
+    border: 1px solid #c9d3f7;
+    border-radius: 6px;
+    padding: 1px 6px;
+  }
+</style>

@@ -1,0 +1,279 @@
+/*
+ * WorkBuddy Lab 全站样式入口
+ * 1. 按 Starlight + Tailwind 4 官方要求声明分层并引入
+ * 2. @theme 里定义设计变量：Tailwind 工具类和 Starlight 主题都从这里取色
+ * 3. 只做浅色主题（见 ForceLight.astro）
+ */
+@layer base, starlight, theme, components, utilities;
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+}
+
+@import '@astrojs/starlight-tailwind';
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@theme {
+  /* ---------- 字体：只用系统字体，不加载任何网络字体 ---------- */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* ---------- 主色：蓝，表示“正确 / 可点 / 链接” ---------- */
+  --color-accent-50: #f3f5fe;
+  --color-accent-100: #e6ebfd;
+  --color-accent-200: #c9d3f7;
+  --color-accent-300: #a3b3f1;
+  --color-accent-400: #7189e8;
+  --color-accent-500: #4d6be4;
+  --color-accent-600: #3355e0; /* 主色本体 */
+  --color-accent-700: #2443c2; /* 悬停 */
+  --color-accent-800: #1f3aa8;
+  --color-accent-900: #1c3180;
+  --color-accent-950: #131f4d;
+
+  /* ---------- 灰阶：偏暖的中性灰 ---------- */
+  --color-gray-50: #fafaf9;  /* 页面底色 */
+  --color-gray-100: #f4f4f2; /* 次级底色、占位块 */
+  --color-gray-200: #e6e6e3; /* 边框、分隔线 */
+  --color-gray-300: #dcdcd8; /* 按钮描边、关闭态开关 */
+  --color-gray-400: #9ea3ad; /* 装饰，不用于文字 */
+  --color-gray-500: #6b7079; /* 辅助文字（最浅的文字色，4.5:1 达标） */
+  --color-gray-600: #4a4f57; /* 次要文字 */
+  --color-gray-700: #3a3e45;
+  --color-gray-800: #2b2f36; /* 正文 */
+  --color-gray-900: #111318; /* 标题、主按钮、墨色 */
+  --color-gray-950: #0a0b0d;
+
+  /* ---------- 语义色 ---------- */
+  --color-warn: #c2410c;        /* 用错的后果：图标、✕ */
+  --color-warn-ink: #9a3412;    /* 橙色底上的文字 */
+  --color-warn-soft: #fff6ef;   /* 提醒框底色 */
+  --color-warn-border: #f6d7c2;
+  --color-fact: #8a6d1f;        /* 会变的事实：图标 */
+  --color-fact-soft: #fafaf7;
+  --color-fact-border: #d6d3c4; /* 虚线框 */
+  --color-on-dark-accent: #5b78f0; /* 深色底上的主色 */
+
+  /* ---------- 圆角 ---------- */
+  --radius-tag: 6px;
+  --radius-btn: 10px;
+  --radius-card: 12px;
+  --radius-panel: 16px;
+
+  /* ---------- 阴影 ---------- */
+  --shadow-frame: 0 1px 2px rgb(17 19 24 / 0.04), 0 24px 64px -24px rgb(17 19 24 / 0.18);
+  --shadow-pop: 0 16px 40px rgb(17 19 24 / 0.14);
+  --shadow-narration: 0 24px 60px rgb(0 0 0 / 0.28);
+}
+
+/* 模拟器聚光灯遮罩色，React 组件里读这个变量；Starlight 顶栏高度适配声明条+导航 */
+:root,
+:root[data-theme='light'] {
+  --sim-dim: rgb(17 19 24 / 0.48);
+  --sl-content-width: 45rem; /* 正文最大宽度约 720px */
+  --sl-sidebar-width: 16.5rem; /* 264px */
+  --sl-nav-height: 6rem; /* 36px 声明条 + 60px 导航 */
+  --sl-color-bg: #ffffff;
+  --sl-color-bg-nav: #ffffff;
+  --sl-color-bg-sidebar: #ffffff;
+  --sl-color-hairline-light: #eeeeeb;
+  --sl-color-hairline-shade: #eeeeeb;
+  --sl-color-text: #2b2f36;
+  --sl-color-text-accent: #3355e0;
+  --sl-color-accent: #3355e0;
+  --sl-color-accent-high: #2443c2;
+  --sl-color-accent-low: #eef2ff;
+  --sl-font: var(--font-sans);
+  --sl-font-mono: var(--font-mono);
+}
+
+/* 文章页头部留白与覆盖样式 */
+header.header {
+  padding: 0 !important;
+  border-bottom: 1px solid #eeeeeb;
+  background: #ffffff;
+}
+
+/* 文章正文排版：17px / 1.85，标题收紧字距 */
+.sl-markdown-content {
+  font-size: 17px;
+  line-height: 1.85;
+  color: #2b2f36;
+}
+.sl-markdown-content :is(h2, h3) {
+  letter-spacing: -0.015em;
+  color: #111318;
+  font-weight: 700;
+}
+.sl-markdown-content h2 {
+  font-size: 26px;
+  line-height: 1.35;
+  margin-top: 2.5rem;
+}
+.sl-markdown-content h3 {
+  font-size: 19px;
+  line-height: 1.45;
+  margin-top: 1.75rem;
+}
+.sl-markdown-content blockquote {
+  border-inline-start: 3px solid #dcdcd8;
+  background: #fafaf9;
+  padding: 0.75rem 1rem;
+  border-radius: 0 8px 8px 0;
+  color: #4a4f57;
+}
+.sl-markdown-content table {
+  font-size: 14.5px;
+  line-height: 1.7;
+}
+
+/* 模拟器：泊舟陪练指引与微交互动效（纯 CSS，尊重系统减弱动效偏好） */
+@keyframes sim-ring-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 2px #3355e0, 0 0 0 6px rgb(51 85 224 / 0.22);
+  }
+  50% {
+    box-shadow: 0 0 0 2.5px #3355e0, 0 0 0 11px rgb(51 85 224 / 0.05);
+  }
+}
+
+@keyframes sim-ring-urgent {
+  0%, 100% {
+    box-shadow: 0 0 0 2.5px #3355e0, 0 0 0 7px rgb(51 85 224 / 0.34);
+  }
+  50% {
+    box-shadow: 0 0 0 3px #3355e0, 0 0 0 14px rgb(51 85 224 / 0.06);
+  }
+}
+
+@keyframes sim-dot-ping {
+  0% { transform: scale(1); opacity: 0.75; }
+  80%, 100% { transform: scale(2.4); opacity: 0; }
+}
+
+@keyframes sim-callout-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes sim-pop-up {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes sim-pop-down {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes sim-slide-right {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes sim-slide-in-panel {
+  from { opacity: 0; transform: translateX(28px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes sim-msg-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sim-typing-dot {
+  0%, 80%, 100% { opacity: 0.25; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-2px); }
+}
+
+@keyframes sim-check-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  65% { transform: scale(1.18); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes sim-spin {
+  to { transform: rotate(360deg); }
+}
+
+.sim-ring {
+  position: relative;
+  z-index: 6;
+  animation: sim-ring-pulse 1.7s ease-in-out infinite;
+}
+
+.sim-ring-urgent {
+  position: relative;
+  z-index: 6;
+  animation: sim-ring-urgent 1.1s ease-in-out infinite;
+}
+
+.sim-dot-ping {
+  animation: sim-dot-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.sim-callout-bob {
+  animation: sim-callout-bob 1.5s ease-in-out infinite;
+}
+
+.sim-pop-up {
+  animation: sim-pop-up 180ms cubic-bezier(0.2, 0.85, 0.25, 1) both;
+}
+
+.sim-pop-down {
+  animation: sim-pop-down 160ms cubic-bezier(0.2, 0.85, 0.25, 1) both;
+}
+
+.sim-slide-right {
+  animation: sim-slide-right 160ms cubic-bezier(0.2, 0.85, 0.25, 1) both;
+}
+
+.sim-slide-in-panel {
+  animation: sim-slide-in-panel 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.sim-msg-rise {
+  animation: sim-msg-rise 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.sim-check-pop {
+  animation: sim-check-pop 280ms cubic-bezier(0.22, 1.35, 0.36, 1) both;
+}
+
+.sim-spin {
+  animation: sim-spin 0.85s linear infinite;
+}
+
+.sim-typing-dot {
+  animation: sim-typing-dot 1.1s ease-in-out infinite;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sim-ring,
+  .sim-ring-urgent,
+  .sim-dot-ping,
+  .sim-callout-bob,
+  .sim-pop-up,
+  .sim-pop-down,
+  .sim-slide-right,
+  .sim-slide-in-panel,
+  .sim-msg-rise,
+  .sim-check-pop,
+  .sim-typing-dot {
+    animation: none !important;
+    transition: none !important;
+  }
+}

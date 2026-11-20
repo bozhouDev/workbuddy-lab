@@ -1,0 +1,35 @@
+# 路线元数据：1.3 记忆与进化
+title: 1.3 记忆与进化
+chapter: setup
+guide: /features/setup/memory/
+illustrative: false
+start: intro
+scenes:
+  home:
+    view: home
+    composer: { group: WorkBuddy-练习 }
+  chat-bad-memory:
+    view: chat
+    composer: { group: WorkBuddy-练习 }
+    messages:
+      - role: user
+        blocks: [{ type: text, text: 帮我整理本周 3 条项目进展 }]
+      - role: assistant
+        blocks:
+          - { type: text, text: Here is your weekly project update in English... }
+  chat-clean-memory:
+    view: chat
+    composer: { group: WorkBuddy-练习 }
+    messages:
+      - role: user
+        blocks: [{ type: text, text: 帮我整理本周 3 条项目进展 }]
+      - role: assistant
+        blocks:
+          - { type: text, text: 已引用云端记忆：按日期第一列 + 3 条中文结论输出。 }
+beats:
+  - { id: intro, step: what, scene: home, say: 打开云端记忆与本地记忆，让 WorkBuddy 跨对话记住你的格式和偏好。 }
+  - { id: where, step: where, say: 左下角头像 → 记忆与进化，开启两个开关并管理云端记忆条目。 }
+  - { id: when, step: when, say: 开局就打开；之后每次发现回答突然跑偏时，第一时间进来检查并删除误记条目。 }
+  - { id: mistake, step: mistake, scene: chat-bad-memory, tone: wrong, say: 昨晚帮朋友写过英文邮件被自动记歪，今天中文周报突然满屏飙英文。 }
+  - { id: try, step: try, scene: chat-clean-memory, tone: right, say: 删掉记歪的英文偏好条目后重发，中文日期表立刻恢复正常。 }
+  - { id: remember, step: remember, scene: chat-clean-memory, say: 改对了主动说「记住这条」；回答跑偏就去「管理云端记忆」删掉记歪的条目。 }

@@ -1,0 +1,48 @@
+---
+title: 模式：默认 / Plan / Ask
+description: 模式决定 WorkBuddy 拿到任务后是直接动手、先出方案等你确认，还是只看只答不动文件。
+verifiedAt: 2026-11-19
+facts: [mode-location]
+sidebar:
+  order: 2
+---
+
+import Fact from '../../../../components/mdx/Fact.astro';
+import Shot from '../../../../components/mdx/Shot.astro';
+import Warning from '../../../../components/mdx/Warning.astro';
+import imgMode from '../../../../assets/shots/features/send-task/mode/01-加号模式开关.png';
+
+点开输入框左下角 `+` 号 → **模式**，里面有两个开关：**计划（Plan）** 和 **仅问答（Ask）**，都不开就是默认模式。
+
+这三种模式解决的是同一个问题：**这次任务，你是想让它直接动手干，还是先聊清楚再干？**
+
+| 模式 | 它会干什么 | 什么时候用 |
+|---|---|---|
+| **默认** | 直接读写文件、动手执行 | 需求已经很明确的小活（比如按固定格式整理一份纪要） |
+| **计划（Plan）** | 先读资料、列一份执行方案，等你确认再动手 | 任务偏复杂、步骤多，或者你自己还没想太清楚 |
+| **仅问答（Ask）** | 只看资料、只回答问题，**绝不改你电脑里任何文件** | 问思路、头脑风暴、让它先帮你分析一份文档 |
+
+<Shot
+  src={imgMode}
+  alt="点击输入框左下角加号后悬停模式展开的二级面板，包含计划 Plan 和仅问答 Ask 两个开关"
+  caption="点 + 号 → 模式，打开「计划 Plan」或「仅问答 Ask」开关"
+/>
+
+<Fact id="mode-location" />
+
+## 用好 Plan 模式的关键
+
+很多人开完 Plan 模式，看它列出密密麻麻 8 步计划，连看都不看直接点“同意执行”，那就白开了。
+
+正确的用法是：**快速扫一遍它列出来的步骤，把不需要的直接删掉，把你在意的细节补上去**（比如“第 3 步不用改原表，新建一个副本就行”），确认方向没偏，再让它动手。
+
+<Warning title="避开两个常见乌龙">
+  <ul>
+    <li><strong>需求还模模糊糊就用「默认模式」</strong>：它可能会二话不说直接动你的文件，改错了还得回头恢复。</li>
+    <li><strong>开着「Ask 模式」让它生成文件</strong>：它只会用文字跟你讲怎么建表，不会真的动手写文件——记得关掉 Ask 再发。</li>
+  </ul>
+</Warning>
+
+## 一句话记住
+
+**没想清楚先开 Plan，只想问思路用 Ask，目标明确再用默认；入口在输入框左下角 `+` → 模式。**

@@ -1,0 +1,20 @@
+---
+// 泊舟陪练模拟器：左 100% 还原 WorkBuddy 5.11.3 活界面 + 右 泊舟陪练栏
+import '../styles/global.css';
+import App from '../simulator/App';
+import { SITE } from '../site.config.mjs';
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>泊舟陪练模拟器 — {SITE.name}</title>
+    <meta name="description" content="泊舟坐在旁边，带你直接在 WorkBuddy 5.11.3 模拟界面里亲手操作一遍，看懂每个功能按下去会怎样。" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="m-0 bg-gray-50 text-gray-900 font-sans antialiased overflow-hidden">
+    <App client:only="react" />
+  </body>
+</html>

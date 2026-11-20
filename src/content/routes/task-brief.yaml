@@ -1,0 +1,43 @@
+# 路线：写清任务（5 要素）—— 草图，检验「两种写法对比」和行内标记
+title: 写清任务：5 要素
+chapter: send-task
+guide: /features/send-task/task-brief/
+start: intro
+scenes:
+  home:
+    view: home
+    composer: { group: WorkBuddy-练习 }
+  vague:
+    view: chat
+    composer: { group: WorkBuddy-练习 }
+    messages:
+      - role: user
+        blocks: [{ type: text, text: 帮我整理一下 @会议记录.txt }]
+      - role: assistant
+        blocks:
+          - { type: text, text: "行动项：1. 上线报表，负责人 {{wrong:张伟}}，截止 {{wrong:11 月 25 日}}" }
+  brief:
+    view: chat
+    composer: { group: WorkBuddy-练习 }
+    messages:
+      - role: user
+        blocks: [{ type: text, text: "材料：@会议记录.txt；目标：整理成行动项表；不要：补充原文没有的信息；交付：行动项.xlsx；检查：每条能在原文找到出处" }]
+      - role: assistant
+        blocks:
+          - { type: text, text: "行动项：1. 上线报表，负责人 {{ok:未明确}}，截止 {{ok:未明确}}" }
+          - { type: file, name: 行动项.xlsx, status: written }
+beats:
+  - { id: intro, step: what, scene: home, say: 任务说得越清楚，它越少自己猜。5 要素：材料、目标、不能做的事、交付物、怎么检查。 }
+  - { id: where, step: where, say: 都写在输入框里，材料用 @ 引用。, spotlight: composer.input }
+  - { id: when, step: when, say: 只要结果要拿去用，就按 5 要素写。随口问问不用。 }
+  - id: pick
+    step: try
+    say: 同一份会议记录，你会怎么发？
+    spotlight: composer.input
+    choices:
+      - { label: 帮我整理一下, goto: mistake }
+      - { label: 按 5 要素写, goto: right }
+  - { id: mistake, step: mistake, scene: vague, tone: wrong, say: 原文没写负责人和截止时间，它编了一个。, spotlight: chat.lastReply, next: right }
+  - { id: right, step: try, scene: brief, tone: right, say: 加一句「原文没写的标未明确」，它就不编了。, spotlight: chat.lastReply }
+  - { id: replay, step: mistake, scene: vague, tone: wrong, skipIfVisited: mistake, say: 对比一下：只说「整理一下」，它会编出负责人。, spotlight: chat.lastReply }
+  - { id: remember, step: remember, scene: home, say: 材料、目标、禁止、交付、检查；没写的标「未明确」。 }

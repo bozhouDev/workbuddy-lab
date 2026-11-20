@@ -1,0 +1,24 @@
+# 会变的事实：status 为 pending 的条目，发布前必须核对并改成 verified
+- id: mode-location
+  text: 模式在输入框左下角 + 菜单的「模式」二级面板里，包含「计划 Plan」和「仅问答 Ask」两个开关；都不开即为默认模式。
+  status: verified
+  verifiedAt: 2026-11-19
+  source: WorkBuddy 5.11.3 真机截图
+- id: no-group-date-folder
+  text: 不选分组直接发任务时，WorkBuddy 会把产物存到默认工作空间的临时目录，后续版本可能调整目录组织方式。
+  status: pending
+  source: 待在 5.11.3 新建无分组任务复测默认路径
+- id: model-multipliers
+  text: 当前自动档倍率为快速 0.15x、均衡 0.50x、极致 1.00x，Hy4 flash 标有「限时免费（0.00x）」，具体模型列表与限时免费活动会随版本变动。
+  status: verified
+  verifiedAt: 2026-11-19
+  source: WorkBuddy 5.11.3 模型下拉列表真机截图
+- id: credits-policy
+  text: 新账号自带起步体验积分，可通过左下角头像进入「Buddy加油站」「成长计划」「去邀约」领取额外额度；具体赠送数值与有效期以客户端当前页面为准。
+  status: pending
+  source: 待核对新号首次赠送积分口径与有效期
+- id: permission-full-access
+  text: 输入框下方「默认权限」点击后弹出「允许完全访问」开关，开启后会大幅减少操作确认弹窗。
+  status: verified
+  verifiedAt: 2026-11-19
+  source: WorkBuddy 5.11.3 权限弹窗真机截图

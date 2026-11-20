@@ -1,0 +1,5 @@
+---
+// 替换 Starlight 的 ThemeProvider：不读系统深色设置，固定浅色
+// 原因：教程截图全是 5.11.3 浅色界面，v1 只做浅色主题
+---
+<script is:inline>document.documentElement.dataset.theme = 'light';</script>

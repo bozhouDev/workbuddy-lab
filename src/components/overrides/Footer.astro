@@ -1,0 +1,114 @@
+---
+import { SITE } from '../../site.config.mjs';
+
+const { pagination, entry } = Astro.locals.starlightRoute;
+const { prev, next } = pagination;
+const feedbackHref = `${SITE.issueUrl}${encodeURIComponent(entry.data.title)}`;
+---
+
+<footer class="wbl-doc-footer not-content">
+  {(prev || next) && (
+    <div class="wbl-pagination">
+      {prev ? (
+        <a href={prev.href} rel="prev" class="wbl-page-card">
+          <span class="wbl-page-dir">← 上一篇</span>
+          <span class="wbl-page-title">{prev.label}</span>
+        </a>
+      ) : (
+        <div aria-hidden="true"></div>
+      )}
+
+      {next ? (
+        <a href={next.href} rel="next" class="wbl-page-card wbl-page-next">
+          <span class="wbl-page-dir">下一篇 →</span>
+          <span class="wbl-page-title">{next.label}</span>
+        </a>
+      ) : (
+        <div aria-hidden="true"></div>
+      )}
+    </div>
+  )}
+
+  <div class="wbl-outdated">
+    <span>发现和你的 WorkBuddy {SITE.clientVersion} 界面对不上？</span>
+    <a href={feedbackHref} target="_blank" rel="noreferrer" class="wbl-outdated-link">
+      内容过时了，去反馈 →
+    </a>
+  </div>
+</footer>
+
+<style>
+  .wbl-doc-footer {
+    margin-top: 4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .wbl-pagination {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  @media (max-width: 560px) {
+    .wbl-pagination {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .wbl-page-card {
+    padding: 16px 18px;
+    border: 1px solid #e6e6e3;
+    border-radius: 12px;
+    background: #ffffff;
+    color: #111318;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: border-color 140ms ease;
+  }
+
+  .wbl-page-card:hover {
+    border-color: #c9d3f7;
+  }
+
+  .wbl-page-next {
+    text-align: right;
+  }
+
+  .wbl-page-dir {
+    font-size: 12.5px;
+    color: #6b7079;
+  }
+
+  .wbl-page-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #111318;
+  }
+
+  .wbl-outdated {
+    padding-top: 20px;
+    border-top: 1px solid #eeeeeb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 13px;
+    color: #6b7079;
+  }
+
+  .wbl-outdated-link {
+    color: #3355e0;
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .wbl-outdated-link:hover {
+    color: #2443c2;
+    text-decoration: underline;
+  }
+</style>

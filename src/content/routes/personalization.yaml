@@ -1,0 +1,35 @@
+# 路线元数据：1.4 个性化：指令
+title: 1.4 个性化：指令
+chapter: setup
+guide: /features/setup/personalization/
+illustrative: false
+start: intro
+scenes:
+  home:
+    view: home
+    composer: { group: WorkBuddy-练习 }
+  chat-before:
+    view: chat
+    composer: { group: WorkBuddy-练习 }
+    messages:
+      - role: user
+        blocks: [{ type: text, text: 把 @周末读书会群聊.txt 整理成待办清单，列清楚负责人和截止时间。 }]
+      - role: assistant
+        blocks:
+          - { type: text, text: 好的！非常高兴为您整理 ✨ 负责人张伟、李娜... }
+  chat-after:
+    view: chat
+    composer: { group: WorkBuddy-练习 }
+    messages:
+      - role: user
+        blocks: [{ type: text, text: 把 @周末读书会群聊.txt 整理成待办清单，列清楚负责人和截止时间。 }]
+      - role: assistant
+        blocks:
+          - { type: text, text: 结论：缺失负责人与截止时间均已标为「未明确」，零废话零编造。 }
+beats:
+  - { id: intro, step: what, scene: home, say: 给 WorkBuddy 的指令管做事红线，写好 5 条短规矩后每次对话自动生效。 }
+  - { id: where, step: where, say: 左下角头像 → 设置 → 个性化 → 给 WorkBuddy 的指令。 }
+  - { id: when, step: when, say: 开局一次性配好，区分清楚「指令」「人设设定」和「长期记忆」三个框。 }
+  - { id: mistake, step: mistake, scene: chat-before, tone: wrong, say: 不设指令直接整理缺失信息的群聊，AI 满屏客套废话还瞎编负责人姓名。 }
+  - { id: try, step: try, scene: chat-after, tone: right, say: 写入泊舟 5 条指令模板并保存，同一句重跑直接给结论，缺失字段标「未明确」。 }
+  - { id: remember, step: remember, scene: chat-after, say: 指令写 5 条短红线就够，别抄两千字长规则；人设管性格，长期记忆写你的固定背景。 }

@@ -1,0 +1,46 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+  src: ImageMetadata;
+  alt: string;
+  caption?: string;
+}
+
+const { src, alt, caption } = Astro.props;
+---
+
+<figure class="wbl-shot not-content">
+  <div class="wbl-shot-frame">
+    <Image src={src} alt={alt} format="webp" quality={86} width={1440} class="wbl-shot-img" />
+  </div>
+  {caption && <figcaption class="wbl-shot-caption">{caption}</figcaption>}
+</figure>
+
+<style>
+  .wbl-shot {
+    margin: 20px 0 28px;
+  }
+
+  .wbl-shot-frame {
+    border-radius: 12px;
+    border: 1px solid #e6e6e3;
+    overflow: hidden;
+    background: #f4f4f2;
+  }
+
+  .wbl-shot-img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .wbl-shot-caption {
+    margin-top: 10px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #6b7079;
+    text-align: center;
+  }
+</style>

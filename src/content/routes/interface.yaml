@@ -1,0 +1,34 @@
+# 路线元数据：0.4 认识界面（供文章页 simRoute 与侧栏「可试」标记引用）
+title: 0.4 认识界面
+chapter: basics
+guide: /features/basics/interface/
+illustrative: false
+start: intro
+scenes:
+  home:
+    view: home
+    composer: { group: null }
+  chat-demo:
+    view: chat
+    composer: { group: WorkBuddy-练习 }
+    messages:
+      - role: user
+        blocks: [{ type: text, text: 帮我整理一份 WorkBuddy 新手 3 步上手清单 }]
+      - role: assistant
+        blocks:
+          - { type: text, text: 已写入 新手清单.md，可在右侧产物区直接核对。 }
+          - { type: file, name: 新手清单.md, status: written }
+    artifacts:
+      file: 新手清单.md
+      badge: 刚生成
+      lines:
+        - { text: 1. 先配好存储路径和 5 条核心指令 }
+        - { text: 2. 发任务前先选分组、保持默认权限 }
+        - { text: 3. 跑完任务在右侧产物区核对成果 }
+beats:
+  - { id: intro, step: what, scene: home, say: 认清 6 块首页区域 + 右侧产物区，就能看懂 WorkBuddy 主界面。 }
+  - { id: where, step: where, say: 左侧入口、左下角头像、快捷标签、输入框、选择分组和默认权限都在首页。 }
+  - { id: when, step: when, say: 第一次打开软件时花 2 分钟认全，后面发任务不迷路。 }
+  - { id: try, step: try, scene: chat-demo, tone: right, say: 亲手点一遍各菜单并发一次小任务，看右侧产物区自动滑出。 }
+  - { id: mistake, step: mistake, scene: home, tone: wrong, say: 动手前忘了选分组，生成的文件会落到默认目录里很难找。 }
+  - { id: remember, step: remember, scene: home, say: 左侧管入口和分组，中间输入框发任务，下方选分组 + 默认权限必看，右侧验产物。 }

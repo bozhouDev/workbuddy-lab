@@ -1,0 +1,57 @@
+# 路线：权限 —— 草图，用来检验格式能否表达「审批弹窗」和「开关」
+# 审批窗没有真机截图，文案和布局待泊舟补截图后定稿
+title: 权限：默认权限 / 允许完全访问
+chapter: send-task
+guide: /features/send-task/permission/
+start: intro
+scenes:
+  home:
+    view: home
+    composer: { text: 帮我清理一下没用的文件, group: WorkBuddy-练习 }
+  menu:
+    view: home
+    overlay: permissionMenu
+    composer: { text: 帮我清理一下没用的文件, group: WorkBuddy-练习 }
+  approval: # 默认权限：删除前弹审批窗
+    view: chat
+    overlay: approvalDialog
+    composer: { permission: default, group: WorkBuddy-练习 }
+    messages:
+      - role: user
+        blocks: [{ type: text, text: 帮我清理一下没用的文件 }]
+    approval: { action: 删除 3 个文件, path: ~/Desktop/合同-终版.pdf 等, outsideWorkspace: true }
+  approved: # 默认权限下没看路径就点了同意
+    view: chat
+    composer: { permission: default, group: WorkBuddy-练习 }
+    messages:
+      - role: user
+        blocks: [{ type: text, text: 帮我清理一下没用的文件 }]
+      - role: assistant
+        blocks:
+          - { type: text, text: "已清理 3 个文件：{{wrong:~/Desktop/合同-终版.pdf}}、旧草稿.docx、temp.txt" }
+  full-access: # 完全访问：不弹审批窗，直接删
+    view: chat
+    composer: { permission: full, group: WorkBuddy-练习 }
+    messages:
+      - role: user
+        blocks: [{ type: text, text: 帮我清理一下没用的文件 }]
+      - role: assistant
+        blocks:
+          - { type: text, text: "已清理 3 个文件：{{wrong:~/Desktop/合同-终版.pdf}}、旧草稿.docx、temp.txt" }
+beats:
+  - { id: intro, step: what, scene: home, say: 权限决定它动你电脑时，要不要先问你一声。 }
+  - { id: find, step: where, say: 在输入框下方，点「默认权限」。, spotlight: composer.permission, await: { click: composer.permission } }
+  - { id: when, step: when, scene: menu, say: 新手一直用默认权限。完全访问留给熟悉之后、并且备份过的时候。, spotlight: permissionMenu.fullAccess }
+  - id: try
+    step: try
+    scene: approval
+    say: 它要删除文件，弹出了审批窗。先看路径：这个文件在工作目录外面。你怎么办？
+    spotlight: approvalDialog
+    choices:
+      - { label: 同意, goto: mistake }
+      - { label: 拒绝，并问它为什么要删, goto: right }
+  - { id: mistake, step: mistake, scene: approved, tone: wrong, say: 你点了同意，工作目录外的合同也一起被删了。审批窗就是让你先看路径的。, spotlight: chat.lastReply, next: right }
+  - { id: right, step: try, scene: approval, tone: right, say: 对。看不懂的操作先拒绝，问清楚「会处理哪些文件、为什么」。, spotlight: approvalDialog.deny }
+  # 每个人都看：完全访问下连审批窗都没有（和上面选错的后果不是同一件事，所以不加 skipIfVisited）
+  - { id: no-approval, step: mistake, scene: full-access, tone: wrong, say: 再看完全访问：同样的任务不会弹审批窗，合同直接被删。, spotlight: chat.lastReply }
+  - { id: remember, step: remember, scene: home, say: 默认权限别关；审批窗先看路径，再点同意。 }

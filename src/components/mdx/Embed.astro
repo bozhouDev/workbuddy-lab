@@ -1,0 +1,57 @@
+---
+interface Props {
+  src: string;
+  title: string;
+  height?: number;
+}
+
+const { src, title, height = 560 } = Astro.props;
+---
+
+<div class="wbl-embed not-content">
+  <div class="wbl-embed-bar">
+    <span>{title}</span>
+    <a href={src} target="_blank" rel="noreferrer">在新窗口打开 ↗</a>
+  </div>
+  <iframe
+    src={src}
+    title={title}
+    loading="lazy"
+    style={`height: ${height}px`}
+    class="wbl-embed-frame"
+  ></iframe>
+</div>
+
+<style>
+  .wbl-embed {
+    margin: 24px 0 28px;
+    border-radius: 12px;
+    border: 1px solid #e6e6e3;
+    overflow: hidden;
+    background: #ffffff;
+  }
+
+  .wbl-embed-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: #f7f7f6;
+    border-bottom: 1px solid #eeeeeb;
+    font-size: 13px;
+    color: #4a4f57;
+  }
+
+  .wbl-embed-bar a {
+    color: #3355e0;
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .wbl-embed-frame {
+    display: block;
+    width: 100%;
+    border: 0;
+    background: #ffffff;
+  }
+</style>

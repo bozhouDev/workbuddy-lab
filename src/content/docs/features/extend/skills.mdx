@@ -1,0 +1,70 @@
+---
+title: 技能 Skill
+description: 用大白话搞懂 Skill 就是打包好的标准操作手册（SOP），掌握广场安装、SkillHub 挑选和 / 快捷调用。
+verifiedAt: 2026-11-20
+sidebar:
+  order: 3
+---
+
+import Shot from '../../../../components/mdx/Shot.astro';
+import Warning from '../../../../components/mdx/Warning.astro';
+import imgSkill1 from '../../../../assets/shots/features/extend/skills/01-技能广场.png';
+import imgSkill2 from '../../../../assets/shots/features/extend/skills/02-SkillHub市场.png';
+import imgSkill3 from '../../../../assets/shots/features/extend/skills/03-斜杠调用技能.png';
+
+你最近在网上大概率经常刷到“给 AI 装几个 Skill 效率翻十倍”，听着挺玄乎，其实它的本质特别简单——**Skill 就是一份打包好的「标准操作手册（SOP）」**。
+
+## 装和不装 Skill 差在哪
+
+- **不装 Skill 时**：你每次让它做 PPT 或处理复杂表格，都得自己反复写要求——字号多大、颜色怎么配、先干哪步再干哪步、哪些坑别踩。少说一句，它就发挥失常。
+- **装了 Skill 之后**：有人已经把这类活最成熟的一套步骤、规范模板、甚至配套小脚本全写进一个包里（核心通常就是一个叫 `SKILL.md` 的说明书）。AI 执行任务前先翻开这本手册，照着里面的规矩一步步做，**不用你每次重教，出品稳得多**。
+
+## 怎么找、怎么装
+
+装技能主要有三种方式，都很省事：
+
+1. **直接在「技能」广场一键装**：进左侧 `专家·技能·连接器` → 切到 **技能**，右上角直接搜关键词（比如 `PPT`、`PDF`、`CloudBase`），看到合适的点卡片上的 `+` 就装好了。
+2. **逛腾讯的 SkillHub 市场按下载量挑**：在技能页里切到 **SkillHub**（腾讯官方的 Skill 市场，对应 `skillhub.cn`），里面聚合了大量优质 Skill。新手不知道哪些好用时，直接按 **下载量** 或分类筛一遍，挑大家用得最多、最稳的装，很少踩雷。
+3. **发链接让它自己装（进阶好用）**：如果你在 GitHub 或别人文章里看到好用的开源 Skill，不用懂代码，直接点右上角 `+ 添加技能`，或者干脆在对话框里把地址发给 WorkBuddy，说一句：
+
+```text
+帮我安装这个技能：[贴上 GitHub 链接]
+```
+
+它会自动拉下来帮你装好。
+
+<Shot
+  src={imgSkill1}
+  alt="WorkBuddy 5.11.3 技能广场列表，展示热门技能卡片与右上角一键添加按钮"
+  caption="技能广场里搜关键词，点卡片右上角 + 即可安装"
+/>
+
+<Shot
+  src={imgSkill2}
+  alt="技能页面切换至 SkillHub 市场，支持按分类和下载量筛选热门 Skill"
+  caption="不知道装什么时，在 SkillHub 按下载量挑最稳"
+/>
+
+## 装完怎么调用
+
+有两种顺手的叫法：
+
+- **在输入框里直接打 `/`**，会立刻弹出你已经装好的所有技能列表，点选一下就行（也可以点 `+` → **技能** 选择）；
+- **直接说大白话**：比如在任务里写一句“用 XX 技能帮我生成这份 PPT”，它自己也会识别并调用。
+
+<Shot
+  src={imgSkill3}
+  alt="在输入框中输入斜杠后弹出的已安装技能快捷调用列表"
+  caption="输入框里直接打 / 快速调出已安装的技能"
+/>
+
+<Warning title="两条小提醒">
+  <ol>
+    <li><strong>别囤积癖发作一次装几十个</strong>——装太多反而容易互相抢活、还占上下文，<strong>用到什么装什么</strong>最干净。</li>
+    <li>前面在「通用设置」里让你保持打开的 <strong>技能自动更新</strong>，管的就是这些技能，有新版会自动跟进。</li>
+  </ol>
+</Warning>
+
+## 一句话记住
+
+**Skill 是 AI 的岗位操作手册；用到什么去技能广场或 SkillHub 装什么，干活时打 `/` 一键调用。**
