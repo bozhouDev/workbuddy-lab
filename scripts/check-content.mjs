@@ -5,16 +5,16 @@
  * 这里补一道硬检查，失败时以非 0 退出，让 npm run build 直接停下。
  *
  * 用法：
- *   node scripts/check-content.mjs            日常构建：检查图文里的 simRoute / facts 引用都存在
+ *   node scripts/check-content.mjs            日常构建：检查图文里的 facts 引用都存在
+ *   （simRoute 由 content.config.ts 的 schema 校验，填错时构建本身就会失败）
  *   node scripts/check-content.mjs --release  发布前：另外要求 facts.yaml 里没有 pending 条目
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, basename, extname, relative } from 'node:path';
+import { join, extname, relative } from 'node:path';
 import { parse } from 'yaml';
 
 const ROOT = process.cwd();
 const DOCS_DIR = join(ROOT, 'src/content/docs');
-const ROUTES_DIR = join(ROOT, 'src/content/routes');
 const FACTS_FILE = join(ROOT, 'src/content/facts.yaml');
 const isRelease = process.argv.includes('--release');
 
@@ -35,13 +35,6 @@ function readFrontmatter(file) {
 
 const errors = [];
 
-// 已有的路线 ID = routes 目录下 yaml 的文件名
-const routeIds = new Set(
-  readdirSync(ROUTES_DIR)
-    .filter((f) => f.endsWith('.yaml'))
-    .map((f) => basename(f, '.yaml')),
-);
-
 // 已有的事实 ID 和状态
 const facts = parse(readFileSync(FACTS_FILE, 'utf8')) ?? [];
 const factIds = new Set(facts.map((f) => f.id));
@@ -50,9 +43,6 @@ const factIds = new Set(facts.map((f) => f.id));
 for (const file of listDocs(DOCS_DIR)) {
   const fm = readFrontmatter(file);
   const where = relative(ROOT, file);
-  if (fm.simRoute && !routeIds.has(fm.simRoute)) {
-    errors.push(`${where}：simRoute「${fm.simRoute}」没有对应的路线文件`);
-  }
   for (const id of fm.facts ?? []) {
     if (!factIds.has(id)) errors.push(`${where}：facts 里的「${id}」在 facts.yaml 中不存在`);
   }
