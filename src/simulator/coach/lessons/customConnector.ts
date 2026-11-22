@@ -75,7 +75,7 @@ export const customConnectorLesson: GuidedLessonDef = {
             { running: '自测 get_forecast("上海")…', done: '自测通过：返回 3 天预报' },
           ],
           replyHtml:
-            '写好了，自测通过。在 WorkBuddy 里这样填：\n\n| 字段 | 填什么 |\n| --- | --- |\n| 名称 | my-weather |\n| 传输类型 | 本地命令（stdio） |\n| 启动命令 | node |\n| 命令参数 | ~/WorkBuddy-练习/weather-mcp/server.js |\n| 环境变量 | {{ok:不用填（这个接口不需要 Key）}} |\n\n去「连接器 → 自定义连接器」添加就行。',
+            '写好了，自测通过。在 WorkBuddy 里这样填：\n\n| 字段 | 填什么 |\n| --- | --- |\n| 名称 | my-weather |\n| 传输类型 | 本地命令（stdio） |\n| 启动命令 | node |\n| 命令参数 | /Users/你的用户名/WorkBuddy-练习/weather-mcp/server.js |\n| 环境变量 | {{ok:不用填（这个接口不需要 Key）}} |\n\n去「连接器 → 自定义连接器」添加就行。',
           artifact: {
             file: 'server.js',
             pathLabel: 'WorkBuddy-练习/weather-mcp/server.js',
@@ -137,7 +137,7 @@ export const customConnectorLesson: GuidedLessonDef = {
       id: 'submit',
       phase: 1,
       navLabel: '添加',
-      say: ['和填写表一一对上了。点「添加」。'],
+      say: ['和填写表一一对上了。注意命令参数要写<b>完整路径</b>（Windows 是 C:\\Users\\… 开头），别写成 ~/ 开头的简写，否则连接器启动不了。点「添加」。'],
       wait: { target: 'mcp.submit', callout: '点添加', label: '添加' },
       onAction: (s) => ({
         mcpFormOpen: false,
@@ -154,9 +154,9 @@ export const customConnectorLesson: GuidedLessonDef = {
       navLabel: '信任',
       say: [
         '加上了，但条目里写着「<b>第三方服务，WorkBuddy 未审核 · 首次连接此 MCP 服务需要您的信任确认</b>」。',
-        '什么能点信任？<b>你自己写的、看过代码的、来源可靠的（官方或大量人用过的开源项目）</b>。来路不明的别信：MCP 在你电脑上运行，权限和你一样大。这个是你自己刚写的，点「信任」。',
+        '什么能点信任？<b>你自己写的、看过代码的、来源可靠的（官方或大量人用过的开源项目）</b>。来路不明的别信：MCP 在你电脑上运行，权限和你一样大。「AI 写的、自测过」不等于可以信任，<b>点之前自己核对三件事</b>：① 启动的是哪个文件（就是刚才那个 server.js）；② 它会访问哪些网址（只有 Open-Meteo 的两个天气接口）；③ 有没有要 Key、读写你别的文件（都没有）。三件都对得上，点「信任」。',
       ],
-      wait: { target: 'mcp.trust', callout: '自己写的，点信任', label: '信任' },
+      wait: { target: 'mcp.trust', callout: '核对完再信任', label: '信任' },
       onAction: (s) => ({
         customConnectors: s.customConnectors.map((c) => (c.name === 'my-weather' ? { ...c, trusted: true } : c)),
       }),
@@ -181,13 +181,14 @@ export const customConnectorLesson: GuidedLessonDef = {
           elapsed: '4s',
           steps: [{ running: '调用 my-weather · get_forecast(上海)…', done: '调用 my-weather · get_forecast：返回 3 天预报' }],
           replyHtml:
-            '查了 Open-Meteo（{{ok:11-23 21:40 查询}}）：\n\n| 日期 | 气温 | 降水概率 |\n| --- | --- | --- |\n| 11-24 明天 | 9~14°C | {{ok:75%}} |\n| 11-25 | 7~12°C | 20% |\n| 11-26 | 8~15°C | 5% |\n\n明天降水概率 75%，{{ok:建议带伞}}；后天起转晴。',
+            '{{ok:数据来源：Open-Meteo}}（通过 my-weather 查询）：'+
+            '\n\n| 日期 | 气温 | 降水概率 |\n| --- | --- | --- |\n| 11-24 明天 | 9~14°C | {{ok:75%}} |\n| 11-25 | 7~12°C | 20% |\n| 11-26 | 8~15°C | 5% |\n\n明天降水概率 75%，{{ok:建议带伞}}；后两天降水概率较低。',
         }),
     },
     {
       id: 'summary',
       phase: 3,
-      say: ['这次每个数字都<b>有来源、有查询时间</b>。你刚刚走完了自己做一个连接器的全过程。'],
+      say: ['这次每个数字都<b>来自工具返回，标了数据来源</b>。你刚刚走完了自己做一个连接器的全过程。'],
       card: {
         kind: 'compare',
         title: '同一个问题，两次回答',
@@ -196,7 +197,7 @@ export const customConnectorLesson: GuidedLessonDef = {
         leftHtml: '「降水概率 40% 左右」，<b>未调用任何工具</b>，是编的。',
         rightLabel: '② 接了自己做的 my-weather',
         rightTone: 'ok',
-        rightHtml: '调用 get_forecast，<b>数据来自 Open-Meteo，带查询时间</b>。',
+        rightHtml: '调用 get_forecast，<b>数字来自 Open-Meteo，标了来源</b>。',
       },
       after: [
         '自己做连接器记住 4 条：<b>① 让 AI 写时说清三件事：输入什么、返回什么、要不要 Key</b>；<b>② 要 Key 的只放「环境变量」</b>，别写进提示词或技能；<b>③ 只信任可靠来源</b>；<b>④ 工具别开太多</b>。',

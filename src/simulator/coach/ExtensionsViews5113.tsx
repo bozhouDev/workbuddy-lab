@@ -817,7 +817,7 @@ function McpForm(props: Props) {
   const { shell } = props;
   const kit = makeTargetKit(props);
   const filled = shell.mcpFormFilled;
-  const path = '~/WorkBuddy-练习/weather-mcp/server.js';
+  const path = '/Users/你的用户名/WorkBuddy-练习/weather-mcp/server.js';
 
   /** 一行只读字段 */
   const field = (label: string, value: string, placeholder: string, hint?: string) => (

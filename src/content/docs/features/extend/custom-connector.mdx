@@ -42,7 +42,12 @@ import Warning from '../../../../components/mdx/Warning.astro';
 
 注意这段话说清了三件事：**输入什么**（城市名）、**返回什么**（3 天的温度和降水概率）、**要不要 Key**（不要）。自己做任何连接器，说清这三件事就够了。
 
-它会建好文件夹、装好依赖、自测一次，然后给你一张填写表。核心代码大概长这样（我在本机用 `@modelcontextprotocol/sdk` 1.17.0 实测过，能跑通）：
+它会建好文件夹、装好依赖、自测一次，然后给你一张填写表。核心代码大概长这样（用 `@modelcontextprotocol/sdk` 1.17.0 + `zod` 3 实测能跑通）：
+
+```bash
+# 在 weather-mcp 文件夹里装依赖：zod 要用 3.x，装成 4.x 时工具参数会丢失、调用报错
+npm install @modelcontextprotocol/sdk@1.17.0 zod@3
+```
 
 ```js
 // server.js：天气 MCP，只提供一个工具 get_forecast
@@ -94,7 +99,7 @@ await server.connect(new StdioServerTransport());
 | 名称 | `my-weather` |
 | 传输类型 | 本地命令（程序在你电脑上跑） |
 | 启动命令 | `node` |
-| 命令参数 | `server.js` 的完整路径，比如 `/Users/你的用户名/WorkBuddy-练习/weather-mcp/server.js`（Windows 是 `C:\Users\...\server.js`） |
+| 命令参数 | `server.js` 的**完整路径**（别写 `~/` 开头的简写，启动时不认），比如 `/Users/你的用户名/WorkBuddy-练习/weather-mcp/server.js`（Windows 是 `C:\Users\...\server.js`） |
 | 环境变量 | 不用填 |
 
 如果服务商给的是一个网址，传输类型就选远程那一种，填服务器 URL。表单也支持直接编辑 JSON，写法和大多数 MCP 客户端一样：
@@ -111,14 +116,14 @@ await server.connect(new StdioServerTransport());
 ```
 
 <Warning title="Key 只放在环境变量里">
-  今天的天气接口不要 Key。以后接需要 Key 的服务，<strong>Key 只填在表单的「环境变量」里</strong>，不要写进提示词、技能或者发到对话里。
+  今天的天气接口不要 Key。以后接需要 Key 的服务，<strong>Key 只填在你自己 WorkBuddy 客户端里这张表单的「环境变量」里</strong>，不要写进提示词、技能或者发到对话里。
 </Warning>
 
 ## 第 3 步：信任确认
 
 点「添加」后，列表里会出现 `my-weather`，旁边写着「首次连接此 MCP 服务需要您的信任确认」，按钮是 **信任 / 拒绝**。
 
-什么能点信任？**你自己写的、看过代码的、来源可靠的**（官方出的，或者大量人用过的开源项目）。来路不明的别信：MCP 在你电脑上运行，**权限和你一样大**，能读你能读的文件。
+什么能点信任？**你自己写的、看过代码的、来源可靠的**（官方出的，或者大量人用过的开源项目）。「AI 帮你写的、自测通过」不等于可以信任，点之前核对三件事：**启动的是哪个文件、会访问哪些网址、要不要 Key 或读写别的文件**。这个天气例子：只启动 `server.js`、只访问 Open-Meteo 的两个接口、不要 Key，对得上再点。来路不明的别信：MCP 在你电脑上运行，**权限和你一样大**，能读你能读的文件。
 
 信任后会显示「1/1 个工具已启用」。工具数要留心：一个连接器开几十个工具会让它挑花眼，用不到的可以关掉。
 
@@ -126,7 +131,7 @@ await server.connect(new StdioServerTransport());
 
 回到首页，同样问「明天上海会下雨吗？要不要带伞？」。这次展开执行步骤，能看到 **调用 my-weather · get_forecast**，回答里的温度和降水概率都来自 Open-Meteo。
 
-想让它回答更可靠，提示词里加一句「告诉我数据来源和查询时间」，它就会注明。
+想让它回答更可靠，提示词里加一句「告诉我数据来源」，它就会注明。注意它只能说出工具真正返回的东西：这个工具只给温度和降水概率，问它「会不会转晴」它就只能推测，要判断晴雨得让工具多返回天气状况字段。
 
 ## 同样的套路还能接什么
 

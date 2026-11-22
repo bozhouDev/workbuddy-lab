@@ -2,8 +2,8 @@ import type { ComposerChip, GuidedLessonDef } from '../guidedTypes';
 import { createBaseGuidedState } from './baseState';
 import { freeChat } from './freeChat';
 
-/** 贯穿本节的任务：飞书里的周报 → 给老板的季度汇报 PPT */
-const PPT_PROMPT = '把飞书里这周 5 份项目周报，做成给老板看的季度汇报 PPT。';
+/** 贯穿本节的任务：飞书里的 5 份周报 → 给老板的本周项目进展汇报 PPT */
+const PPT_PROMPT = '把飞书里这周 5 份项目周报，做成给老板看的本周项目进展汇报 PPT。';
 
 /** 配齐后的三枚胶囊：数据线 + 岗位脑子 + 操作手册 */
 const FULL_CHIPS: ComposerChip[] = [
@@ -68,14 +68,14 @@ export const chooseLesson: GuidedLessonDef = {
       onEnter: () => ({ view: 'home', composerChips: [], composerText: PPT_PROMPT, popover: null }),
       say: [
         '连接器的提示是「<b>帮你连接外部应用数据</b>」：管的是<b>拿得到什么</b>。',
-        '认完门，回到首页。输入框里是一个真实的活：<code>把飞书里这周 5 份项目周报，做成给老板看的季度汇报 PPT</code>。先<b>什么都不配</b>，直接发。',
+        '认完门，回到首页。输入框里是一个真实的活：<code>把飞书里这周 5 份项目周报，做成给老板看的本周项目进展汇报 PPT</code>。先<b>什么都不配</b>，直接发。',
       ],
       wait: { target: 'composer.send', callout: '什么都不配，直接发', label: '发送（裸跑）' },
       runChat: () =>
         freeChat({
           id: 'choose-bare',
           prompt: PPT_PROMPT,
-          chatTitle: '① 什么都不配 · 季度汇报 PPT',
+          chatTitle: '① 什么都不配 · 项目汇报 PPT',
           footerTip: '没有连接器、专家、技能时的输出，可在左侧 最近 里回看',
           elapsed: '41s',
           hideMarksInitially: true,
@@ -84,7 +84,7 @@ export const chooseLesson: GuidedLessonDef = {
             { running: '生成大纲…', done: '已生成 8 页大纲（Markdown）' },
           ],
           replyHtml:
-            '已为你生成季度汇报大纲：\n\n1. 项目背景\n2. 本季度工作过程\n3. 各项目进展：{{wrong:A 项目完成率 85%、B 项目完成率 92%}}\n4. 遇到的问题\n5. {{wrong:最终成果与结论}}\n6. 下季度计划\n\n如需生成 PPT 文件，请告诉我。',
+            '已为你生成项目汇报大纲：\n\n1. 项目背景\n2. 本周工作过程\n3. 各项目进展：{{wrong:A 项目完成率 85%、B 项目完成率 92%}}\n4. 遇到的问题\n5. {{wrong:最终成果与结论}}\n6. 下周计划\n\n如需生成 PPT 文件，请告诉我。',
         }),
     },
     {
@@ -109,17 +109,17 @@ export const chooseLesson: GuidedLessonDef = {
           id: 'choose-full',
           prompt: PPT_PROMPT,
           promptChips: FULL_CHIPS,
-          chatTitle: '② 配齐三样 · 季度汇报 PPT',
+          chatTitle: '② 配齐三样 · 项目汇报 PPT',
           footerTip: '在左侧 最近 里点 ① 和 ② 对比',
           elapsed: '2m 06s',
           steps: [
             { running: '调用 飞书 · 搜索文档「项目周报」…', done: '已通过飞书读取 5 篇周报（11-17 ~ 11-21）' },
-            { running: '以 PPT制作专家 视角梳理结构…', done: '采用「结论先行」结构，共 7 页' },
-            { running: '调用技能 WPS Office 全家桶…', done: '已生成 季度汇报.pptx' },
+            { running: '以 PPT制作专家 视角梳理结构…', done: '采用「结论先行」结构，共 8 页' },
+            { running: '调用技能 WPS Office 全家桶…', done: '已生成 本周项目汇报.pptx' },
           ],
           replyHtml:
-            '已完成，第 1 页就是结论：\n\n- {{ok:第 1 页 · 一句话结论：5 个项目 4 个按期，C 项目延期 2 周，需要追加 1 名测试}}\n- 第 2–5 页：每个项目一页，数字均来自周报原文，{{ok:页脚标注出处（哪份周报、哪天）}}\n- 第 6 页：风险与需要老板拍板的事\n- 第 7 页：下季度计划',
-          fileCard: { name: '季度汇报.pptx', meta: '7 页 · 可直接用 WPS 打开修改' },
+            '已完成，第 1 页就是结论：\n\n- {{ok:第 1 页 · 一句话结论：5 个项目 4 个按期，C 项目延期 2 周，需要追加 1 名测试}}\n- 第 2–6 页：5 个项目每个一页，数字均来自周报原文，{{ok:页脚标注出处（哪份周报、哪天）}}\n- 第 7 页：风险与需要老板拍板的事\n- 第 8 页：下周计划',
+          fileCard: { name: '本周项目汇报.pptx', meta: '8 页 · 可直接用 WPS 打开修改' },
         }),
     },
     {

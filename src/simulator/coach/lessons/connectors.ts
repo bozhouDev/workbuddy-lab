@@ -191,7 +191,7 @@ export const connectorsLesson: GuidedLessonDef = {
       revealMarksOnEnter: true,
       onEnter: () => ({ view: 'home', composerText: GOOD_PROMPT, composerChips: FEISHU_CHIP }),
       say: [
-        '橙色几处：它<b>把你能看到的 186 篇都翻了一遍</b>，去年的年会、同事共享给你的销售复盘全混进来了。连接器能读的范围，就是<b>你这个账号</b>能看到的全部。',
+        '橙色几处：它<b>把你能看到的 186 篇都翻了一遍</b>，去年的年会、同事共享给你的销售复盘全混进来了。授权给它的账号能看到的，它<b>都有可能翻进来</b>。',
         '用连接器要说清 <b>5 件事</b>：哪个服务、找什么、时间范围、做什么、结果放哪。我按这个改好了，再发一次。',
       ],
       wait: { target: 'composer.send', callout: '说清范围再发', label: '发送（说清范围）' },

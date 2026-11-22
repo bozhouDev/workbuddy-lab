@@ -72,7 +72,7 @@ export const skillsLesson: GuidedLessonDef = {
       phase: 1,
       navLabel: '⚡ 是什么',
       say: [
-        '先学会<b>看卡片</b>。最上面一行是「精选技能」，每张卡右下角有两个数。把鼠标放到第一张卡的 <b>⚡</b> 上。',
+        '先学会<b>看卡片</b>。最上面一行是「精选技能」，每张卡右下角有两个数。<b>点一下</b>第一张卡的 <b>⚡</b> 数字，看它是什么意思（真机上鼠标悬停就会出提示）。',
       ],
       wait: { target: 'skills.statUse', callout: '看看 ⚡ 是什么', label: '⚡ 使用量' },
       onAction: () => ({ statTip: 'use' }),
@@ -102,7 +102,7 @@ export const skillsLesson: GuidedLessonDef = {
       id: 'stat-download',
       phase: 1,
       navLabel: 'SkillHub 的 ⬇',
-      say: ['注意，SkillHub 卡片上也有 ⬇，但旁边换成了 ☆。把鼠标放到第一张卡的 ⬇ 上。'],
+      say: ['注意，SkillHub 卡片上也有 ⬇，但旁边换成了 ☆。点一下第一张卡的 ⬇ 数字。'],
       wait: { target: 'skills.statDownload', callout: '这里的 ⬇ 是什么', label: '⬇ 下载量' },
       onAction: () => ({ statTip: 'download' }),
     },
