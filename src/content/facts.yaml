@@ -22,3 +22,38 @@
   status: verified
   verifiedAt: 2026-11-19
   source: WorkBuddy 5.11.3 权限弹窗真机截图
+- id: skill-card-stats
+  text: 技能页「精选 / 推荐」卡片上 ⚡ 是使用量、⬇ 是安装量；「SkillHub」卡片上 ⬇ 是下载量、☆ 是收藏量，鼠标悬停有文字提示。
+  status: verified
+  verifiedAt: 2026-11-23
+  source: WorkBuddy 5.11.3 客户端代码（use_count / install_count / downloads）与中文语言包
+- id: skill-add-menu
+  text: 技能页「添加技能」菜单依次为 查找技能 / 上传技能 / 创建技能；创建技能会在首页输入框预填「请帮我创建一个可以实现「……」的skill」，上传的技能包必须含 SKILL.md（name、description 必填）。
+  status: verified
+  verifiedAt: 2026-11-23
+  source: WorkBuddy 5.11.3 客户端代码与中文语言包
+- id: schedule-from-chat
+  text: 定时任务「新建 ▾ → 从对话新建」会回到首页并把输入框预填为「帮我创建一个定时任务：」；输入框已有内容时先弹出「替换输入框中的内容？」。
+  status: verified
+  verifiedAt: 2026-11-23
+  source: WorkBuddy 5.11.3 客户端代码与中文语言包
+- id: mcp-form-transport
+  text: 「添加 MCP 服务器」表单的传输类型分本地命令（stdio）和远程 URL 两类；教程里写的选项文字是教学概括，真机下拉框的确切文字待核对。
+  status: pending
+  source: 语言包里没找到传输类型选项文案，待在 5.11.3 真机截图核对
+- id: feishu-capabilities
+  text: 飞书连接器详情「可用功能」里的具体条目（读文档、读群消息、多维表格、发消息、删除文档等）以真机为准，模拟器里是教学示例。
+  status: pending
+  source: 待截取 5.11.3 飞书连接器详情页
+- id: phone-work-modes
+  text: 手机端派活分「云端工作」和「连接电脑」两种方式，云端访问不到本机文件；模拟器里手机界面是教学抽象，入口文字待核对。
+  status: pending
+  source: 云端限制文案来自 5.11.3 语言包；手机端界面待截图核对
+- id: schedule-default-permission
+  text: 从对话新建的定时任务，执行权限默认是「需逐次确认」还是「免确认执行」待核对；模拟器按需逐次确认演示，让学员自己改成免确认。
+  status: pending
+  source: 待在 5.11.3 真机从对话新建一次后查看编辑弹窗
+- id: schedule-run-cost
+  text: 定时任务每次运行都按普通任务消耗额度（用限时免费模型时不扣积分）；具体计费口径以客户端为准。
+  status: pending
+  source: 待核对定时任务运行是否与普通对话同口径计费

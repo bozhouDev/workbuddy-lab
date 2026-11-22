@@ -89,19 +89,21 @@ const chapters: { n: string; t: string; items: ChapterItem[] }[] = [
     n: '03',
     t: '能力扩展',
     items: [
-      { t: '怎么选：专家 / 技能 / 连接器', href: '/features/extend/choose/' },
-      { t: '专家', href: '/features/extend/experts/' },
-      { t: '技能 Skill', href: '/features/extend/skills/' },
-      { t: '连接器', href: '/features/extend/connectors/' },
-      { t: '资料库', href: '/features/extend/library/' },
+      { t: '怎么选：专家 / 技能 / 连接器', href: '/features/extend/choose/', sim: true },
+      { t: '专家', href: '/features/extend/experts/', sim: true },
+      { t: '技能 Skill', href: '/features/extend/skills/', sim: true },
+      { t: '做一个自己的技能', href: '/features/extend/make-skill/', sim: true },
+      { t: '连接器', href: '/features/extend/connectors/', sim: true },
+      { t: '自定义连接器：做一个自己的 MCP', href: '/features/extend/custom-connector/', sim: true },
+      { t: '资料库', href: '/features/extend/library/', sim: true },
     ],
   },
   {
     n: '04',
     t: '自动化',
     items: [
-      { t: '定时任务', href: '/features/automation/schedule/' },
-      { t: '助理：手机遥控电脑', href: '/features/automation/assistant/' },
+      { t: '定时任务', href: '/features/automation/schedule/', sim: true },
+      { t: '助理：手机遥控电脑', href: '/features/automation/assistant/', sim: true },
     ],
   },
 ];
