@@ -29,6 +29,11 @@ import { GuidanceCallout } from './GuidanceCue';
 import type { GuidedShellState, GuidedTargetId } from './guidedTypes';
 import type { PopoverId } from './types';
 import { SettingsViews5113 } from './SettingsViews5113';
+import { ExtensionsViews5113 } from './ExtensionsViews5113';
+import { ScheduleView5113 } from './ScheduleView5113';
+import { LibraryView5113, MobileLinkPopover, PhonePanel } from './LibraryPhoneViews';
+import { SLASH_SKILLS_BASE } from './extensionsData';
+import { FakeQr, LetterIcon } from './targetKit';
 
 interface GuidedWorkBuddyProps {
   shell: GuidedShellState;
@@ -61,14 +66,17 @@ export function GuidedWorkBuddy({
   onNewTask,
   onAsideClick,
 }: GuidedWorkBuddyProps) {
+  // 不在首页、但下一步要点首页输入框的按钮时，提示学员先点「新建任务」回首页
   const isNeedBackToHome =
-    shell.view === 'chat' &&
-    (waitTarget === 'composer.send' ||
-      waitTarget === 'composer.group' ||
-      waitTarget === 'composer.model' ||
-      waitTarget === 'composer.plus' ||
-      waitTarget === 'composer.mention' ||
-      waitTarget === 'composer.permission');
+    shell.view !== 'home' && shell.view !== 'settings' && Boolean(waitTarget?.startsWith('composer.'));
+  // 第 3、4 章的三个侧栏入口：作为课程目标时可点进对应页面
+  const navTargets: Record<string, GuidedTargetId> = {
+    extensions: 'nav.extensions',
+    schedule: 'nav.schedule',
+    library: 'nav.library',
+  };
+  /** 新视图共用的目标参数 */
+  const kitProps = { waitTarget, waitCallout, urgent, onTargetClick, onAsideClick };
   const ring = (id: GuidedTargetId) =>
     waitTarget === id ? (urgent ? 'sim-ring-urgent' : 'sim-ring') : '';
 
@@ -254,29 +262,36 @@ export function GuidedWorkBuddy({
           {[
             { id: 'newTask', label: '新建任务', icon: <NewTaskIcon size={16} />, active: shell.view === 'home' },
             { id: 'assistant', label: '助理', badge: 'BETA', icon: <AssistantIcon size={16} /> },
-            { id: 'extensions', label: '专家·技能·连接器', icon: <ExtensionsIcon size={16} /> },
-            { id: 'schedule', label: '定时任务', icon: <ScheduleIcon size={16} /> },
-            { id: 'library', label: '资料库', icon: <LibraryIcon size={16} /> },
+            { id: 'extensions', label: '专家·技能·连接器', icon: <ExtensionsIcon size={16} />, active: shell.view === 'extensions' },
+            { id: 'schedule', label: '定时任务', icon: <ScheduleIcon size={16} />, active: shell.view === 'schedule' },
+            { id: 'library', label: '资料库', icon: <LibraryIcon size={16} />, active: shell.view === 'library' },
             { id: 'discover', label: '发现', icon: <DiscoverIcon size={16} /> },
           ].map((it) => {
             const highlightNewTask = it.id === 'newTask' && isNeedBackToHome;
+            const navTarget = navTargets[it.id];
+            const isNavTarget = Boolean(navTarget) && waitTarget === navTarget;
             return (
               <button
                 key={it.label}
                 type="button"
+                data-guided-target={navTarget}
                 onClick={(e) => {
                   e.stopPropagation();
                   if (it.id === 'newTask') {
                     onNewTask();
                     return;
                   }
-                  onAsideClick(it.label, `<b>${it.label}</b>这节课先不用点，跟着右边蓝圈步骤走就行。`);
+                  if (isNavTarget) {
+                    onTargetClick(navTarget);
+                    return;
+                  }
+                  onAsideClick(it.label, `<b>${it.label}</b>这一步先不用点，跟着右边蓝圈步骤走就行。`);
                 }}
                 className={`relative w-full border-0 text-left flex items-center ${
                   shell.sidebarCollapsed ? 'justify-center' : 'gap-2.5 px-2.5'
                 } py-[7px] rounded-lg cursor-pointer ${
                   it.active ? 'bg-[#eaeae8] font-medium text-[#111318]' : 'bg-transparent text-[#2b2f36] hover:bg-[#efefef]'
-                } ${highlightNewTask ? 'sim-ring' : ''}`}
+                } ${highlightNewTask ? 'sim-ring' : ''} ${isNavTarget ? ring(navTarget) : ''}`}
               >
                 {it.icon}
                 {!shell.sidebarCollapsed && (
@@ -290,8 +305,9 @@ export function GuidedWorkBuddy({
                   </>
                 )}
                 {highlightNewTask && (
-                  <GuidanceCallout text="看完点这里回新对话" placement="right" />
+                  <GuidanceCallout text="先点这里回到首页" placement="right" />
                 )}
+                {isNavTarget && waitCallout && <GuidanceCallout text={waitCallout} placement="right" />}
               </button>
             );
           })}
@@ -389,14 +405,41 @@ export function GuidedWorkBuddy({
           {!shell.sidebarCollapsed && (
             <div className="flex items-center gap-2">
               <BellIcon size={15} />
-              <MobileLinkIcon size={15} />
+              <button
+                type="button"
+                data-guided-target="nav.mobileLink"
+                aria-label="连接移动设备"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOrAside(
+                    'nav.mobileLink',
+                    '移动设备',
+                    '这个小手机图标是连接手机的入口，打开「允许移动设备远程连接」后扫码就能在手机上派活。',
+                    'mobile'
+                  );
+                }}
+                className={`relative border-0 bg-transparent hover:bg-[#eaeae8] rounded-md p-0.5 inline-flex cursor-pointer text-[#5c5f66] ${ring('nav.mobileLink')}`}
+              >
+                <MobileLinkIcon size={15} />
+                {waitTarget === 'nav.mobileLink' && waitCallout && (
+                  <GuidanceCallout text={waitCallout} placement="top" align="end" />
+                )}
+              </button>
             </div>
           )}
         </div>
       </aside>
 
-      {/* ===== 主工作区：首页 OR 带真实积分消耗的对话 + 右侧产物区 ===== */}
-      {shell.view === 'home' ? (
+      {shell.popover === 'mobile' && <MobileLinkPopover shell={shell} {...kitProps} />}
+
+      {/* ===== 主工作区：第 3、4 章的页面 / 首页 / 带真实积分消耗的对话 + 右侧产物区 ===== */}
+      {shell.view === 'extensions' ? (
+        <ExtensionsViews5113 shell={shell} {...kitProps} />
+      ) : shell.view === 'schedule' ? (
+        <ScheduleView5113 shell={shell} {...kitProps} />
+      ) : shell.view === 'library' ? (
+        <LibraryView5113 shell={shell} {...kitProps} />
+      ) : shell.view === 'home' ? (
         <div className="flex-1 min-w-0 relative flex flex-col items-center justify-center px-6 xl:px-10 pb-8 bg-white">
           <div className="absolute right-4 top-3 text-[#6b7079]">
             <PanelRightIcon size={16} />
@@ -643,6 +686,45 @@ export function GuidedWorkBuddy({
                     <span className="text-[12px] text-[#8c9099] truncate font-mono">{f.dir}</span>
                   </button>
                 ))}
+              </div>
+            )}
+
+            {/* / 技能菜单：自定义技能和刚装的技能排在最前面（真机内置 + 已安装共 27 个起） */}
+            {shell.slashMenuOpen && (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="sim-pop-up absolute left-2 bottom-[96px] z-30 w-[320px] rounded-[14px] bg-white border border-[#e6e6e3] shadow-[0_14px_36px_rgba(17,19,24,0.16)] p-1.5 flex flex-col text-[13px]"
+              >
+                <div className="px-2.5 pt-1 pb-1.5 text-[11.5px] text-[#8c9099]">
+                  技能 ({27 + shell.installedSkillIds.length + shell.customSkills.length})
+                </div>
+                {[
+                  ...shell.customSkills.map((n) => ({ name: n, desc: '用户自定义 · 群聊整理成五栏筹备纪要' })),
+                  ...(shell.installedSkillIds.length ? [{ name: 'WPS Office 全家桶', desc: '用自然语言操作 WPS 文字 / 表格 / 演示' }] : []),
+                  ...SLASH_SKILLS_BASE,
+                ].map((sk, idx) => {
+                  const isTarget = idx === 0 && waitTarget === 'slashMenu.pick';
+                  return (
+                    <button
+                      key={sk.name}
+                      type="button"
+                      data-guided-target={idx === 0 ? 'slashMenu.pick' : undefined}
+                      onClick={() =>
+                        idx === 0
+                          ? handleOrAside('slashMenu.pick', sk.name, '选中这个技能。')
+                          : onAsideClick(sk.name, `内置技能 <b>${sk.name}</b>：${sk.desc}。这节课要选的是蓝圈那个。`)
+                      }
+                      className={`relative w-full text-left border-0 bg-transparent hover:bg-[#f4f4f5] rounded-lg px-2.5 py-1.5 flex items-center gap-2.5 cursor-pointer ${isTarget ? ring('slashMenu.pick') : ''}`}
+                    >
+                      <LetterIcon name={sk.name} color={idx === 0 ? '#3355e0' : '#9ea3ad'} size={24} />
+                      <span className="min-w-0">
+                        <span className="block font-medium text-[#111318] truncate">{sk.name}</span>
+                        <span className="block text-[11.5px] text-[#8c9099] truncate">{sk.desc}</span>
+                      </span>
+                      {isTarget && waitCallout && <GuidanceCallout text={waitCallout} placement="right" />}
+                    </button>
+                  );
+                })}
               </div>
             )}
 
@@ -922,6 +1004,51 @@ export function GuidedWorkBuddy({
                       )}
                     </button>
 
+                    <button
+                      type="button"
+                      data-guided-target="composer.slash"
+                      onClick={() =>
+                        handleOrAside(
+                          'composer.slash',
+                          '/ 调用技能',
+                          '在输入框里打 <b>/</b> 会弹出技能列表，选一个，这次任务就按这个技能的步骤来做。'
+                        )
+                      }
+                      className={`relative h-7 px-2 rounded-lg border border-[#e6e6e3] bg-[#fafaf9] hover:bg-[#f2f2f0] text-[12px] font-medium text-[#4a4f57] inline-flex items-center gap-1 cursor-pointer transition-colors ${ring(
+                        'composer.slash'
+                      )}`}
+                    >
+                      <span className="font-mono text-accent-600 font-bold">/</span>
+                      <span>技能</span>
+                      {waitTarget === 'composer.slash' && waitCallout && (
+                        <GuidanceCallout text={waitCallout} placement="top" align="start" />
+                      )}
+                    </button>
+
+                    {/* 输入框里挂着的专家 / 技能 / 连接器胶囊 */}
+                    {shell.composerChips.map((c) => (
+                      <span
+                        key={`${c.kind}-${c.label}`}
+                        className="sim-pop-up h-6 px-2 rounded-full bg-[#f3f5fe] border border-accent-200 text-accent-700 text-[11.5px] font-semibold inline-flex items-center gap-1 max-w-[170px]"
+                        title={c.label}
+                      >
+                        <span className="text-[10px] text-accent-500">{c.kind === 'expert' ? '专家' : c.kind === 'skill' ? '技能' : '连接器'}</span>
+                        <span className="truncate">{c.label}</span>
+                        {/* × 移除：真机点了会把胶囊拿掉，课程里只做解释，避免打乱当前步骤 */}
+                        <button
+                          type="button"
+                          aria-label={`移除 ${c.label}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onAsideClick('移除', `点 × 会把「${c.label}」从这次任务里拿掉。换活的时候记得移除，这一步先留着它。`);
+                          }}
+                          className="border-0 bg-transparent p-0 text-accent-400 hover:text-accent-700 cursor-pointer leading-none"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+
                     {shell.planOn && (
                       <span className="sim-pop-up h-6 px-2 rounded-full bg-accent-50 border border-accent-200 text-accent-700 text-[11.5px] font-semibold inline-flex items-center">
                         计划 Plan
@@ -1070,7 +1197,17 @@ export function GuidedWorkBuddy({
 
             {chat && (
               <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-5">
-                {/* 用户消息 */}
+                {/* 用户消息（上方挂着这次带上的专家 / 技能 / 连接器） */}
+                {chat.promptChips && chat.promptChips.length > 0 && (
+                  <div className="self-end flex flex-wrap justify-end gap-1.5 -mb-3">
+                    {chat.promptChips.map((c) => (
+                      <span key={`${c.kind}-${c.label}`} className="h-6 px-2 rounded-full bg-[#f3f5fe] border border-accent-200 text-accent-700 text-[11.5px] font-semibold inline-flex items-center gap-1">
+                        <span className="text-[10px] text-accent-500">{c.kind === 'expert' ? '专家' : c.kind === 'skill' ? '技能' : '连接器'}</span>
+                        {c.label}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <div className="sim-msg-rise self-end max-w-[85%] rounded-[16px] bg-[#f4f4f5] px-4 py-2.5 text-[13.5px] leading-[1.65] text-[#111318]">
                   <RichText text={chat.prompt} />
                 </div>
@@ -1168,6 +1305,45 @@ export function GuidedWorkBuddy({
                         {chat.planConfirmLabel}
                         {waitTarget === 'chat.confirmPlan' && waitCallout && (
                           <GuidanceCallout text={waitCallout} placement="top" align="start" />
+                        )}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* 操作卡片（如扫码授权、已创建定时任务），按钮可以是课程目标 */}
+                  {isDone && chat.actionCard && (
+                    <div
+                      className={`sim-msg-rise flex items-center justify-between gap-3 px-3.5 py-3 rounded-[14px] border ${
+                        chat.actionCard.tone === 'warn'
+                          ? 'bg-[#fff6ef] border-[#f6d7c2]'
+                          : chat.actionCard.tone === 'ok'
+                            ? 'bg-[#f3f5fe] border-accent-200'
+                            : 'bg-[#f7f7f6] border-[#ebebeb]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        {chat.actionCard.icon === 'qr' ? (
+                          // 扫码授权卡片：放一个明确标了「模拟」的假二维码
+                          <FakeQr size={84} />
+                        ) : (
+                          <span className="w-8 h-8 rounded-[9px] bg-white border border-[#ebebeb] text-[15px] inline-flex items-center justify-center shrink-0">
+                            {chat.actionCard.icon}
+                          </span>
+                        )}
+                        <div className="min-w-0">
+                          <div className="font-semibold text-[13px] text-[#111318] truncate">{chat.actionCard.title}</div>
+                          <div className="text-[11.5px] text-[#6b7079] truncate">{chat.actionCard.meta}</div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        data-guided-target="chat.actionCard"
+                        onClick={() => handleOrAside('chat.actionCard', chat.actionCard!.buttonLabel, '跟着右边泊舟的提示走。')}
+                        className={`relative h-8 px-3 rounded-lg border-0 bg-[#111318] text-white text-[12px] font-semibold cursor-pointer shrink-0 ${ring('chat.actionCard')}`}
+                      >
+                        {chat.actionCard.buttonLabel}
+                        {waitTarget === 'chat.actionCard' && waitCallout && (
+                          <GuidanceCallout text={waitCallout} placement="top" align="end" />
                         )}
                       </button>
                     </div>
@@ -1424,6 +1600,20 @@ export function GuidedWorkBuddy({
           )}
         </div>
       )}
+
+      {/* 顶部轻提示（召唤成功、安装成功、连接成功、定时任务已新建等） */}
+      {shell.toast && (
+        <div
+          key={shell.toast}
+          role="status"
+          className="sim-toast absolute top-3 left-1/2 z-40 px-3.5 py-2 rounded-[10px] bg-[#111318] text-white text-[12.5px] shadow-lg whitespace-nowrap pointer-events-none"
+        >
+          {shell.toast}
+        </div>
+      )}
+
+      {/* 4.2 手机模拟面板 */}
+      {shell.phonePanelOpen && <PhonePanel shell={shell} draft={shell.followupText} {...kitProps} />}
     </div>
   );
 }

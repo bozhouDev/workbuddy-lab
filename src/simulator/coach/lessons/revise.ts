@@ -169,10 +169,10 @@ export const reviseLesson: GuidedLessonDef = {
         rightTone: 'ok',
         rightHtml: '原文结构毫发无损，待办表按截止时间排好、未明确项加粗，直接更新原文件。',
       },
-      after: ['到这里，第 2 章 <b>发任务全闭环</b>（+/@ → 模式 → 权限 → 5 要素 → 看过程 → 验收 → 二次修改）已经全部走通！'],
+      after: ['到这里，第 2 章 <b>发任务全闭环</b>（+/@ → 模式 → 权限 → 5 要素 → 看过程 → 验收 → 二次修改）已经全部走通！下一章给它加能力：专家、技能、连接器。'],
       buttons: [
-        { label: '读 二次修改 完整图文', primary: true, href: '/features/send-task/revise/' },
-        { label: '去读第 3 章：能力扩展 →', href: '/features/extend/choose/' },
+        { label: '下一章：3.1 怎么选：专家 / 技能 / 连接器 →', primary: true, nextLesson: 'choose' },
+        { label: '读本节图文教程', href: '/features/send-task/revise/' },
         { label: '重来一遍', restart: true },
       ],
     },

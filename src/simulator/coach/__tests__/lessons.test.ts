@@ -21,6 +21,15 @@ import { reviewLesson } from '../lessons/review';
 import { reviseLesson } from '../lessons/revise';
 import { settingsLesson } from '../lessons/settings';
 import { taskBriefLesson } from '../lessons/taskBrief';
+import { chooseLesson } from '../lessons/choose';
+import { expertsLesson } from '../lessons/experts';
+import { skillsLesson } from '../lessons/skills';
+import { makeSkillLesson } from '../lessons/makeSkill';
+import { connectorsLesson } from '../lessons/connectors';
+import { customConnectorLesson } from '../lessons/customConnector';
+import { libraryLesson } from '../lessons/library';
+import { scheduleLesson } from '../lessons/schedule';
+import { assistantLesson } from '../lessons/assistant';
 
 // 用步骤数据驱动的课程（「认识界面」是单独写的 InterfaceLesson 组件，不在这里）
 const LESSONS: GuidedLessonDef[] = [
@@ -36,7 +45,24 @@ const LESSONS: GuidedLessonDef[] = [
   executionLesson,
   reviewLesson,
   reviseLesson,
+  chooseLesson,
+  expertsLesson,
+  skillsLesson,
+  makeSkillLesson,
+  connectorsLesson,
+  customConnectorLesson,
+  libraryLesson,
+  scheduleLesson,
+  assistantLesson,
 ];
+
+const COACH_DIR = join(process.cwd(), 'src/simulator/coach');
+
+/** 界面组件源码合在一起，用来确认课程等待的目标真的画在界面上 */
+const UI_SOURCE = readdirSync(COACH_DIR)
+  .filter((name) => name.endsWith('.tsx'))
+  .map((name) => readFileSync(join(COACH_DIR, name), 'utf8'))
+  .join('\n');
 
 const DOCS_DIR = join(process.cwd(), 'src/content/docs');
 
@@ -115,6 +141,15 @@ describe.each(LESSONS.map((l) => [l.id, l] as const))('课程：%s', (_id, lesso
       for (const b of step.buttons ?? []) {
         if (b.nextLesson) expect(ids.has(b.nextLesson), `${step.id}「${b.label}」`).toBe(true);
       }
+    }
+  });
+
+  it('等待的目标在界面源码里有对应控件（防止拼错卡住）', () => {
+    for (const step of lesson.steps) {
+      const t = step.wait?.target;
+      if (!t) continue;
+      const found = UI_SOURCE.includes(`'${t}'`) || UI_SOURCE.includes(`"${t}"`);
+      expect(found, `步骤 ${step.id} 等待的「${t}」在界面里找不到`).toBe(true);
     }
   });
 

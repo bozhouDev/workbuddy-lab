@@ -21,7 +21,9 @@ export type PopoverId =
   | 'plus'
   | 'group'
   | 'permission'
-  | 'model';
+  | 'model'
+  /** 左下角移动设备小图标弹出的连接面板（4.2） */
+  | 'mobile';
 
 export type PlusSubmenu = 'files' | 'mode';
 

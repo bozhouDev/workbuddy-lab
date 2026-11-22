@@ -1,4 +1,24 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+/**
+ * 按顺序走一节陪练课
+ * - 'btn:文字'：点陪练栏里的按钮
+ * - 'home'：点侧栏「新建任务」回首页（目标在首页输入框、当前不在首页时）
+ * - 其余：课程目标 ID，先等它亮起蓝圈（说明陪练已经在等这一步）再点，避免点早了被当成随手点
+ */
+async function walkLesson(page: Page, steps: string[]) {
+  for (const step of steps) {
+    if (step.startsWith('btn:')) {
+      await page.getByRole('button', { name: step.slice(4), exact: true }).click({ timeout: 10000 });
+    } else if (step === 'home') {
+      await page.getByRole('button', { name: '新建任务' }).first().click();
+    } else {
+      const target = page.locator(`[data-guided-target="${step}"]`).first();
+      await expect(target, `等待目标 ${step} 亮起`).toHaveClass(/sim-ring/, { timeout: 10000 });
+      await target.click();
+    }
+  }
+}
 
 test.describe('M1 首页与文章页验证', () => {
   test('首页在 390px 手机端无横向滚动', async ({ page }) => {
@@ -308,5 +328,102 @@ test.describe('第 02 章「发任务」全部 7 节泊舟陪练模拟器', () =
     await page.getByRole('button', { name: '标出被改乱的地方' }).click();
     await page.locator('[data-guided-target="chat.followupSend"]').click();
     await expect(page.getByText('模糊催改 vs 精准局部修改对比')).toBeVisible({ timeout: 6000 });
+  });
+});
+
+test.describe('第 03、04 章泊舟陪练模拟器', () => {
+  test('3.1–3.4：怎么选 → 专家 → 装技能看懂 ⚡⬇ → 做自己的技能', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/simulator/?route=choose');
+    await walkLesson(page, [
+      'btn:去看看入口在哪', 'nav.extensions', 'ext.tab.experts', 'ext.tab.connectors',
+      'composer.send', 'btn:标出问题', 'composer.send',
+    ]);
+    await expect(page.getByText('你缺什么 → 用什么')).toBeVisible({ timeout: 8000 });
+
+    await page.getByRole('button', { name: /下一节：3.2 专家/ }).click();
+    await walkLesson(page, [
+      'btn:先看不召唤专家', 'composer.send', 'btn:标出问题', 'nav.extensions', 'ext.tab.experts',
+      'experts.search', 'experts.card', 'experts.summon',
+    ]);
+    await expect(page.getByText('已成功召唤专家「PPT制作专家」')).toBeVisible();
+    await walkLesson(page, ['composer.send']);
+    await expect(page.getByText('同一个问题，两次回答')).toBeVisible({ timeout: 8000 });
+
+    await page.getByRole('button', { name: /下一节：3.3 技能/ }).click();
+    await walkLesson(page, [
+      'btn:先看不用技能', 'composer.send', 'btn:标出问题', 'nav.extensions', 'skills.statUse',
+    ]);
+    await expect(page.getByText(/使用量 40\.65w/)).toBeVisible();
+    await walkLesson(page, ['skills.statInstall']);
+    await expect(page.getByText(/安装量 75\.29w/)).toBeVisible();
+    await walkLesson(page, ['skills.tab.skillhub', 'skills.statDownload']);
+    await expect(page.getByText(/下载量 1212\.32w/)).toBeVisible();
+    await walkLesson(page, ['skills.search', 'skills.pickCard', 'skills.install', 'skills.installConfirm']);
+    await expect(page.getByText('已安装(16)')).toBeVisible();
+    await walkLesson(page, ['composer.slash', 'slashMenu.pick', 'composer.send']);
+    await expect(page.getByText('同一张表，两次结果')).toBeVisible({ timeout: 8000 });
+
+    await page.getByRole('button', { name: /下一节：3.4 做一个自己的技能/ }).click();
+    await walkLesson(page, [
+      'btn:先看偷懒只说一句', 'composer.send', 'btn:标出问题', 'nav.extensions', 'skills.addMenu',
+      'skills.addMenu.create', 'composer.send', 'nav.extensions', 'skills.installed',
+    ]);
+    await expect(page.getByText('用户自定义').first()).toBeVisible();
+    await walkLesson(page, ['home', 'composer.slash', 'slashMenu.pick', 'composer.send']);
+    await expect(page.getByText('做一个技能的 4 步')).toBeVisible({ timeout: 8000 });
+  });
+
+  test('3.5–3.7：连接飞书（对话内扫码）→ 自己做天气 MCP 并信任 → 资料库', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/simulator/?route=connectors');
+    await walkLesson(page, [
+      'btn:先看没接连接器', 'composer.send', 'nav.extensions', 'ext.tab.connectors', 'connectors.add',
+      'composer.send', 'chat.actionCard', 'nav.extensions', 'connectors.card',
+    ]);
+    await expect(page.getByText('可用功能').first()).toBeVisible();
+    await walkLesson(page, ['home', 'composer.send', 'composer.send', 'btn:标出问题', 'composer.send']);
+    await expect(page.getByText('同一个连接器，两种说法')).toBeVisible({ timeout: 8000 });
+
+    await page.getByRole('button', { name: /下一节：3.6 自定义连接器/ }).click();
+    await walkLesson(page, [
+      'btn:先问问明天下不下雨', 'composer.send', 'btn:标出问题', 'composer.send', 'nav.extensions',
+      'ext.tab.connectors', 'connectors.custom', 'mcp.fill', 'mcp.submit', 'mcp.trust',
+    ]);
+    await expect(page.getByText('1/1 个工具已启用')).toBeVisible();
+    await walkLesson(page, ['home', 'composer.send']);
+    await expect(page.getByText('调用 my-weather · get_forecast：返回 3 天预报')).toBeVisible({ timeout: 8000 });
+    await expect(page.getByText('同一个问题，两次回答')).toBeVisible({ timeout: 8000 });
+
+    await page.getByRole('button', { name: /下一节：3.7 资料库/ }).click();
+    await walkLesson(page, [
+      'btn:看看堆满了会怎样', 'composer.send', 'btn:标出问题', 'nav.library', 'library.newCategory',
+      'library.upload', 'composer.send',
+    ]);
+    await expect(page.getByText('资料库建库 4 条')).toBeVisible({ timeout: 8000 });
+  });
+
+  test('4.1 定时任务建好并看运行记录 → 4.2 手机遥控电脑', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/simulator/?route=schedule');
+    await walkLesson(page, [
+      'btn:看看直接设自动会怎样', 'nav.schedule', 'schedule.newMenu', 'schedule.fromChat',
+    ]);
+    // 从对话新建：输入框预填真机文案
+    await expect(page.getByText(/帮我创建一个定时任务：每天 08:30 执行/).first()).toBeVisible();
+    await walkLesson(page, ['composer.send', 'nav.schedule', 'schedule.openTask', 'schedule.permFull', 'schedule.run', 'schedule.save']);
+    await expect(page.getByText('每天 08:30 · 下一次运行 明天 08:30')).toBeVisible();
+    await walkLesson(page, ['schedule.fastForward', 'schedule.viewRecords']);
+    await expect(page.getByText('已错过计划时间，将补跑一次')).toBeVisible();
+    await walkLesson(page, ['schedule.recordDetail']);
+    await expect(page.getByText('第 1 次运行成功')).toBeVisible();
+    await expect(page.getByText('定时任务清单')).toBeVisible({ timeout: 8000 });
+
+    await page.getByRole('button', { name: /下一节：4.2 助理/ }).click();
+    await walkLesson(page, ['btn:去连手机', 'nav.mobileLink', 'mobile.toggle', 'btn:假装用手机扫好了（模拟）', 'phone.send']);
+    await expect(page.getByText(/云端沙箱访问不到本机文件/)).toBeVisible();
+    await walkLesson(page, ['phone.modeComputer', 'phone.send']);
+    await expect(page.getByText('云端工作 vs 连接电脑')).toBeVisible({ timeout: 8000 });
+    await expect(page.getByText('来自手机 · 读书会筹备纪要').first()).toBeVisible();
   });
 });

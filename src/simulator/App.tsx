@@ -154,7 +154,8 @@ export default function App() {
                 aria-label="模拟课程列表"
                 className="sim-pop-up absolute left-0 top-[40px] z-50 w-[304px] max-h-[75vh] overflow-y-auto rounded-[14px] bg-white border border-gray-200 shadow-[0_18px_46px_rgba(17,19,24,0.16)] p-2 flex flex-col gap-0.5"
               >
-                {(['00 入门', '01 开局设置', '02 发任务'] as const).map((chapter) => (
+                {/* 章节按课程目录自动分组，加课不用再改这里 */}
+                {[...new Set(LESSON_CATALOG.map((l) => l.chapter))].map((chapter) => (
                   <div key={chapter} className="mb-1 last:mb-0">
                     <div className="px-2.5 pt-1.5 pb-1 text-[11px] font-medium text-gray-400">
                       {chapter}
@@ -194,11 +195,6 @@ export default function App() {
                   </div>
                 ))}
 
-                <div className="h-px bg-gray-100 my-1 mx-1" />
-                <div className="px-2.5 py-1.5 text-[11.5px] text-gray-400 flex items-center justify-between">
-                  <span>03 能力扩展 / 04 自动化</span>
-                  <span>下批上线</span>
-                </div>
               </div>
             )}
           </div>

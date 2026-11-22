@@ -232,6 +232,20 @@ header.header {
   animation: sim-callout-bob 1.5s ease-in-out infinite;
 }
 
+/* 顶部轻提示：弹出后停留约 2.6 秒自动淡出（和真机 toast 一样不用手动关） */
+@keyframes sim-toast {
+  0% { opacity: 0; transform: translate(-50%, -6px); }
+  8% { opacity: 1; transform: translate(-50%, 0); }
+  85% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -6px); visibility: hidden; }
+}
+.sim-toast {
+  animation: sim-toast 3s ease both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sim-toast { animation: none; }
+}
+
 .sim-pop-up {
   animation: sim-pop-up 180ms cubic-bezier(0.2, 0.85, 0.25, 1) both;
 }

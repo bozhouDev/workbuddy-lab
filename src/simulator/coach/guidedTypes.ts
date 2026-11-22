@@ -13,7 +13,16 @@ export type LessonId =
   | 'task-brief'
   | 'execution'
   | 'review'
-  | 'revise';
+  | 'revise'
+  | 'choose'
+  | 'experts'
+  | 'skills'
+  | 'make-skill'
+  | 'connectors'
+  | 'custom-connector'
+  | 'library'
+  | 'schedule'
+  | 'assistant';
 
 export interface LessonNavMeta {
   id: LessonId;
@@ -37,6 +46,15 @@ export const LESSON_CATALOG: readonly LessonNavMeta[] = [
   { id: 'execution', code: '2.5', chapter: '02 发任务', title: '看执行过程', guideUrl: '/features/send-task/execution/' },
   { id: 'review', code: '2.6', chapter: '02 发任务', title: '检查结果', guideUrl: '/features/send-task/review/' },
   { id: 'revise', code: '2.7', chapter: '02 发任务', title: '二次修改', guideUrl: '/features/send-task/revise/' },
+  { id: 'choose', code: '3.1', chapter: '03 能力扩展', title: '怎么选：专家 / 技能 / 连接器', guideUrl: '/features/extend/choose/' },
+  { id: 'experts', code: '3.2', chapter: '03 能力扩展', title: '专家', guideUrl: '/features/extend/experts/' },
+  { id: 'skills', code: '3.3', chapter: '03 能力扩展', title: '技能：找、看懂、装、用', guideUrl: '/features/extend/skills/' },
+  { id: 'make-skill', code: '3.4', chapter: '03 能力扩展', title: '做一个自己的技能', guideUrl: '/features/extend/make-skill/' },
+  { id: 'connectors', code: '3.5', chapter: '03 能力扩展', title: '连接器：接飞书', guideUrl: '/features/extend/connectors/' },
+  { id: 'custom-connector', code: '3.6', chapter: '03 能力扩展', title: '自定义连接器：做一个自己的 MCP', guideUrl: '/features/extend/custom-connector/' },
+  { id: 'library', code: '3.7', chapter: '03 能力扩展', title: '资料库', guideUrl: '/features/extend/library/' },
+  { id: 'schedule', code: '4.1', chapter: '04 自动化', title: '定时任务：建一个，看结果', guideUrl: '/features/automation/schedule/' },
+  { id: 'assistant', code: '4.2', chapter: '04 自动化', title: '助理：手机遥控电脑', guideUrl: '/features/automation/assistant/' },
 ];
 
 export type SettingsTab = 'general' | 'memory' | 'personalization';
@@ -74,7 +92,59 @@ export type GuidedTargetId =
   | 'approval.cancel'
   | 'approval.askPlain'
   | 'chat.confirmPlan'
-  | 'chat.followupSend';
+  | 'chat.followupSend'
+  // 第 3、4 章：侧栏入口与输入框扩展
+  | 'nav.extensions'
+  | 'nav.schedule'
+  | 'nav.library'
+  | 'nav.mobileLink'
+  | 'composer.slash'
+  | 'slashMenu.pick'
+  | 'chat.actionCard'
+  // 专家·技能·连接器页（顶部三个标签）
+  | 'ext.tab.experts'
+  | 'ext.tab.skills'
+  | 'ext.tab.connectors'
+  // 专家
+  | 'experts.search'
+  | 'experts.card'
+  | 'experts.summon'
+  // 技能
+  | 'skills.statUse'
+  | 'skills.statInstall'
+  | 'skills.tab.skillhub'
+  | 'skills.statDownload'
+  | 'skills.search'
+  | 'skills.pickCard'
+  | 'skills.install'
+  | 'skills.installConfirm'
+  | 'skills.addMenu'
+  | 'skills.addMenu.create'
+  | 'skills.installed'
+  // 连接器
+  | 'connectors.add'
+  | 'connectors.card'
+  | 'connectors.custom'
+  | 'mcp.fill'
+  | 'mcp.submit'
+  | 'mcp.trust'
+  // 资料库
+  | 'library.newCategory'
+  | 'library.upload'
+  // 定时任务
+  | 'schedule.newMenu'
+  | 'schedule.fromChat'
+  | 'schedule.openTask'
+  | 'schedule.permFull'
+  | 'schedule.run'
+  | 'schedule.save'
+  | 'schedule.fastForward'
+  | 'schedule.viewRecords'
+  | 'schedule.recordDetail'
+  // 助理（手机遥控）
+  | 'mobile.toggle'
+  | 'phone.modeComputer'
+  | 'phone.send';
 
 export interface CloudMemoryItem {
   id: string;
@@ -120,10 +190,65 @@ export interface ChatRunSpec {
   approvalCard?: ChatApprovalCard;
   /** Plan 模式下展示方案确认按钮 */
   planConfirmLabel?: string;
+  /** 用户消息上方挂着的胶囊（专家 / 技能 / 连接器） */
+  promptChips?: ComposerChip[];
+  /** 回复末尾的操作卡片（如「已创建定时任务 · 去查看」「扫码授权」），按钮可作为等待目标 */
+  actionCard?: {
+    icon: string;
+    title: string;
+    meta: string;
+    buttonLabel: string;
+    tone?: 'ok' | 'warn' | 'plain';
+  };
+}
+
+/** 输入框里挂着的胶囊（召唤的专家 / 选中的技能 / 指定的连接器） */
+export interface ComposerChip {
+  kind: 'expert' | 'skill' | 'connector';
+  label: string;
+}
+
+/** 专家·技能·连接器页顶部的三个标签 */
+export type ExtTab = 'experts' | 'skills' | 'connectors';
+
+/** 一条定时任务（对照 5.11.3 定时任务卡片与编辑弹窗） */
+export interface ScheduledTask {
+  id: string;
+  name: string;
+  prompt: string;
+  /** 卡片底部的频率文案，如「每天 08:30」 */
+  freq: string;
+  on: boolean;
+  /** 执行权限：免确认执行 / 需逐次确认 */
+  permission: 'full' | 'confirm';
+  nextRun: string;
+}
+
+/** 一条运行记录（对照「运行记录」表：任务名称 / 状态 / 运行时间 / 操作） */
+export interface ScheduleRecord {
+  id: string;
+  nth: number;
+  taskName: string;
+  status: 'success' | 'catchup' | 'failed';
+  /** 状态列显示的文字 */
+  statusText: string;
+  time: string;
+  /** 补充说明（如「已错过计划时间，将补跑一次」） */
+  note?: string;
+  artifactFile?: string;
+  summary?: string;
+  artifactLines?: string[];
+}
+
+/** 手机模拟面板里的一条消息 */
+export interface PhoneMessage {
+  from: 'me' | 'bot';
+  text: string;
+  tone?: 'warn' | 'ok';
 }
 
 export interface GuidedShellState {
-  view: 'home' | 'chat' | 'settings';
+  view: 'home' | 'chat' | 'settings' | 'extensions' | 'schedule' | 'library';
   settingsTab: SettingsTab;
   popover: PopoverId;
   plusSubmenu: PlusSubmenu;
@@ -167,6 +292,51 @@ export interface GuidedShellState {
   chatStepIndex: number;
   streamedCharCount: number;
   showArtifacts: boolean;
+  // ===== 第 3 章：专家·技能·连接器 =====
+  extTab: ExtTab;
+  /** 输入框里挂着的胶囊 */
+  composerChips: ComposerChip[];
+  /** 输入框的 / 技能菜单 */
+  slashMenuOpen: boolean;
+  /** 顶部轻提示（如「已成功召唤专家」） */
+  toast: string | null;
+  expertSearch: string;
+  expertDetailId: string | null;
+  skillTab: 'recommend' | 'skillhub' | 'plugins';
+  skillSearch: string;
+  /** 当前亮起的计数提示，如 'use' / 'install' / 'download' */
+  statTip: 'use' | 'install' | 'download' | null;
+  skillDetailId: string | null;
+  skillInstallConfirmOpen: boolean;
+  /** 从市场装上的技能 id */
+  installedSkillIds: string[];
+  /** 自己做的技能名（「已安装 · 用户自定义」分组） */
+  customSkills: string[];
+  addSkillMenuOpen: boolean;
+  /** 是否打开「已安装」列表 */
+  installedPanelOpen: boolean;
+  connectedIds: string[];
+  connectorDetailId: string | null;
+  mcpFormOpen: boolean;
+  mcpFormFilled: boolean;
+  /** 自定义 MCP：trusted 为 false 时条目里显示「信任 / 拒绝」 */
+  customConnectors: Array<{ name: string; tools: string; trusted: boolean }>;
+  // ===== 3.7 资料库 =====
+  libraryCategories: string[];
+  libraryFiles: Array<{ name: string; category: string }>;
+  // ===== 4.1 定时任务 =====
+  scheduleTab: 'tasks' | 'records';
+  scheduleNewMenuOpen: boolean;
+  scheduledTasks: ScheduledTask[];
+  scheduleModalOpen: boolean;
+  scheduleTestRan: boolean;
+  scheduleRecords: ScheduleRecord[];
+  scheduleRecordDetailId: string | null;
+  // ===== 4.2 助理 =====
+  mobileLinkOn: boolean;
+  phonePanelOpen: boolean;
+  phoneMode: 'cloud' | 'computer';
+  phoneMessages: PhoneMessage[];
 }
 
 export type CoachCardSpec =

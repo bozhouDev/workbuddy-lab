@@ -11,7 +11,7 @@ import { GuidedWorkBuddy } from './GuidedWorkBuddy';
 import type { FeedItem, FeedItemInput, NavTrailStep, PhaseIndex, PopoverId } from './types';
 
 const AUTO_COLLAPSE_WIDTH = 1140;
-const STORAGE_PREFIX = 'wblab:guided:v4:';
+const STORAGE_PREFIX = 'wblab:guided:v5:';
 
 let msgSeq = 0;
 const nextId = () => `gd-${++msgSeq}`;
@@ -42,6 +42,24 @@ async function loadLessonDef(id: Exclude<LessonId, 'interface'>): Promise<Guided
       return (await import('./lessons/review')).reviewLesson;
     case 'revise':
       return (await import('./lessons/revise')).reviseLesson;
+    case 'choose':
+      return (await import('./lessons/choose')).chooseLesson;
+    case 'experts':
+      return (await import('./lessons/experts')).expertsLesson;
+    case 'skills':
+      return (await import('./lessons/skills')).skillsLesson;
+    case 'make-skill':
+      return (await import('./lessons/makeSkill')).makeSkillLesson;
+    case 'connectors':
+      return (await import('./lessons/connectors')).connectorsLesson;
+    case 'custom-connector':
+      return (await import('./lessons/customConnector')).customConnectorLesson;
+    case 'library':
+      return (await import('./lessons/library')).libraryLesson;
+    case 'schedule':
+      return (await import('./lessons/schedule')).scheduleLesson;
+    case 'assistant':
+      return (await import('./lessons/assistant')).assistantLesson;
   }
 }
 
@@ -90,6 +108,7 @@ function isAlreadySatisfiedByState(target: GuidedTargetId | undefined, s: Guided
   if (target === 'composer.plus' && s.popover === 'plus') return true;
   if (target === 'composer.permission' && s.popover === 'permission') return true;
   if (target === 'composer.mention' && s.mentionMenuOpen) return true;
+  if (target === 'nav.mobileLink' && s.popover === 'mobile') return true;
   return false;
 }
 
