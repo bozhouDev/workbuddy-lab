@@ -6,6 +6,9 @@ import { expect, test, type Page } from '@playwright/test';
  * - 'home'：点侧栏「新建任务」回首页（目标在首页输入框、当前不在首页时）
  * - 其余：课程目标 ID，先等它亮起蓝圈（说明陪练已经在等这一步）再点，避免点早了被当成随手点
  */
+/** 第 3、4 章走课用的窗口宽度，可用 SIM_WIDTH=1024 环境变量换窄屏再跑一遍 */
+const WALK_WIDTH = Number(process.env.SIM_WIDTH ?? 1440);
+
 async function walkLesson(page: Page, steps: string[]) {
   for (const step of steps) {
     if (step.startsWith('btn:')) {
@@ -333,7 +336,7 @@ test.describe('第 02 章「发任务」全部 7 节泊舟陪练模拟器', () =
 
 test.describe('第 03、04 章泊舟陪练模拟器', () => {
   test('3.1–3.4：怎么选 → 专家 → 装技能看懂 ⚡⬇ → 做自己的技能', async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.setViewportSize({ width: WALK_WIDTH, height: 900 });
     await page.goto('/simulator/?route=choose');
     await walkLesson(page, [
       'btn:去看看入口在哪', 'nav.extensions', 'ext.tab.experts', 'ext.tab.connectors',
@@ -375,7 +378,7 @@ test.describe('第 03、04 章泊舟陪练模拟器', () => {
   });
 
   test('3.5–3.7：连接飞书（对话内扫码）→ 自己做天气 MCP 并信任 → 资料库', async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.setViewportSize({ width: WALK_WIDTH, height: 900 });
     await page.goto('/simulator/?route=connectors');
     await walkLesson(page, [
       'btn:先看没接连接器', 'composer.send', 'nav.extensions', 'ext.tab.connectors', 'connectors.add',
@@ -404,7 +407,7 @@ test.describe('第 03、04 章泊舟陪练模拟器', () => {
   });
 
   test('4.1 定时任务建好并看运行记录 → 4.2 手机遥控电脑', async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.setViewportSize({ width: WALK_WIDTH, height: 900 });
     await page.goto('/simulator/?route=schedule');
     await walkLesson(page, [
       'btn:看看直接设自动会怎样', 'nav.schedule', 'schedule.newMenu', 'schedule.fromChat',
@@ -431,6 +434,24 @@ test.describe('第 03、04 章泊舟陪练模拟器', () => {
     await expect(page.getByText(/云端沙箱访问不到本机文件/)).toBeVisible();
     await walkLesson(page, ['phone.modeComputer', 'phone.send']);
     await expect(page.getByText('云端工作 vs 连接电脑')).toBeVisible({ timeout: 8000 });
-    await expect(page.getByText('来自手机 · 读书会筹备纪要').first()).toBeVisible();
+    // 窄屏侧栏自动折叠，「最近」列表不显示，只在宽屏检查
+    if (WALK_WIDTH >= 1140) await expect(page.getByText('来自手机 · 读书会筹备纪要').first()).toBeVisible();
+  });
+
+  test('1100 宽侧栏折叠也能找到手机入口；中途逛走后侧栏蓝圈能带回当前页面', async ({ page }) => {
+    await page.setViewportSize({ width: 1100, height: 800 });
+    await page.goto('/simulator/?route=assistant');
+    await walkLesson(page, ['btn:去连手机', 'nav.mobileLink', 'mobile.toggle']);
+    await expect(page.getByText('移动端 App')).toBeVisible();
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/simulator/?route=choose');
+    await walkLesson(page, ['btn:去看看入口在哪', 'nav.extensions']);
+    // 正等着点「专家」标签时，学员跑回了首页
+    await page.getByRole('button', { name: '新建任务' }).first().click();
+    const back = page.locator('[data-guided-target="nav.extensions"]');
+    await expect(back).toHaveClass(/sim-ring/);
+    await back.click();
+    await walkLesson(page, ['ext.tab.experts']);
   });
 });

@@ -46,6 +46,8 @@ interface GuidedWorkBuddyProps {
   onClosePopover: () => void;
   onSelectHistoryChat: (chatId: string) => void;
   onNewTask: () => void;
+  /** 回到当前步骤所在页面（学员中途逛走后用） */
+  onBackToView: (view: GuidedShellState['view']) => void;
   onAsideClick: (label: string, explain: string) => void;
 }
 
@@ -64,6 +66,7 @@ export function GuidedWorkBuddy({
   onClosePopover,
   onSelectHistoryChat,
   onNewTask,
+  onBackToView,
   onAsideClick,
 }: GuidedWorkBuddyProps) {
   // 不在首页、但下一步要点首页输入框的按钮时，提示学员先点「新建任务」回首页
@@ -75,6 +78,17 @@ export function GuidedWorkBuddy({
     schedule: 'nav.schedule',
     library: 'nav.library',
   };
+  // 当前要点的目标在哪个页面上；学员不在那个页面时，高亮对应侧栏入口，点它回去
+  const targetView: 'extensions' | 'schedule' | 'library' | null = !waitTarget
+    ? null
+    : /^(ext|skills|experts|connectors|mcp)\./.test(waitTarget)
+      ? 'extensions'
+      : waitTarget.startsWith('schedule.')
+        ? 'schedule'
+        : waitTarget.startsWith('library.')
+          ? 'library'
+          : null;
+  const backToView = targetView && shell.view !== targetView ? targetView : null;
   /** 新视图共用的目标参数 */
   const kitProps = { waitTarget, waitCallout, urgent, onTargetClick, onAsideClick };
   const ring = (id: GuidedTargetId) =>
@@ -267,13 +281,17 @@ export function GuidedWorkBuddy({
             { id: 'library', label: '资料库', icon: <LibraryIcon size={16} />, active: shell.view === 'library' },
             { id: 'discover', label: '发现', icon: <DiscoverIcon size={16} /> },
           ].map((it) => {
-            const highlightNewTask = it.id === 'newTask' && isNeedBackToHome;
+            const highlightNewTask =
+              (it.id === 'newTask' && isNeedBackToHome) || (backToView !== null && it.id === backToView);
             const navTarget = navTargets[it.id];
             const isNavTarget = Boolean(navTarget) && waitTarget === navTarget;
             return (
               <button
                 key={it.label}
                 type="button"
+                // 侧栏折叠时只剩图标，靠 aria-label / title 告诉学员这是哪个入口
+                aria-label={it.label}
+                title={shell.sidebarCollapsed ? it.label : undefined}
                 data-guided-target={navTarget}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -283,6 +301,10 @@ export function GuidedWorkBuddy({
                   }
                   if (isNavTarget) {
                     onTargetClick(navTarget);
+                    return;
+                  }
+                  if (backToView !== null && it.id === backToView) {
+                    onBackToView(backToView);
                     return;
                   }
                   onAsideClick(it.label, `<b>${it.label}</b>这一步先不用点，跟着右边蓝圈步骤走就行。`);
@@ -367,7 +389,7 @@ export function GuidedWorkBuddy({
         {/* 左下角：头像 + 实时模拟积分余额微标 */}
         <div
           className={`px-2.5 py-2.5 border-t border-[#ebebeb] flex items-center ${
-            shell.sidebarCollapsed ? 'justify-center' : 'justify-between'
+            shell.sidebarCollapsed ? 'flex-col gap-1.5 justify-center' : 'justify-between'
           } text-[#5c5f66]`}
         >
           <button
@@ -402,9 +424,10 @@ export function GuidedWorkBuddy({
             )}
           </button>
 
-          {!shell.sidebarCollapsed && (
+          {/* 侧栏折叠时也保留手机入口，否则 4.2 第一步在窄窗口里找不到目标 */}
+          {(!shell.sidebarCollapsed || waitTarget === 'nav.mobileLink') && (
             <div className="flex items-center gap-2">
-              <BellIcon size={15} />
+              {!shell.sidebarCollapsed && <BellIcon size={15} />}
               <button
                 type="button"
                 data-guided-target="nav.mobileLink"

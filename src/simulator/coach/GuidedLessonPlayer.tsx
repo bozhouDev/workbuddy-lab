@@ -625,6 +625,15 @@ export default function GuidedLessonPlayer({
     setShell((prev) => (prev ? { ...prev, view: 'home', popover: null } : prev));
   }, [isRunningChat]);
 
+  /** 学员中途逛到别处时，点高亮的侧栏入口回到当前步骤所在的页面（扩展页 / 定时任务 / 资料库） */
+  const handleBackToView = useCallback(
+    (view: GuidedShellState['view']) => {
+      if (isRunningChat) return;
+      setShell((prev) => (prev ? { ...prev, view, popover: null } : prev));
+    },
+    [isRunningChat]
+  );
+
   // 允许点击安全菜单自由开关（与 0.4 一致，不锁死界面）
   const handleTogglePopover = useCallback(
     (pop: PopoverId) => {
@@ -756,6 +765,7 @@ export default function GuidedLessonPlayer({
         }
         onSelectHistoryChat={handleSelectHistoryChat}
         onNewTask={handleNewTask}
+        onBackToView={handleBackToView}
         onAsideClick={handleAsideClick}
       />
 
