@@ -424,8 +424,8 @@ export function GuidedWorkBuddy({
             )}
           </button>
 
-          {/* 侧栏折叠时也保留手机入口，否则 4.2 第一步在窄窗口里找不到目标 */}
-          {(!shell.sidebarCollapsed || waitTarget === 'nav.mobileLink') && (
+          {/* 侧栏折叠时也保留手机入口：4.2 要点它，弹窗被点掉后也要能再打开 */}
+          {(
             <div className="flex items-center gap-2">
               {!shell.sidebarCollapsed && <BellIcon size={15} />}
               <button

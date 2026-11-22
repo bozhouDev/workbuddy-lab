@@ -441,7 +441,12 @@ test.describe('第 03、04 章泊舟陪练模拟器', () => {
   test('1100 宽侧栏折叠也能找到手机入口；中途逛走后侧栏蓝圈能带回当前页面', async ({ page }) => {
     await page.setViewportSize({ width: 1100, height: 800 });
     await page.goto('/simulator/?route=assistant');
-    await walkLesson(page, ['btn:去连手机', 'nav.mobileLink', 'mobile.toggle']);
+    await walkLesson(page, ['btn:去连手机', 'nav.mobileLink']);
+    // 弹窗被点掉后，折叠侧栏里的手机按钮还在，能再打开
+    await page.getByText('WorkBuddy，我帮你').click();
+    await expect(page.locator('[data-guided-target="mobile.toggle"]')).toHaveCount(0);
+    await page.locator('[data-guided-target="nav.mobileLink"]').click();
+    await walkLesson(page, ['mobile.toggle']);
     await expect(page.getByText('移动端 App')).toBeVisible();
 
     await page.setViewportSize({ width: 1440, height: 900 });
