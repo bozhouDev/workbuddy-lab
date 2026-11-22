@@ -47,6 +47,13 @@ export type CoachActionId =
   | 'permission'
   | 'suggestions';
 
+export type NavTrailStep = {
+  id: string;
+  label: string;
+  done: boolean;
+  active: boolean;
+};
+
 export type FeedItem =
   | { id: string; kind: 'coach'; html: string }
   | { id: string; kind: 'aside'; label: string; html: string }
@@ -54,7 +61,8 @@ export type FeedItem =
   | { id: string; kind: 'did'; text: string }
   | { id: string; kind: 'checklist' }
   | { id: string; kind: 'summary' }
-  | { id: string; kind: 'card'; card: CoachCardSpec };
+  | { id: string; kind: 'card'; card: CoachCardSpec }
+  | { id: string; kind: 'navTrail'; steps: NavTrailStep[] };
 
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
 export type FeedItemInput = DistributiveOmit<FeedItem, 'id'>;

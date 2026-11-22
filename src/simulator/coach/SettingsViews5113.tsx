@@ -152,16 +152,26 @@ function NavIcon({ kind }: { kind: string }) {
 
 type DropdownKey = null | 'lang' | 'linkOpen' | 'lockScreen' | 'proxy' | 'sound';
 
+type SelectOption = string | { label: string; desc?: string };
+
 interface InlineSelectProps {
   value: string;
-  options: readonly string[];
+  options: readonly SelectOption[];
   open: boolean;
   onToggle: () => void;
   onSelect: (val: string) => void;
+  menuWidthClass?: string;
 }
 
-/** 还原截图 3 样式的真实下拉选择框（白底圆角 + 绿色对勾） */
-function InlineSelect({ value, options, open, onToggle, onSelect }: InlineSelectProps) {
+/** 还原真机样式的真实下拉选择框（白底圆角 + 绿色对勾，支持带副标题说明的富选项） */
+function InlineSelect({
+  value,
+  options,
+  open,
+  onToggle,
+  onSelect,
+  menuWidthClass = 'min-w-[138px]',
+}: InlineSelectProps) {
   return (
     <div className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
       <button
@@ -178,20 +188,32 @@ function InlineSelect({ value, options, open, onToggle, onSelect }: InlineSelect
       </button>
 
       {open && (
-        <div className="sim-pop-up absolute right-0 top-[36px] z-30 min-w-[138px] rounded-[12px] bg-white border border-[#e6e6e3] shadow-[0_14px_34px_rgba(17,19,24,0.14)] p-1.5 flex flex-col gap-0.5 text-[12.5px]">
-          {options.map((opt) => {
-            const active = opt === value;
+        <div
+          className={`sim-pop-up absolute right-0 top-[36px] z-30 ${menuWidthClass} rounded-[12px] bg-white border border-[#e6e6e3] shadow-[0_14px_34px_rgba(17,19,24,0.14)] p-1.5 flex flex-col gap-0.5 text-[12.5px]`}
+        >
+          {options.map((raw) => {
+            const opt = typeof raw === 'string' ? { label: raw } : raw;
+            const active = opt.label === value;
             return (
               <button
-                key={opt}
+                key={opt.label}
                 type="button"
-                onClick={() => onSelect(opt)}
-                className={`w-full border-0 rounded-[8px] px-2.5 py-1.5 flex items-center justify-between gap-3 text-left cursor-pointer transition-colors ${
-                  active ? 'bg-[#f4f4f5] font-medium text-[#111318]' : 'bg-transparent text-[#2b2f36] hover:bg-[#f7f7f6]'
+                onClick={() => onSelect(opt.label)}
+                className={`w-full border-0 rounded-[8px] px-2.5 py-2 flex items-start justify-between gap-3 text-left cursor-pointer transition-colors ${
+                  active ? 'bg-[#f4f4f5] text-[#111318]' : 'bg-transparent text-[#2b2f36] hover:bg-[#f7f7f6]'
                 }`}
               >
-                <span>{opt}</span>
-                {active && <span className="text-[#00b578] font-bold">✓</span>}
+                <span className="min-w-0">
+                  <span className={`block leading-snug ${active ? 'font-semibold' : 'font-medium'}`}>
+                    {opt.label}
+                  </span>
+                  {opt.desc && (
+                    <span className="block text-[11.5px] text-[#7a7f89] mt-0.5 leading-[1.45] font-normal">
+                      {opt.desc}
+                    </span>
+                  )}
+                </span>
+                {active && <span className="text-[#00b578] font-bold shrink-0 mt-0.5">✓</span>}
               </button>
             );
           })}
@@ -260,27 +282,27 @@ export function SettingsViews5113({
       icon: 'general',
       tab: 'general',
       target: 'settings.tab.general',
-      explain: '「通用」管语言字体、防休眠、存储路径、桌面通知和隐私，装好软件第一天先来这里调顺。',
+      explain: '<b>通用</b>管语言字体、防休眠、存储路径、桌面通知和隐私，装好软件第一天先来这里调顺。',
     },
     {
       label: '个人主页',
       icon: 'profile',
-      explain: '「个人主页」看你的账号昵称和登录方式，日常基本不用改。',
+      explain: '<b>个人主页</b>看你的账号昵称和登录方式，日常基本不用改。',
     },
     {
       label: '套餐与积分',
       icon: 'credits',
-      explain: '「套餐与积分」能查每一笔任务扣了多少积分、积分什么时候到期，1.5 节会重点讲。',
+      explain: '<b>套餐与积分</b>能查每一笔任务扣了多少积分、积分什么时候到期，1.5 节会重点讲。',
     },
     {
       label: '外观',
       icon: 'appearance',
-      explain: '「外观」用来切换浅色 / 深色主题，按自己眼睛舒服选就行。',
+      explain: '<b>外观</b>用来切换浅色 / 深色主题，按自己眼睛舒服选就行。',
     },
     {
       label: '快捷键',
       icon: 'shortcuts',
-      explain: '「快捷键」查看或自定义唤起窗口、新建任务等键盘快捷键，熟练后再折腾。',
+      explain: '<b>快捷键</b>查看或自定义唤起窗口、新建任务等键盘快捷键，熟练后再折腾。',
     },
   ];
 
@@ -290,39 +312,39 @@ export function SettingsViews5113({
       icon: 'personalization',
       tab: 'personalization',
       target: 'settings.tab.personalization',
-      explain: '「个性化」里放着「给 WorkBuddy 的指令」「人设设定」和「长期记忆」，1.4 节专门带你配。',
+      explain: '<b>个性化</b>里放着<b>给 WorkBuddy 的指令</b>、<b>人设设定</b>和<b>长期记忆</b>，1.4 节专门带你配。',
     },
     {
       label: '记忆与进化',
       icon: 'memory',
       tab: 'memory',
       target: 'settings.tab.memory',
-      explain: '「记忆与进化」管云端记忆和本地记忆开关，记歪了也来这里删，1.3 节专门演示。',
+      explain: '<b>记忆与进化</b>管云端记忆和本地记忆开关，记歪了也来这里删，1.3 节专门演示。',
     },
     {
       label: '智能体',
       icon: 'agent',
-      explain: '「智能体」管理后台运行的 Agent 高级配置，新手保持默认即可。',
+      explain: '<b>智能体</b>管理后台运行的 Agent 高级配置，新手保持默认即可。',
     },
     {
       label: '模型',
       icon: 'model',
-      explain: '「模型」管理可用模型列表，或者接入你自己其他平台的 API Key（新手不用折腾）。',
+      explain: '<b>模型</b>管理可用模型列表，或者接入你自己其他平台的 API Key（新手不用折腾）。',
     },
     {
       label: '助理',
       icon: 'assistant',
-      explain: '「助理」用来绑定微信 / 飞书 / 企微等远程通道，出门用手机遥控电脑干活（第 4 章细讲）。',
+      explain: '<b>助理</b>用来绑定微信 / 飞书 / 企微等远程通道，出门用手机遥控电脑干活（第 4 章细讲）。',
     },
     {
       label: '设备连接',
       icon: 'devices',
-      explain: '「设备连接」用来扫码绑定手机端，随时查看任务进度。',
+      explain: '<b>设备连接</b>用来扫码绑定手机端，随时查看任务进度。',
     },
     {
       label: '对话流',
       icon: 'flow',
-      explain: '「对话流」控制消息展示和流式输出细节，保持默认就很顺手。',
+      explain: '<b>对话流</b>控制消息展示和流式输出细节，保持默认就很顺手。',
     },
   ];
 
@@ -330,12 +352,12 @@ export function SettingsViews5113({
     {
       label: '数据导入',
       icon: 'import',
-      explain: '「数据导入」可以把你在其他 AI 工具里积累的历史记录或记忆一键迁过来。',
+      explain: '<b>数据导入</b>可以把你在其他 AI 工具里积累的历史记录或记忆一键迁过来。',
     },
     {
       label: '数据管理',
       icon: 'data',
-      explain: '「数据管理」用来批量导出或清理旧对话记录和本地缓存。',
+      explain: '<b>数据管理</b>用来批量导出或清理旧对话记录和本地缓存。',
     },
   ];
 
@@ -365,7 +387,7 @@ export function SettingsViews5113({
           >
             ← 返回
             {waitTarget === 'settings.back' && waitCallout && (
-              <GuidanceCallout text={waitCallout} placement="right" />
+              <GuidanceCallout text={waitCallout} placement="bottom" align="end" />
             )}
           </button>
         </div>
@@ -406,7 +428,7 @@ export function SettingsViews5113({
               <NavIcon kind={n.icon} />
               <span className="truncate">{n.label}</span>
               {n.target && waitTarget === n.target && waitCallout && (
-                <GuidanceCallout text={waitCallout} placement="right" />
+                <GuidanceCallout text={waitCallout} placement="bottom" align="start" />
               )}
             </button>
           );
@@ -437,7 +459,7 @@ export function SettingsViews5113({
               <NavIcon kind={n.icon} />
               <span className="truncate">{n.label}</span>
               {n.target && waitTarget === n.target && waitCallout && (
-                <GuidanceCallout text={waitCallout} placement="right" />
+                <GuidanceCallout text={waitCallout} placement="bottom" align="start" />
               )}
             </button>
           );
@@ -480,12 +502,12 @@ export function SettingsViews5113({
                   open={openDrop === 'lang'}
                   onToggle={() => {
                     setOpenDrop((d) => (d === 'lang' ? null : 'lang'));
-                    onAsideClick('语言', '切换 WorkBuddy 的界面显示语言，咱们保持「简体中文」就行。');
+                    onAsideClick('语言', '切换 WorkBuddy 的界面显示语言，咱们保持<b>简体中文</b>就行。');
                   }}
                   onSelect={(v) => {
                     setLang(v);
                     setOpenDrop(null);
-                    onAsideClick('语言', `已演示切到「${v}」——平时保持简体中文最顺眼。`);
+                    onAsideClick('语言', `已演示切到 <b>${v}</b> ——平时保持简体中文最顺眼。`);
                   }}
                 />
               </div>
@@ -545,19 +567,40 @@ export function SettingsViews5113({
                 </div>
                 <InlineSelect
                   value={linkOpen}
-                  options={['智能打开', '系统默认浏览器', '应用内打开']}
+                  menuWidthClass="w-[296px]"
+                  options={[
+                    {
+                      label: '智能打开',
+                      desc: '本地预览在 WorkBuddy 内打开，其他在系统浏览器打开。',
+                    },
+                    {
+                      label: '内置打开',
+                      desc: '所有链接在 WorkBuddy 内置浏览器打开。',
+                    },
+                    {
+                      label: '外部打开',
+                      desc: '所有链接在系统默认浏览器打开。',
+                    },
+                  ]}
                   open={openDrop === 'linkOpen'}
                   onToggle={() => {
                     setOpenDrop((d) => (d === 'linkOpen' ? null : 'linkOpen'));
                     onAsideClick(
                       '链接打开方式',
-                      '决定你点对话里的网页链接时，是在软件里开还是用系统浏览器开。保持「智能打开」最省心。'
+                      '决定你点对话里的链接在哪打开：保持<b>智能打开</b>最顺手——本地做的网页直接在软件里预览，外部网址自动交回系统浏览器。'
                     );
                   }}
                   onSelect={(v) => {
                     setLinkOpen(v);
                     setOpenDrop(null);
-                    onAsideClick('链接打开方式', `已切换为「${v}」——日常推荐保持「智能打开」。`);
+                    onAsideClick(
+                      '链接打开方式',
+                      v === '智能打开'
+                        ? '推荐保持<b>智能打开</b>：本地预览留在 WorkBuddy 里，外部链接用系统浏览器打开。'
+                        : v === '内置打开'
+                          ? '<b>内置打开</b>会把所有链接都在 WorkBuddy 窗口内打开，不用来回切软件。'
+                          : '<b>外部打开</b>会统一交给你的 Chrome/Safari 等系统默认浏览器打开。'
+                    );
                   }}
                 />
               </div>
@@ -576,7 +619,7 @@ export function SettingsViews5113({
                     e.stopPropagation();
                     onAsideClick(
                       '文件打开方式',
-                      '问你要不要让 WorkBuddy 接管双击电脑文件。新手不用设，保持「未设置」，避免平时双击文档总弹出它。'
+                      '问你要不要让 WorkBuddy 接管双击电脑文件。新手不用设，保持<b>未设置</b>，避免平时双击文档总弹出它。'
                     );
                   }}
                   className="border-0 bg-transparent hover:bg-[#f4f4f2] rounded-lg px-2 py-1 text-[12.5px] text-[#6b7079] cursor-pointer shrink-0"
@@ -599,13 +642,24 @@ export function SettingsViews5113({
                 </div>
                 <InlineSelect
                   value={lockMode}
-                  options={['关闭', '合盖除外', '始终保持运行']}
+                  menuWidthClass="w-[290px]"
+                  options={[
+                    { label: '关闭', desc: '不保持唤醒，设备按系统设置正常休眠。' },
+                    {
+                      label: '熄屏后保持唤醒',
+                      desc: '屏幕会正常熄灭，后台任务和远程控制照常执行，较省电。',
+                    },
+                    {
+                      label: '保持屏幕常亮',
+                      desc: '屏幕不会熄灭，可随时查看任务，较耗电。',
+                    },
+                  ]}
                   open={openDrop === 'lockScreen'}
                   onToggle={() => {
                     setOpenDrop((d) => (d === 'lockScreen' ? null : 'lockScreen'));
                     onAsideClick(
                       '允许锁屏运行',
-                      '打算出门用手机微信遥控家里电脑干活时才需要打开（一般选「合盖除外」）；平时只在电脑前用就保持「关闭」。'
+                      '打算出门用手机微信遥控家里电脑干活时，选<b>熄屏后保持唤醒</b>最省电稳妥；平时只在电脑前用就保持<b>关闭</b>。'
                     );
                   }}
                   onSelect={(v) => {
@@ -614,8 +668,10 @@ export function SettingsViews5113({
                     onAsideClick(
                       '允许锁屏运行',
                       v === '关闭'
-                        ? '平时只在电脑前用，保持「关闭」最省电安全。'
-                        : `选了「${v}」后，电脑锁屏了后台也能继续接你手机发来的遥控任务。`
+                        ? '平时只在电脑前用，保持<b>关闭</b>最省电安全。'
+                        : v === '熄屏后保持唤醒'
+                          ? '选<b>熄屏后保持唤醒</b>最适合手机遥控电脑：屏幕黑着省电，后台照常接微信发来的任务。'
+                          : '<b>保持屏幕常亮</b>适合在桌边随时瞄一眼进度，出门遥控的话选<b>熄屏后保持唤醒</b>更省电。'
                     );
                   }}
                 />
@@ -689,7 +745,7 @@ export function SettingsViews5113({
                     setOpenDrop((d) => (d === 'proxy' ? null : 'proxy'));
                     onAsideClick(
                       '网络代理',
-                      '平时保持「直接连接」就行；如果公司内网或者开了代理导致连不上网，切到「跟随系统」立刻就能通。'
+                      '平时保持<b>直接连接</b>就行；如果公司内网或者开了代理导致连不上网，切到<b>跟随系统</b>立刻就能通。'
                     );
                   }}
                   onSelect={(v) => {
@@ -698,10 +754,10 @@ export function SettingsViews5113({
                     onAsideClick(
                       '网络代理',
                       v === '跟随系统'
-                        ? '切到「跟随系统」后会自动复用电脑的代理设置，连不上网时优先试这招。'
+                        ? '切到<b>跟随系统</b>后会自动复用电脑的代理设置，连不上网时优先试这招。'
                         : v === '手动配置'
-                          ? '「手动配置」留给需要填公司内网代理地址和端口的情况，普通用户用不到。'
-                          : '日常网络正常时保持「直接连接」最快最稳。'
+                          ? '<b>手动配置</b>留给需要填公司内网代理地址和端口的情况，普通用户用不到。'
+                          : '日常网络正常时保持<b>直接连接</b>最快最稳。'
                     );
                   }}
                 />
@@ -904,7 +960,7 @@ export function SettingsViews5113({
                       clickOrAside(
                         'settings.changePath',
                         '更改存储路径',
-                        '点「更改」把默认工作空间挪出 C 盘，以后新建任务和分组都会自动存到新目录里。'
+                        '点<b>更改</b>把默认工作空间挪出 C 盘，以后新建任务和分组都会自动存到新目录里。'
                       );
                     }}
                     className={`relative h-9 px-4 rounded-[9px] border border-[#dcdcd8] bg-white hover:bg-[#f4f4f2] text-[13px] font-medium text-[#111318] cursor-pointer shrink-0 ${ring(
@@ -913,7 +969,7 @@ export function SettingsViews5113({
                   >
                     更改
                     {waitTarget === 'settings.changePath' && waitCallout && (
-                      <GuidanceCallout text={waitCallout} placement="top" />
+                      <GuidanceCallout text={waitCallout} placement="top" align="end" />
                     )}
                   </button>
                 </div>
@@ -957,7 +1013,7 @@ export function SettingsViews5113({
                 >
                   {shell.notifyEnabled ? '已开启 ✓' : '前往系统设置 ↗'}
                   {waitTarget === 'settings.enableNotify' && waitCallout && (
-                    <GuidanceCallout text={waitCallout} placement="top" />
+                    <GuidanceCallout text={waitCallout} placement="top" align="end" />
                   )}
                 </button>
               </div>
@@ -978,13 +1034,13 @@ export function SettingsViews5113({
                     setOpenDrop((d) => (d === 'sound' ? null : 'sound'));
                     onAsideClick(
                       '通知提示音',
-                      '弹窗提醒时要不要带声音。在办公室怕吵到旁边同事，保持「无音效」就行。'
+                      '弹窗提醒时要不要带声音。在办公室怕吵到旁边同事，保持<b>无音效</b>就行。'
                     );
                   }}
                   onSelect={(v) => {
                     setNotifySound(v);
                     setOpenDrop(null);
-                    onAsideClick('通知提示音', `已切到「${v}」——办公环境一般选无音效最安静。`);
+                    onAsideClick('通知提示音', `已切到 <b>${v}</b> ——办公环境一般选无音效最安静。`);
                   }}
                 />
               </div>
@@ -1060,119 +1116,159 @@ export function SettingsViews5113({
           </>
         )}
 
-        {/* ===== Tab 2：记忆与进化（1.3 记忆与进化） ===== */}
-        {shell.settingsTab === 'memory' && (
-          <>
-            <div className="rounded-[14px] bg-white border border-[#ececea] p-4 flex flex-col gap-4">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <div className="text-[13.5px] font-semibold text-[#111318]">云端记忆</div>
-                  <div className="text-[12px] text-[#6b7079] mt-0.5">
-                    自动记住对话中的重要信息，每晚整理更新，让后续回答越来越贴合你。
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  data-guided-target="settings.toggleCloudMemory"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    clickOrAside(
-                      'settings.toggleCloudMemory',
-                      '云端记忆开关',
-                      '打开云端记忆后，跨对话也会记住你反复交代过的格式与偏好。'
-                    );
-                  }}
-                  className={`relative border-0 bg-transparent p-1 rounded-full cursor-pointer ${ring(
-                    'settings.toggleCloudMemory'
-                  )}`}
-                >
-                  <Toggle on={shell.cloudMemoryOn} />
-                  {waitTarget === 'settings.toggleCloudMemory' && waitCallout && (
-                    <GuidanceCallout text={waitCallout} placement="left" />
-                  )}
-                </button>
-              </div>
-
-              <div className="h-px bg-[#f0f0ee]" />
-
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <div className="text-[13.5px] font-semibold text-[#111318]">本地记忆与技能</div>
-                  <div className="text-[12px] text-[#6b7079] mt-0.5">
-                    记录有长期价值的项目成果和约定，支持用户级和项目级，在后续任务中继续遵循。
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  data-guided-target="settings.toggleLocalMemory"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    clickOrAside(
-                      'settings.toggleLocalMemory',
-                      '本地记忆开关',
-                      '本地记忆用于沉淀长期项目的约定与经验。'
-                    );
-                  }}
-                  className={`relative border-0 bg-transparent p-1 rounded-full cursor-pointer ${ring(
-                    'settings.toggleLocalMemory'
-                  )}`}
-                >
-                  <Toggle on={shell.localMemoryOn} />
-                  {waitTarget === 'settings.toggleLocalMemory' && waitCallout && (
-                    <GuidanceCallout text={waitCallout} placement="left" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <div className="rounded-[14px] bg-white border border-[#ececea] p-4 flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-[13.5px] font-semibold text-[#111318]">管理云端记忆</div>
-                  <div className="text-[12px] text-[#6b7079] mt-0.5">
-                    每晚自动整理更新，全局共享。发现回答突然跑偏时，来这里删掉记歪的条目。
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAsideClick(
-                      '导入记忆',
-                      '以前在别的 AI 工具里攒过个人偏好和记忆的，可以点「导入」直接带进来，不用重新养。'
-                    );
-                  }}
-                  className="h-8 px-3 rounded-lg border border-[#dcdcd8] bg-white hover:bg-[#f4f4f2] text-[12.5px] text-[#4a4f57] inline-flex items-center cursor-pointer"
-                >
-                  导入
-                </button>
-              </div>
-
-              <div className="flex flex-col gap-2 pt-1">
-                {shell.cloudMemories.map((mem) => (
-                  <div
-                    key={mem.id}
-                    className={`sim-msg-rise flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-[10px] border text-[13px] ${
-                      mem.bad
-                        ? 'bg-[#fff6ef] border-[#f6d7c2]'
-                        : 'bg-[#fafaf9] border-[#eeeeeb]'
-                    }`}
-                  >
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`text-[10.5px] font-semibold px-1.5 py-[1px] rounded shrink-0 ${
-                            mem.bad
-                              ? 'bg-[#ffe4cf] text-[#9a3412]'
-                              : 'bg-[#eef2ff] text-accent-600'
-                          }`}
-                        >
-                          {mem.tag}
-                        </span>
-                        <span className="text-[#111318] font-medium">{mem.text}</span>
-                      </div>
+        {/* ===== Tab 2：记忆与进化（100% 还原 5.11.3：双开关 + 整份可编辑 Markdown 长文档） ===== */}
+        {shell.settingsTab === 'memory' && (() => {
+          const hasBadMemory = shell.cloudMemories.some((m) => m.bad);
+          return (
+            <>
+              <div className="rounded-[14px] bg-white border border-[#ececea] p-4 flex flex-col gap-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-[13.5px] font-semibold text-[#111318] flex items-center gap-1.5">
+                      <span>云端记忆</span>
+                      <span className="text-[11px] text-[#8c9099] font-normal">ⓘ</span>
                     </div>
-                    {mem.bad ? (
+                    <div className="text-[12px] text-[#6b7079] mt-0.5">
+                      记住对话中的重要信息，让后续回答更贴合你。
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    data-guided-target="settings.toggleCloudMemory"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      clickOrAside(
+                        'settings.toggleCloudMemory',
+                        '云端记忆开关',
+                        '打开云端记忆后，跨对话也会记住你反复交代过的格式与偏好。'
+                      );
+                    }}
+                    className={`relative border-0 bg-transparent p-1 rounded-full cursor-pointer ${ring(
+                      'settings.toggleCloudMemory'
+                    )}`}
+                  >
+                    <Toggle on={shell.cloudMemoryOn} />
+                    {waitTarget === 'settings.toggleCloudMemory' && waitCallout && (
+                      <GuidanceCallout text={waitCallout} placement="left" />
+                    )}
+                  </button>
+                </div>
+
+                <div className="h-px bg-[#f0f0ee]" />
+
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-[13.5px] font-semibold text-[#111318] flex items-center gap-1.5">
+                      <span>本地记忆与技能</span>
+                      <span className="text-[11px] text-[#8c9099] font-normal">ⓘ</span>
+                    </div>
+                    <div className="text-[12px] text-[#6b7079] mt-0.5">
+                      记录有长期价值的项目成果和约定，支持用户级和项目级，让智能体在后续任务中遵循。
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    data-guided-target="settings.toggleLocalMemory"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      clickOrAside(
+                        'settings.toggleLocalMemory',
+                        '本地记忆开关',
+                        '本地记忆用于沉淀长期项目的约定与经验。'
+                      );
+                    }}
+                    className={`relative border-0 bg-transparent p-1 rounded-full cursor-pointer ${ring(
+                      'settings.toggleLocalMemory'
+                    )}`}
+                  >
+                    <Toggle on={shell.localMemoryOn} />
+                    {waitTarget === 'settings.toggleLocalMemory' && waitCallout && (
+                      <GuidanceCallout text={waitCallout} placement="left" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="rounded-[14px] bg-white border border-[#ececea] p-4 flex flex-col gap-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-[13.5px] font-semibold text-[#111318] flex items-center gap-2">
+                      <span>管理云端记忆</span>
+                      <span
+                        className={`text-[11px] font-medium px-2 py-[1px] rounded-md ${
+                          shell.cloudMemoryOn
+                            ? 'bg-[#ecfdf5] text-[#047857]'
+                            : 'bg-[#f2f3f5] text-[#6b7079]'
+                        }`}
+                      >
+                        {shell.cloudMemoryOn ? '生效中' : '已暂停'}
+                      </span>
+                    </div>
+                    <div className="text-[12px] text-[#6b7079] mt-0.5">
+                      每晚自动整理更新，可随时查看和编辑（整份 Markdown 文档）。
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAsideClick(
+                        '导入记忆',
+                        '以前在别的 AI 工具里攒过个人偏好和记忆的，可以点<b>导入</b>直接带进来，不用重新养。'
+                      );
+                    }}
+                    className="h-8 px-3.5 rounded-lg border border-[#dcdcd8] bg-white hover:bg-[#f4f4f2] text-[12.5px] text-[#111318] inline-flex items-center cursor-pointer shrink-0"
+                  >
+                    导入
+                  </button>
+                </div>
+
+                {!shell.cloudMemoryOn && (
+                  <div className="text-[12px] text-[#6b7079] bg-[#f7f7f6] border border-dashed border-[#dcdcd8] rounded-[9px] px-3 py-2">
+                    当前 <strong>云端记忆</strong> 开关已关闭，下面这份 Markdown 记忆文档暂时不会被新对话读取。
+                  </div>
+                )}
+
+                {/* 真实形态：一整份长 Markdown 记忆文档（不是一条条列表按钮） */}
+                <div
+                  className={`rounded-[12px] border transition-all overflow-hidden ${
+                    !shell.cloudMemoryOn
+                      ? 'opacity-65 border-[#e6e6e3] bg-[#fafaf9]'
+                      : hasBadMemory
+                        ? 'border-[#e6c4a8] bg-white shadow-[0_0_0_1px_rgba(194,65,12,0.12)]'
+                        : 'border-[#e2e4e9] bg-[#fafbfc]'
+                  }`}
+                >
+                  <div className="px-3.5 py-2 border-b border-[#eceef2] bg-[#f6f7f9] flex items-center justify-between text-[11.5px] text-[#6b7079]">
+                    <span className="font-mono">cloud-memory.md</span>
+                    <span>{hasBadMemory ? '可手动编辑删改 · 发现 1 段异常偏好' : '可随时手动编辑删改'}</span>
+                  </div>
+
+                  <div className="p-4 flex flex-col gap-3 text-[13px] leading-[1.78] text-[#1f2329] select-text">
+                    {shell.cloudMemories.map((mem) => (
+                      <div
+                        key={mem.id}
+                        className={
+                          mem.bad
+                            ? 'sim-msg-rise rounded-[9px] bg-[#fff5ee] border border-[#f6d7c2] px-3 py-2 text-[#9a3412]'
+                            : ''
+                        }
+                      >
+                        <div className="text-[12px] font-semibold text-[#5c6270] mb-0.5">
+                          ## {mem.tag}
+                        </div>
+                        <div className={mem.bad ? 'font-medium text-[#9a3412]' : 'text-[#2b2f36]'}>
+                          - {mem.text}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {hasBadMemory && (
+                    <div className="px-3.5 py-2.5 border-t border-[#f3e1d3] bg-[#fffaf6] flex items-center justify-between gap-3 flex-wrap">
+                      <span className="text-[12px] text-[#9a3412]">
+                        真机里直接在这份长文本框里选中删掉这一段并保存即可（模拟器一键演示）：
+                      </span>
                       <button
                         type="button"
                         data-guided-target="settings.deleteBadMemory"
@@ -1180,28 +1276,30 @@ export function SettingsViews5113({
                           e.stopPropagation();
                           clickOrAside(
                             'settings.deleteBadMemory',
-                            '删除记歪的记忆',
-                            '删除这条误记的偏好后，后续中文任务就不会再莫名其妙输出英文了。'
+                            '手动删掉误记段落并保存',
+                            '在 Markdown 文档里删掉这段误记的英文偏好并保存后，中文输出就会立刻恢复。'
                           );
                         }}
-                        className={`relative h-7 px-2.5 rounded-lg border border-[#f6d7c2] bg-white hover:bg-[#ffe4cf] text-[#9a3412] text-[12px] font-semibold cursor-pointer shrink-0 ${ring(
+                        className={`relative h-8 px-3.5 rounded-lg border-0 bg-[#c2410c] hover:bg-[#9a3412] text-white text-[12.5px] font-semibold cursor-pointer shrink-0 ${ring(
                           'settings.deleteBadMemory'
                         )}`}
                       >
-                        删除
+                        删掉这一段并保存
                         {waitTarget === 'settings.deleteBadMemory' && waitCallout && (
-                          <GuidanceCallout text={waitCallout} placement="left" />
+                          <GuidanceCallout text={waitCallout} placement="top" align="end" />
                         )}
                       </button>
-                    ) : (
-                      <span className="text-[11.5px] text-[#8c9099] shrink-0">生效中</span>
-                    )}
-                  </div>
-                ))}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </>
-        )}
+
+              <div className="text-center text-[11.5px] text-[#8c9099] pt-2 pb-1">
+                记忆内容遵循 <span className="underline">WorkBuddy 隐私政策</span>，仅你本人可见
+              </div>
+            </>
+          );
+        })()}
 
         {/* ===== Tab 3：个性化（1.4 个性化：指令） ===== */}
         {shell.settingsTab === 'personalization' && (
@@ -1287,7 +1385,7 @@ export function SettingsViews5113({
                       clickOrAside(
                         'settings.editRules',
                         '编辑指令',
-                        '点「编辑」把 5 条做事红线写进去，以后每次对话都自动遵守。'
+                        '点<b>编辑</b>把 5 条做事红线写进去，以后每次对话都自动遵守。'
                       );
                     }}
                     className={`relative h-8 px-3.5 rounded-lg border border-[#dcdcd8] bg-white hover:bg-[#f4f4f2] text-[12.5px] font-medium text-[#111318] cursor-pointer shrink-0 ${ring(
@@ -1381,7 +1479,7 @@ export function SettingsViews5113({
                   e.stopPropagation();
                   onAsideClick(
                     '人设设定',
-                    '「人设设定」管它是谁、什么说话性格（比如干脆的效率顾问），和「指令」里的做事红线要分开填。'
+                    '<b>人设设定</b>管它是谁、什么说话性格（比如干脆的效率顾问），和<b>指令</b>里的做事红线要分开填。'
                   );
                 }}
                 className="h-8 px-3.5 rounded-lg border border-[#dcdcd8] bg-white text-[12.5px] text-[#2b2f36] cursor-pointer shrink-0"
@@ -1403,7 +1501,7 @@ export function SettingsViews5113({
                   e.stopPropagation();
                   onAsideClick(
                     '长期记忆',
-                    '「长期记忆」放你的固定背景资料（职业、受众、常用软件），让它不用每次追问你是干嘛的。'
+                    '<b>长期记忆</b>放你的固定背景资料（职业、受众、常用软件），让它不用每次追问你是干嘛的。'
                   );
                 }}
                 className="h-8 px-3.5 rounded-lg border border-[#dcdcd8] bg-white text-[12.5px] text-[#2b2f36] cursor-pointer shrink-0"

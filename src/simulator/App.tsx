@@ -143,7 +143,7 @@ export default function App() {
               <span className="font-mono text-[11.5px] text-accent-600">{currentMeta.code}</span>
               <span>{currentMeta.title}</span>
               <span className="text-[11px] font-normal text-gray-500 hidden sm:inline">
-                （6 节可练）
+                （{LESSON_CATALOG.length} 节可练）
               </span>
               <ChevronDownIcon size={12} className="text-gray-500" />
             </button>
@@ -152,9 +152,9 @@ export default function App() {
               <div
                 role="menu"
                 aria-label="模拟课程列表"
-                className="sim-pop-up absolute left-0 top-[40px] z-50 w-[290px] rounded-[14px] bg-white border border-gray-200 shadow-[0_18px_46px_rgba(17,19,24,0.16)] p-2 flex flex-col gap-0.5"
+                className="sim-pop-up absolute left-0 top-[40px] z-50 w-[304px] max-h-[75vh] overflow-y-auto rounded-[14px] bg-white border border-gray-200 shadow-[0_18px_46px_rgba(17,19,24,0.16)] p-2 flex flex-col gap-0.5"
               >
-                {(['00 入门', '01 开局设置'] as const).map((chapter) => (
+                {(['00 入门', '01 开局设置', '02 发任务'] as const).map((chapter) => (
                   <div key={chapter} className="mb-1 last:mb-0">
                     <div className="px-2.5 pt-1.5 pb-1 text-[11px] font-medium text-gray-400">
                       {chapter}
@@ -196,7 +196,7 @@ export default function App() {
 
                 <div className="h-px bg-gray-100 my-1 mx-1" />
                 <div className="px-2.5 py-1.5 text-[11.5px] text-gray-400 flex items-center justify-between">
-                  <span>02 发任务（模式 / 权限 / 验收）</span>
+                  <span>03 能力扩展 / 04 自动化</span>
                   <span>下批上线</span>
                 </div>
               </div>

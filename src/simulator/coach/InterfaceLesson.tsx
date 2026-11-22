@@ -20,7 +20,7 @@ import type {
   PlusSubmenu,
 } from './types';
 
-const AUTO_COLLAPSE_WIDTH = 1360;
+const AUTO_COLLAPSE_WIDTH = 1140;
 
 let msgSeq = 0;
 const nextId = () => `if-${++msgSeq}`;
@@ -496,7 +496,7 @@ export default function InterfaceLesson({
       };
     }
     if (stage === 'demo-ready') {
-      return { waitPrompt: '在左边点蓝圈里的「发送」按钮', buttons: [] };
+      return { waitPrompt: '在左边点蓝圈里的 发送 按钮', buttons: [] };
     }
     if (stage === 'demo-running') {
       return { waitPrompt: 'WorkBuddy 正在执行任务…', buttons: [] };
@@ -509,7 +509,7 @@ export default function InterfaceLesson({
     }
     if (stage === 'quiz') {
       return {
-        waitPrompt: '在左边直接点出「指定保存文件夹」的按钮',
+        waitPrompt: '在左边直接点出 指定保存文件夹 的按钮',
         buttons: [
           { label: '直接给我提示', primary: false, onClick: () => setQuizHintVisible(true) },
         ],

@@ -128,7 +128,7 @@ export function LiveWorkBuddy({
       {/* ===== 左侧栏（5.11.3 高还原，支持窄屏自动/手动折叠） ===== */}
       <aside
         className={`shrink-0 bg-[#f7f7f7] border-r border-[#ebebeb] flex flex-col text-[13px] transition-[width] duration-200 ${
-          shell.sidebarCollapsed ? 'w-[58px]' : 'w-[236px]'
+          shell.sidebarCollapsed ? 'w-[58px]' : 'w-[206px] xl:w-[232px]'
         }`}
       >
         {/* 顶行：macOS 三圆点 + 折叠/搜索/筛选 */}
@@ -339,7 +339,7 @@ export function LiveWorkBuddy({
             )}
             {dotFor('avatar', 'avatar') && <ExploreDot />}
             {primaryTarget === 'avatar' && primaryCallout && (
-              <GuidanceCallout text={primaryCallout} placement="top" />
+              <GuidanceCallout text={primaryCallout} placement="top" align="start" />
             )}
           </button>
 
@@ -568,7 +568,7 @@ export function LiveWorkBuddy({
                     >
                       <SendPlaneIcon size={14} />
                       {primaryTarget === 'send' && primaryCallout && (
-                        <GuidanceCallout text={primaryCallout} placement="top" />
+                        <GuidanceCallout text={primaryCallout} placement="top" align="end" />
                       )}
                     </button>
                   </div>

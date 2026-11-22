@@ -9,11 +9,18 @@ import { extname, join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 import { LESSON_CATALOG, type GuidedLessonDef } from '../guidedTypes';
+import { attachLesson } from '../lessons/attach';
+import { executionLesson } from '../lessons/execution';
 import { groupsLesson } from '../lessons/groups';
 import { memoryLesson } from '../lessons/memory';
+import { modeLesson } from '../lessons/mode';
 import { modelsCreditsLesson } from '../lessons/modelsCredits';
+import { permissionLesson } from '../lessons/permission';
 import { personalizationLesson } from '../lessons/personalization';
+import { reviewLesson } from '../lessons/review';
+import { reviseLesson } from '../lessons/revise';
 import { settingsLesson } from '../lessons/settings';
+import { taskBriefLesson } from '../lessons/taskBrief';
 
 // 用步骤数据驱动的课程（「认识界面」是单独写的 InterfaceLesson 组件，不在这里）
 const LESSONS: GuidedLessonDef[] = [
@@ -22,6 +29,13 @@ const LESSONS: GuidedLessonDef[] = [
   memoryLesson,
   personalizationLesson,
   modelsCreditsLesson,
+  attachLesson,
+  modeLesson,
+  permissionLesson,
+  taskBriefLesson,
+  executionLesson,
+  reviewLesson,
+  reviseLesson,
 ];
 
 const DOCS_DIR = join(process.cwd(), 'src/content/docs');

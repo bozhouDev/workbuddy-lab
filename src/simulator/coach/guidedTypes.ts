@@ -6,7 +6,14 @@ export type LessonId =
   | 'groups'
   | 'memory'
   | 'personalization'
-  | 'models-credits';
+  | 'models-credits'
+  | 'attach'
+  | 'mode'
+  | 'permission'
+  | 'task-brief'
+  | 'execution'
+  | 'review'
+  | 'revise';
 
 export interface LessonNavMeta {
   id: LessonId;
@@ -23,6 +30,13 @@ export const LESSON_CATALOG: readonly LessonNavMeta[] = [
   { id: 'memory', code: '1.3', chapter: '01 开局设置', title: '记忆与进化', guideUrl: '/features/setup/memory/' },
   { id: 'personalization', code: '1.4', chapter: '01 开局设置', title: '个性化：指令', guideUrl: '/features/setup/personalization/' },
   { id: 'models-credits', code: '1.5', chapter: '01 开局设置', title: '模型与积分', guideUrl: '/features/setup/models-credits/' },
+  { id: 'attach', code: '2.1', chapter: '02 发任务', title: '添加资料：+ 和 @', guideUrl: '/features/send-task/attach/' },
+  { id: 'mode', code: '2.2', chapter: '02 发任务', title: '模式：默认 / Plan / Ask', guideUrl: '/features/send-task/mode/' },
+  { id: 'permission', code: '2.3', chapter: '02 发任务', title: '权限与审批弹窗', guideUrl: '/features/send-task/permission/' },
+  { id: 'task-brief', code: '2.4', chapter: '02 发任务', title: '写清任务：5 要素与采访法', guideUrl: '/features/send-task/task-brief/' },
+  { id: 'execution', code: '2.5', chapter: '02 发任务', title: '看执行过程', guideUrl: '/features/send-task/execution/' },
+  { id: 'review', code: '2.6', chapter: '02 发任务', title: '检查结果', guideUrl: '/features/send-task/review/' },
+  { id: 'revise', code: '2.7', chapter: '02 发任务', title: '二次修改', guideUrl: '/features/send-task/revise/' },
 ];
 
 export type SettingsTab = 'general' | 'memory' | 'personalization';
@@ -43,11 +57,24 @@ export type GuidedTargetId =
   | 'settings.editRules'
   | 'settings.fillRules'
   | 'settings.saveRules'
+  | 'composer.plus'
+  | 'plusMenu.togglePlan'
+  | 'plusMenu.toggleAsk'
+  | 'composer.mention'
+  | 'mentionMenu.pickChatLog'
   | 'composer.group'
   | 'groupMenu.pickPractice'
+  | 'groupMenu.pickLocalFolder'
+  | 'folderPicker.pickPractice'
+  | 'composer.permission'
+  | 'permMenu.toggleFullAccess'
   | 'composer.model'
   | 'modelMenu.pickFree'
-  | 'composer.send';
+  | 'composer.send'
+  | 'approval.cancel'
+  | 'approval.askPlain'
+  | 'chat.confirmPlan'
+  | 'chat.followupSend';
 
 export interface CloudMemoryItem {
   id: string;
@@ -65,7 +92,15 @@ export interface ChatRunArtifact {
   lines: Array<{ text: string; tone?: 'plain' | 'warn' | 'ok' }>;
 }
 
+export interface ChatApprovalCard {
+  question: string;
+  confirmLabel: string;
+  cancelLabel: string;
+  askLabel: string;
+}
+
 export interface ChatRunSpec {
+  id: string;
   prompt: string;
   chatTitle: string;
   model: string;
@@ -75,10 +110,16 @@ export interface ChatRunSpec {
   footerTip: string;
   elapsed: string;
   memoryBadge?: string;
+  /** 为 true 时先按真实无标红效果吐字，等泊舟提问并揭示后再亮起橙/蓝标记 */
+  hideMarksInitially?: boolean;
   steps: Array<{ running: string; done: string }>;
-  replyHtml: string; // 支持 {{wrong:...}} 和 {{ok:...}} 行内语义标色
+  replyHtml: string; // 支持 {{wrong:...}} 和 {{ok:...}} 行内语义标色与 Markdown 表格
   fileCard?: { name: string; meta: string; warn?: boolean };
   artifact?: ChatRunArtifact;
+  /** 5.11.3 默认权限底部审批确认卡片（对照 01-默认权限审批弹窗.png） */
+  approvalCard?: ChatApprovalCard;
+  /** Plan 模式下展示方案确认按钮 */
+  planConfirmLabel?: string;
 }
 
 export interface GuidedShellState {
@@ -95,6 +136,8 @@ export interface GuidedShellState {
   lockScreenMode: string;
   // 1.2 分组
   selectedGroup: string | null;
+  practiceGroupBound: boolean;
+  folderPickerOpen: boolean;
   // 1.3 记忆与进化
   cloudMemoryOn: boolean;
   localMemoryOn: boolean;
@@ -107,9 +150,19 @@ export interface GuidedShellState {
   // 1.5 模型与积分
   selectedModel: string;
   creditBalance: number;
+  // 2.x 发任务（模式 / @ 引用 / 权限 / 对话内二次修改）
+  planOn: boolean;
+  askOn: boolean;
+  fullAccessOn: boolean;
+  mentionMenuOpen: boolean;
+  followupText: string;
   // 输入框与对话动效
   composerText: string;
   activeChat: ChatRunSpec | null;
+  /** 左侧「最近」列表保留全部运行过的对话，可随时点回去对比 */
+  chatHistory: ChatRunSpec[];
+  /** 是否在当前对话里亮出 {{wrong:}} / {{ok:}} 教学标记 */
+  marksRevealed: boolean;
   chatPhase: 'idle' | 'steps' | 'streaming' | 'done';
   chatStepIndex: number;
   streamedCharCount: number;
@@ -149,6 +202,10 @@ export type CoachCardSpec =
 export interface GuidedStep {
   id: string;
   phase: PhaseIndex;
+  /** 设为短标签（如「头像」「设置」「返回」）时，并入紧凑路径条而非刷屏发气泡 */
+  navLabel?: string;
+  /** 进入该步骤时是否点亮对话里的 {{wrong:}} / {{ok:}} 高亮标记 */
+  revealMarksOnEnter?: boolean;
   say: string[];
   card?: CoachCardSpec;
   after?: string[];

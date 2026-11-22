@@ -1,29 +1,51 @@
 interface CalloutProps {
   text: string;
   placement?: 'top' | 'bottom' | 'right' | 'left';
+  align?: 'center' | 'start' | 'end';
 }
 
 /**
  * 贴在目标控件边缘轻幅弹动的迷你指引浮标（不压暗全屏，一眼锁定目标）
+ * 支持 align='start' | 'end' 防止贴近容器左右边缘时被裁切
  */
-export function GuidanceCallout({ text, placement = 'top' }: CalloutProps) {
-  const posClass =
-    placement === 'top'
-      ? 'bottom-full left-1/2 -translate-x-1/2 mb-2.5'
-      : placement === 'bottom'
-        ? 'top-full left-1/2 -translate-x-1/2 mt-2.5'
-        : placement === 'right'
-          ? 'left-full top-1/2 -translate-y-1/2 ml-2.5'
-          : 'right-full top-1/2 -translate-y-1/2 mr-2.5';
+export function GuidanceCallout({
+  text,
+  placement = 'top',
+  align = 'center',
+}: CalloutProps) {
+  let posClass: string;
+  let arrowClass: string;
 
-  const arrowClass =
-    placement === 'top'
-      ? 'top-full left-1/2 -translate-x-1/2 -mt-[4px] border-t-[#3355E0] border-x-transparent border-b-transparent border-[5px]'
-      : placement === 'bottom'
-        ? 'bottom-full left-1/2 -translate-x-1/2 -mb-[4px] border-b-[#3355E0] border-x-transparent border-t-transparent border-[5px]'
-        : placement === 'right'
-          ? 'right-full top-1/2 -translate-y-1/2 -mr-[4px] border-r-[#3355E0] border-y-transparent border-l-transparent border-[5px]'
-          : 'left-full top-1/2 -translate-y-1/2 -ml-[4px] border-l-[#3355E0] border-y-transparent border-r-transparent border-[5px]';
+  if (placement === 'top' || placement === 'bottom') {
+    const verticalPos = placement === 'top' ? 'bottom-full mb-2.5' : 'top-full mt-2.5';
+    const horizPos =
+      align === 'start'
+        ? 'left-0'
+        : align === 'end'
+          ? 'right-0'
+          : 'left-1/2 -translate-x-1/2';
+    posClass = `${verticalPos} ${horizPos}`;
+
+    const verticalArrow =
+      placement === 'top'
+        ? 'top-full -mt-[4px] border-t-[#3355E0] border-x-transparent border-b-transparent'
+        : 'bottom-full -mb-[4px] border-b-[#3355E0] border-x-transparent border-t-transparent';
+    const horizArrow =
+      align === 'start'
+        ? 'left-4'
+        : align === 'end'
+          ? 'right-4'
+          : 'left-1/2 -translate-x-1/2';
+    arrowClass = `${verticalArrow} ${horizArrow} border-[5px]`;
+  } else if (placement === 'right') {
+    posClass = 'left-full top-1/2 -translate-y-1/2 ml-2.5';
+    arrowClass =
+      'right-full top-1/2 -translate-y-1/2 -mr-[4px] border-r-[#3355E0] border-y-transparent border-l-transparent border-[5px]';
+  } else {
+    posClass = 'right-full top-1/2 -translate-y-1/2 mr-2.5';
+    arrowClass =
+      'left-full top-1/2 -translate-y-1/2 -ml-[4px] border-l-[#3355E0] border-y-transparent border-r-transparent border-[5px]';
+  }
 
   return (
     <span

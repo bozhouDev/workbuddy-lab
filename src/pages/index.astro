@@ -43,9 +43,9 @@ const mistakes = [
   {
     f: '模式与权限',
     bad: '需求模糊就用默认模式，或开着完全访问让它批量清理文件。',
-    good: '大改动先开 Plan 看方案，新手始终保持「默认权限」。',
-    href: '/features/send-task/mode/',
-    cta: '看避坑图文 →',
+    good: '大改动先开 Plan 看方案，新手始终保持默认权限。',
+    href: '/simulator/?route=mode',
+    cta: '去试一下 →',
   },
 ];
 
@@ -76,13 +76,13 @@ const chapters: { n: string; t: string; items: ChapterItem[] }[] = [
     n: '02',
     t: '发任务',
     items: [
-      { t: '添加资料：+ 和 @', href: '/features/send-task/attach/' },
-      { t: '模式：默认 / Plan / Ask', href: '/features/send-task/mode/' },
-      { t: '权限', href: '/features/send-task/permission/' },
-      { t: '写清任务：5 要素与采访法', href: '/features/send-task/task-brief/' },
-      { t: '看执行过程', href: '/features/send-task/execution/' },
-      { t: '检查结果', href: '/features/send-task/review/' },
-      { t: '二次修改', href: '/features/send-task/revise/' },
+      { t: '添加资料：+ 和 @', href: '/features/send-task/attach/', sim: true },
+      { t: '模式：默认 / Plan / Ask', href: '/features/send-task/mode/', sim: true },
+      { t: '权限', href: '/features/send-task/permission/', sim: true },
+      { t: '写清任务：5 要素与采访法', href: '/features/send-task/task-brief/', sim: true },
+      { t: '看执行过程', href: '/features/send-task/execution/', sim: true },
+      { t: '检查结果', href: '/features/send-task/review/', sim: true },
+      { t: '二次修改', href: '/features/send-task/revise/', sim: true },
     ],
   },
   {
@@ -377,7 +377,7 @@ const cases = [
         <div class="max-w-[1200px] mx-auto px-4 sm:px-6 py-16 sm:py-28 flex flex-col gap-10 sm:gap-12">
           <div class="flex justify-between items-end gap-4 flex-wrap">
             <div class="flex flex-col gap-2.5">
-              <div class="font-mono text-[12px] text-accent-600 tracking-[0.06em]">功能篇 · 23 节已全部上线（6 节可进模拟器实操）</div>
+              <div class="font-mono text-[12px] text-accent-600 tracking-[0.06em]">功能篇 · 23 节已全部上线（13 节可进模拟器实操）</div>
               <h2 class="m-0 text-[22px] sm:text-[36px] leading-[1.25] tracking-[-0.02em] font-bold">
                 从装好软件，到把它用顺
               </h2>

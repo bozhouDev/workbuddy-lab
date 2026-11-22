@@ -29,6 +29,9 @@ interface CoachRailProps {
   buttons: CoachButton[];
   onFocusArea?: (areaId: AreaId) => void;
   subtitle?: string;
+  /** 可回跳的已完成阶段索引（用于点击 4 段进度条或底部「上一阶段」） */
+  jumpablePhases?: PhaseIndex[];
+  onJumpPhase?: (phase: PhaseIndex) => void;
 }
 
 const MIN_W = 310;
@@ -50,6 +53,8 @@ export function CoachRail({
   buttons,
   onFocusArea,
   subtitle = '左边真界面哪里都能点，点了就讲',
+  jumpablePhases = [],
+  onJumpPhase,
 }: CoachRailProps) {
   const feedRef = useRef<HTMLDivElement>(null);
 
@@ -257,7 +262,7 @@ export function CoachRail({
       className={
         isFloating
           ? 'sim-pop-up fixed z-50 flex flex-col rounded-[16px] border border-gray-200 bg-white/98 backdrop-blur-md overflow-hidden shadow-[0_24px_64px_-12px_rgba(17,19,24,0.28)]'
-          : 'w-[348px] xl:w-[392px] shrink-0 h-full flex flex-col rounded-[16px] border border-gray-200 bg-white overflow-hidden shadow-[0_12px_36px_-18px_rgba(17,19,24,0.12)]'
+          : 'w-[340px] xl:w-[388px] shrink-0 h-full flex flex-col rounded-[16px] border border-gray-200 bg-white overflow-hidden shadow-[0_12px_36px_-18px_rgba(17,19,24,0.12)]'
       }
     >
       {/* 头部：悬浮模式下按住此栏可自由拖动到左/中/右任意位置 */}
@@ -332,11 +337,27 @@ export function CoachRail({
           </div>
         </div>
 
-        {/* 4 段循环进度条 */}
+        {/* 4 段循环进度条（已走过的阶段可点击回看） */}
         <div className="grid grid-cols-4 gap-1 mt-2.5" role="list" aria-label="4 段陪练进度">
           {PHASE_LABELS.map((label, idx) => {
+            const pIdx = idx as PhaseIndex;
             const isOn = idx === phase;
             const isDone = idx < phase;
+            const canJump = Boolean(onJumpPhase && !isOn && jumpablePhases.includes(pIdx));
+            if (canJump) {
+              return (
+                <button
+                  key={label}
+                  type="button"
+                  role="listitem"
+                  title={`回到 ${label} 阶段`}
+                  onClick={() => onJumpPhase?.(pIdx)}
+                  className="border-0 text-center text-[11.5px] py-1 rounded-[7px] bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium cursor-pointer transition-colors"
+                >
+                  ↺ {label}
+                </button>
+              );
+            }
             return (
               <span
                 key={label}
@@ -368,18 +389,18 @@ export function CoachRail({
             return (
               <div
                 key={item.id}
-                className="sim-msg-rise self-start max-w-[94%] flex items-start gap-2"
+                className="sim-msg-rise self-start max-w-[95%] flex items-start gap-2.5"
               >
                 <img
                   src="/avatar-bozhou.jpg"
                   alt=""
                   aria-hidden="true"
-                  width={24}
-                  height={24}
-                  className="w-6 h-6 rounded-full object-cover shrink-0 mt-0.5 border border-black/5"
+                  width={26}
+                  height={26}
+                  className="w-6.5 h-6.5 rounded-full object-cover shrink-0 mt-0.5 border border-black/10 shadow-2xs"
                 />
                 <div
-                  className="rounded-[4px_14px_14px_14px] bg-gray-100 px-3 py-2 text-[13.5px] leading-[1.7] text-gray-900"
+                  className="coach-bubble rounded-[6px_16px_16px_16px] bg-[#f6f7f9] border border-[#eaecf0] px-3.5 py-2.5 text-[14px] leading-[1.72] text-[#1f2329] shadow-[0_1px_2px_rgba(16,24,40,0.03)]"
                   dangerouslySetInnerHTML={{ __html: item.html }}
                 />
               </div>
@@ -390,9 +411,9 @@ export function CoachRail({
             return (
               <div
                 key={item.id}
-                className="sim-msg-rise self-start max-w-[94%] ml-8 rounded-[12px] border border-dashed border-gray-300 bg-white px-3 py-2 text-[12.5px] leading-[1.68] text-gray-600"
+                className="sim-msg-rise coach-bubble self-start max-w-[94%] ml-9 rounded-[12px] border border-[#e3e7f3] border-l-[3px] border-l-accent-500 bg-[#fafbff] px-3.5 py-2.5 text-[13px] leading-[1.68] text-[#3a3f4b]"
               >
-                <span className="block font-mono text-[10.5px] text-gray-500 mb-0.5">
+                <span className="block text-[11px] font-semibold text-accent-600 mb-0.5">
                   你点的是 · {item.label}
                 </span>
                 <span dangerouslySetInnerHTML={{ __html: item.html }} />
@@ -404,9 +425,37 @@ export function CoachRail({
             return (
               <div
                 key={item.id}
-                className="sim-msg-rise self-end max-w-[85%] rounded-[14px_4px_14px_14px] bg-gray-900 text-white px-3 py-1.5 text-[13.5px]"
+                className="sim-msg-rise self-end max-w-[85%] rounded-[16px_6px_16px_16px] bg-[#181a20] text-white px-3.5 py-2 text-[14px] leading-[1.6] shadow-[0_2px_6px_rgba(17,19,24,0.1)]"
               >
                 {item.text}
+              </div>
+            );
+          }
+
+          if (item.kind === 'navTrail') {
+            return (
+              <div
+                key={item.id}
+                className="sim-msg-rise self-stretch rounded-[12px] border border-[#e7e9ee] bg-[#fafbfc] px-3 py-2 flex flex-wrap items-center gap-1.5 text-[12px]"
+              >
+                <span className="text-[#8c9099] font-medium mr-0.5">路径</span>
+                {item.steps.map((st, idx) => (
+                  <span key={st.id} className="inline-flex items-center gap-1">
+                    {idx > 0 && <span className="text-[#c5c7cc]">→</span>}
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-[2px] rounded-md ${
+                        st.done
+                          ? 'text-[#047857] bg-[#ecfdf5] font-medium'
+                          : st.active
+                            ? 'text-accent-700 bg-accent-50 border border-accent-200 font-semibold'
+                            : 'text-[#8c9099]'
+                      }`}
+                    >
+                      <span>{st.done ? '✓' : st.active ? '●' : '○'}</span>
+                      <span>{st.label}</span>
+                    </span>
+                  </span>
+                ))}
               </div>
             );
           }
@@ -415,9 +464,10 @@ export function CoachRail({
             return (
               <div
                 key={item.id}
-                className="sim-msg-rise self-end text-[11.5px] text-gray-500 pr-1"
+                className="sim-msg-rise self-end inline-flex items-center gap-1 text-[11.5px] text-gray-500 bg-gray-100/80 rounded-full px-2.5 py-0.5"
               >
-                你点了「{item.text}」
+                <span className="text-[#047857]">✓</span>
+                <span>已操作 {item.text}</span>
               </div>
             );
           }
@@ -503,7 +553,7 @@ export function CoachRail({
                     </tr>
                     <tr className="border-b border-[#f0f0ed]">
                       <td className="px-3 py-2 font-semibold text-gray-900 whitespace-nowrap">框下方</td>
-                      <td className="px-3 py-2 text-gray-600">动手前先选分组；新手保持「默认权限」</td>
+                      <td className="px-3 py-2 text-gray-600">动手前先选分组；新手保持<strong>默认权限</strong></td>
                     </tr>
                     <tr>
                       <td className="px-3 py-2 font-semibold text-gray-900 whitespace-nowrap">右侧区</td>
@@ -521,25 +571,50 @@ export function CoachRail({
               return (
                 <div
                   key={item.id}
-                  className="sim-msg-rise self-stretch rounded-[12px] border border-gray-200 bg-white overflow-hidden"
+                  className="sim-msg-rise coach-card self-stretch rounded-[12px] border border-[#e6e8ee] bg-white overflow-hidden"
                 >
-                  <div className="px-3 py-2 bg-[#fbfbfa] border-b border-[#eeeeeb] flex items-center justify-between gap-2 text-[12px]">
-                    <span className="font-semibold text-gray-900 truncate">{c.title}</span>
+                  <div className="px-3.5 py-2 bg-[#f8f9fb] border-b border-[#eceef2] flex items-center justify-between gap-2 text-[12px]">
+                    <span className="font-semibold text-[#111318] truncate">{c.title}</span>
                     <span
-                      className={`text-[10.5px] font-semibold px-1.5 py-[1px] rounded shrink-0 ${
+                      className={`text-[10.5px] font-semibold px-2 py-[2px] rounded-md shrink-0 ${
                         c.badgeTone === 'warn'
                           ? 'bg-[#fff1e8] text-[#9a3412]'
                           : c.badgeTone === 'ok'
                             ? 'bg-accent-50 text-accent-600'
-                            : 'bg-gray-100 text-gray-600'
+                            : 'bg-[#eef0f4] text-[#5c6270]'
                       }`}
                     >
                       {c.badge}
                     </span>
                   </div>
-                  <pre className="m-0 px-3 py-2.5 text-[12px] leading-[1.7] font-mono text-gray-800 whitespace-pre-wrap bg-white">
-                    {c.lines.join('\n')}
-                  </pre>
+                  <div className="px-3.5 py-3 flex flex-col gap-2 text-[13px] leading-[1.7] text-[#2b2f36] bg-white">
+                    {c.lines.map((line, idx) => {
+                      const speakerMatch = line.match(/^(你|WorkBuddy)：(.*)$/);
+                      if (speakerMatch) {
+                        const [, speaker, body] = speakerMatch;
+                        const isUser = speaker === '你';
+                        return (
+                          <div key={idx} className="flex items-start gap-2">
+                            <span
+                              className={`shrink-0 mt-[2px] text-[11px] font-semibold px-1.5 py-[1px] rounded-md ${
+                                isUser
+                                  ? 'bg-[#eef2ff] text-accent-700'
+                                  : 'bg-[#f2f3f5] text-[#4a4f57]'
+                              }`}
+                            >
+                              {speaker}
+                            </span>
+                            <span className="min-w-0 flex-1 text-[#1f2329]">{body}</span>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div key={idx} className="text-[#2b2f36]">
+                          {line}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               );
             }
@@ -548,7 +623,7 @@ export function CoachRail({
               return (
                 <div
                   key={item.id}
-                  className="sim-msg-rise self-stretch rounded-[12px] border border-gray-200 bg-white overflow-hidden"
+                  className="sim-msg-rise coach-card self-stretch rounded-[12px] border border-gray-200 bg-white overflow-hidden"
                 >
                   <div className="px-3 py-2 bg-[#fbfbfa] border-b border-[#eeeeeb] text-[12px] font-semibold text-gray-900">
                     {c.title}

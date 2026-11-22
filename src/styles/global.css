@@ -12,6 +12,17 @@
   *::after {
     box-sizing: border-box;
   }
+
+  html,
+  body,
+  button,
+  input,
+  textarea,
+  select {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
 
 @import '@astrojs/starlight-tailwind';
@@ -19,8 +30,8 @@
 @import 'tailwindcss/utilities.css' layer(utilities);
 
 @theme {
-  /* ---------- 字体：只用系统字体，不加载任何网络字体 ---------- */
-  --font-sans: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Segoe UI', system-ui, sans-serif;
+  /* ---------- 字体：优先现代中文无衬线系统字体，不加载网络字体 ---------- */
+  --font-sans: 'PingFang SC', 'Hiragino Sans GB', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Microsoft YaHei', 'Noto Sans SC', 'Segoe UI', system-ui, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
   /* ---------- 主色：蓝，表示“正确 / 可点 / 链接” ---------- */
@@ -259,6 +270,45 @@ header.header {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* 泊舟陪练对话框排版：加粗清晰、内联标签化、无生硬等宽断词 */
+.coach-bubble b,
+.coach-bubble strong {
+  font-weight: 600;
+  color: #111318;
+}
+
+.coach-bubble code {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #1f2329;
+  background: #ffffff;
+  border: 1px solid #e2e5ec;
+  border-radius: 6px;
+  padding: 1px 6px;
+  margin: 0 2px;
+  white-space: nowrap;
+  display: inline-block;
+  line-height: 1.5;
+  vertical-align: baseline;
+}
+
+.coach-card b,
+.coach-card strong {
+  font-weight: 600;
+  color: #111318;
+}
+
+.coach-card code {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  background: rgb(17 19 24 / 0.06);
+  border-radius: 5px;
+  padding: 1px 5px;
+  word-break: break-all;
 }
 
 @media (prefers-reduced-motion: reduce) {
