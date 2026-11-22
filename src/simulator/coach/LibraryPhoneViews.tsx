@@ -125,7 +125,12 @@ export function MobileLinkPopover(props: Props) {
         <div className="text-[12px] text-[#6b7079] mt-1">同账号移动设备连接后，可同步查看任务、分组、会话与产物</div>
       </div>
       {shell.mobileLinkOn && (
-        <div className="flex flex-col items-center gap-1.5">
+        <div className="flex flex-col items-center gap-2">
+          {/* 真机二维码上方有「移动端 App / 微信小程序」两个页签，这里只做展示 */}
+          <div className="w-full grid grid-cols-2 rounded-[10px] bg-[#f1f1ef] p-0.5 text-[12px]">
+            <span className="text-center py-1 rounded-[8px] bg-white font-semibold text-[#111318] shadow-sm">移动端 App</span>
+            <span className="text-center py-1 text-[#8c9099]">微信小程序</span>
+          </div>
           <FakeQr size={112} />
           <span className="text-[11.5px] text-[#8c9099]">用 WorkBuddy App 或微信小程序扫码（模拟）</span>
         </div>
@@ -137,7 +142,7 @@ export function MobileLinkPopover(props: Props) {
           data-guided-target="mobile.toggle"
           aria-label="允许移动设备远程连接"
           onClick={kit.click('mobile.toggle', '允许移动设备远程连接', '打开后才能用手机连这台电脑。')}
-          className={`relative w-9 h-5 rounded-full p-0.5 flex border-0 cursor-pointer ${shell.mobileLinkOn ? 'bg-[#111318] justify-end' : 'bg-[#d6d6d2] justify-start'} ${kit.ring('mobile.toggle')}`}
+          className={`relative w-9 h-5 rounded-full p-0.5 flex border-0 cursor-pointer ${shell.mobileLinkOn ? 'bg-[#10b981] justify-end' : 'bg-[#d6d6d2] justify-start'} ${kit.ring('mobile.toggle')}`}
         >
           <span className="w-4 h-4 rounded-full bg-white" />
           {kit.callout('mobile.toggle', 'right', 'center')}
