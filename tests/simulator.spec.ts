@@ -417,6 +417,13 @@ test.describe('第 03、04 章泊舟陪练模拟器', () => {
     await expect(page.getByText('已错过计划时间，将补跑一次')).toBeVisible();
     await walkLesson(page, ['schedule.recordDetail']);
     await expect(page.getByText('第 1 次运行成功')).toBeVisible();
+    // 手快连点时，陪练消息仍按步骤顺序出现（旧消息不会晚到插到后面）
+    const order = await page.evaluate(() => {
+      const text = document.body.innerText;
+      return [text.indexOf('保存前先点'), text.indexOf('要等 3 天'), text.indexOf('三条记录')];
+    });
+    expect(order.every((v) => v >= 0)).toBe(true);
+    expect(order).toEqual([...order].sort((x, y) => x - y));
     await expect(page.getByText('定时任务清单')).toBeVisible({ timeout: 8000 });
 
     await page.getByRole('button', { name: /下一节：4.2 助理/ }).click();

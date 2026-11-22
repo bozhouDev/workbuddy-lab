@@ -189,9 +189,36 @@ export default function GuidedLessonPlayer({
   const phaseSnapshotsRef = useRef<Partial<Record<PhaseIndex, SavedSnapshot>>>({});
   const prevRestartRef = useRef(restartSignal);
 
+  /**
+   * 正在逐条打出的陪练消息：items 是这一步要说的全部，next 是下一条的下标。
+   * 学员手快在消息没打完时就点了目标，要先把剩下的一次补齐，否则旧消息会晚到、插在新消息后面。
+   */
+  const pendingSayRef = useRef<{
+    items: FeedItemInput[];
+    next: number;
+    timers: number[];
+    onDone?: () => void;
+  } | null>(null);
+
   const clearAllTimers = useCallback(() => {
     for (const id of timersRef.current) window.clearTimeout(id);
     timersRef.current = [];
+    // 重来 / 跳阶段时整段作废，不再补发
+    pendingSayRef.current = null;
+  }, []);
+
+  /** 把上一步还没打出来的消息立刻按原顺序补上，并执行它的收尾（如更新路径条） */
+  const flushPendingSay = useCallback(() => {
+    const pending = pendingSayRef.current;
+    if (!pending) return;
+    pendingSayRef.current = null;
+    for (const id of pending.timers) window.clearTimeout(id);
+    const rest = pending.items.slice(pending.next);
+    if (rest.length > 0) {
+      setFeed((prev) => [...prev, ...rest.map((item) => ({ ...item, id: nextId() }) as FeedItem)]);
+    }
+    setIsTyping(false);
+    pending.onDone?.();
   }, []);
 
   const schedule = useCallback((fn: () => void, ms: number) => {
@@ -202,25 +229,34 @@ export default function GuidedLessonPlayer({
 
   const saySequence = useCallback(
     (items: FeedItemInput[], onDone?: () => void) => {
+      // 上一段没打完的先补齐，保证消息顺序
+      flushPendingSay();
       if (items.length === 0) {
         onDone?.();
         return;
       }
       setIsTyping(true);
+      const pending = { items, next: 0, timers: [] as number[], onDone };
+      pendingSayRef.current = pending;
       let elapsed = 0;
       items.forEach((item, idx) => {
         const delay = idx === 0 ? 180 : 280;
         elapsed += delay;
-        schedule(() => {
+        const id = schedule(() => {
+          // 已被补发或作废的旧序列不再输出
+          if (pendingSayRef.current !== pending) return;
           setFeed((prev) => [...prev, { ...item, id: nextId() } as FeedItem]);
+          pending.next = idx + 1;
           if (idx === items.length - 1) {
+            pendingSayRef.current = null;
             setIsTyping(false);
             onDone?.();
           }
         }, elapsed);
+        pending.timers.push(id);
       });
     },
-    [schedule]
+    [schedule, flushPendingSay]
   );
 
   /** 在 feed 中原地更新当前带路路径条（不刷屏发一堆「你点了 X」） */
@@ -266,6 +302,8 @@ export default function GuidedLessonPlayer({
 
       const step = def.steps[targetIdx];
       if (!step) return;
+      // 进新一步前，把上一步没打完的话补齐（下面可能直接更新路径条）
+      flushPendingSay();
       lastAsideRef.current = null;
       setStepIdx(targetIdx);
       setUrgent(false);
@@ -319,7 +357,7 @@ export default function GuidedLessonPlayer({
         saySequence(items);
       }
     },
-    [saySequence, upsertNavTrail, markLastNavTrailDone]
+    [saySequence, upsertNavTrail, markLastNavTrailDone, flushPendingSay]
   );
 
   // 动态按需加载当前课脚本（优先恢复本次会话刷新前的进度）
@@ -530,6 +568,8 @@ export default function GuidedLessonPlayer({
       if (!step?.wait || step.wait.target !== target) return;
 
       lastAsideRef.current = null;
+      // 消息没打完就点了：先补齐，再记「已操作」
+      flushPendingSay();
       // 非带路步骤保留一条简洁确认，带路步骤直接勾选路径条不再刷屏
       if (!step.navLabel) {
         setFeed((prev) => [...prev, { id: nextId(), kind: 'did', text: step.wait!.label }]);
@@ -556,7 +596,7 @@ export default function GuidedLessonPlayer({
         enterStep(lesson, nextIdx, updatedShell);
       }
     },
-    [lesson, stepIdx, isRunningChat, finishActiveRunNow, markLastNavTrailDone, runChatAnimation, enterStep]
+    [lesson, stepIdx, isRunningChat, finishActiveRunNow, markLastNavTrailDone, runChatAnimation, enterStep, flushPendingSay]
   );
 
   // 允许在「最近」中自由切换历史对话回看对比（不破坏课程当前进度）
