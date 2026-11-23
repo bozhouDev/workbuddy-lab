@@ -429,17 +429,21 @@ test.describe('第 03、04 章泊舟陪练模拟器', () => {
     // 从对话新建：输入框预填真机文案
     await expect(page.getByText(/帮我创建一个定时任务：每天 08:30 执行/).first()).toBeVisible();
     await walkLesson(page, [
-      'composer.send', 'nav.schedule', 'schedule.openTask', 'schedule.permFull', 'schedule.run', 'schedule.save', 'schedule.viewRecords',
+      'composer.send', 'nav.schedule', 'schedule.openTask', 'schedule.run', 'schedule.viewRecords',
     ]);
     await expect(page.getByText('测试运行成功').first()).toBeVisible();
+    // 运行记录表的列名对照真机
+    await expect(page.getByText('耗时', { exact: true })).toBeVisible();
     await walkLesson(page, ['schedule.recordDetail', 'schedule.checkSource']);
     await expect(page.getByText(/距试跑约 14 小时/)).toBeVisible();
-    await walkLesson(page, ['schedule.closeDetail', 'schedule.fastForward']);
+    // 任务页右侧有「下一次运行」
+    await expect(page.getByText(/下一次运行 明天/)).toBeVisible();
+    await walkLesson(page, ['schedule.permFull', 'nav.schedule', 'schedule.fastForward']);
     await expect(page.getByText('已错过计划时间，将补跑一次')).toBeVisible();
     // 手快连点时，陪练消息仍按步骤顺序出现（旧消息不会晚到插到后面）
     const order = await page.evaluate(() => {
       const text = document.body.innerText;
-      return [text.indexOf('现在点「运行」'), text.indexOf('把刚改的执行权限存下来'), text.indexOf('成功只说明跑完了'), text.indexOf('要等 3 天')];
+      return [text.indexOf('点底部的「运行」'), text.indexOf('成功只说明跑完了'), text.indexOf('这句就是你唯一的保险'), text.indexOf('要等 3 天')];
     });
     expect(order.every((v) => v >= 0)).toBe(true);
     expect(order).toEqual([...order].sort((x, y) => x - y));

@@ -75,7 +75,6 @@ export function createBaseGuidedState(
     scheduleTemplatesOpen: false,
     scheduleCreateTemplateId: null,
     scheduleModalTaskId: null,
-    scheduleTestRan: false,
     scheduleCheckedSource: null,
     scheduleRecords: [],
     scheduleRecordDetailId: null,

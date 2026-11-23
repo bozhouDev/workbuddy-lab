@@ -9,9 +9,10 @@ export interface ScheduleTemplate {
   content: string;
   /** 点开后填进表单的提示词 */
   prompt: string;
-  /** 表单里预填的重复 / 时间：只填了课程会打开的两个（每周工作周报按真机截图，父母联系提醒按简介） */
+  /** 表单里预填的重复 / 时间 / 有效期：只填了有真机截图的两个（每周工作周报、父母联系提醒） */
   repeat?: string;
   time?: string;
+  validity?: string;
 }
 
 export const SCHEDULE_TEMPLATES: ScheduleTemplate[] = [
@@ -71,6 +72,8 @@ export const SCHEDULE_TEMPLATES: ScheduleTemplate[] = [
     prompt: '每周日十点提醒我给家人打电话或发消息，简单问候近况。',
     repeat: '每周 周日',
     time: '10:00',
+    // 真机截图里结束日期被截断，照原样显示
+    validity: '2026/11/24 — 20…',
   },
   {
     id: 'healthCheckupReminder',

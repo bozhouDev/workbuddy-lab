@@ -144,12 +144,10 @@ export type GuidedTargetId =
   | 'schedule.openTask'
   | 'schedule.permFull'
   | 'schedule.run'
-  | 'schedule.save'
   | 'schedule.fastForward'
   | 'schedule.viewRecords'
   | 'schedule.recordDetail'
   | 'schedule.checkSource'
-  | 'schedule.closeDetail'
   // 助理（手机遥控）
   | 'mobile.toggle'
   | 'phone.deviceSwitch'
@@ -249,7 +247,7 @@ export interface ScheduleNewsItem {
   source: string;
 }
 
-/** 一条运行记录（对照「运行记录」表：任务名称 / 状态 / 运行时间 / 操作） */
+/** 一条运行记录（对照真机「运行记录」表：任务名称 / 状态 / 运行时间 / 耗时 / 任务类型 / 操作） */
 export interface ScheduleRecord {
   id: string;
   nth: number;
@@ -259,15 +257,18 @@ export interface ScheduleRecord {
   /** 状态列显示的文字 */
   statusText: string;
   time: string;
+  /** 耗时列，如「1m20s」 */
+  duration: string;
   /** 补充说明（如「已错过计划时间，将补跑一次」） */
   note?: string;
-  artifactFile?: string;
-  summary?: string;
+  /** 任务页右侧「运行记录」卡片和正文开头的第二行（如覆盖时段） */
+  summary: string;
+  /** 没有资讯条目时正文只显示这几行 */
   artifactLines?: string[];
-  /** 有值时制品按资讯条目渲染，每条的来源可点开核对 */
+  /** 有值时正文按资讯条目渲染，每条的来源可点开核对 */
   artifactItems?: ScheduleNewsItem[];
-  /** 运行明细的几行 */
-  runLog?: string[];
+  /** 这次运行消耗的积分 */
+  cost?: string;
 }
 
 /** 手机模拟面板里的一条消息 */
@@ -368,7 +369,6 @@ export interface GuidedShellState {
   scheduleCreateTemplateId: string | null;
   /** 「编辑定时任务」弹窗正在编辑的任务 id */
   scheduleModalTaskId: string | null;
-  scheduleTestRan: boolean;
   /** 制品里点开核对过的来源（条目标题） */
   scheduleCheckedSource: string | null;
   scheduleRecords: ScheduleRecord[];

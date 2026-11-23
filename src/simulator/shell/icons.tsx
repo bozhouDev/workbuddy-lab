@@ -53,6 +53,25 @@ export function PlusIcon({ size = 15, ...rest }: IconProps) {
   );
 }
 
+/** 归档（运行记录「操作」列） */
+export function ArchiveIcon({ size = 15, ...rest }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true" {...rest}>
+      <rect x="2.5" y="3" width="11" height="3" rx="0.8" stroke="currentColor" strokeWidth="1.2" />
+      <path d="M3.5 6v6.2c0 .5.4.8.8.8h7.4c.4 0 .8-.3.8-.8V6M6.5 8.5h3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** 删除（运行记录「操作」列） */
+export function TrashIcon({ size = 15, ...rest }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true" {...rest}>
+      <path d="M2.8 4.2h10.4M6.2 4.2V2.8h3.6v1.4M4 4.2l.6 8.4c0 .5.4.9.9.9h5c.5 0 .9-.4.9-.9l.6-8.4M6.6 6.8v4.2M9.4 6.8v4.2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function FilterIcon({ size = 15, ...rest }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true" {...rest}>
