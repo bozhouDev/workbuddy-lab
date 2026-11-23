@@ -60,6 +60,7 @@ export function createBaseGuidedState(
     addSkillMenuOpen: false,
     installedPanelOpen: false,
     connectedIds: [],
+    enabledConnectorIds: [],
     connectorDetailId: null,
     mcpFormOpen: false,
     mcpFormFilled: false,

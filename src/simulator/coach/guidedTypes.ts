@@ -82,6 +82,9 @@ export type GuidedTargetId =
   | 'libraryPicker.confirm'
   | 'plusMenu.togglePlan'
   | 'plusMenu.toggleAsk'
+  // + → 连接器 二级菜单与飞书开关
+  | 'plusMenu.connectors'
+  | 'plusMenu.toggleFeishu'
   | 'composer.mention'
   | 'mentionMenu.pickChatLog'
   | 'composer.group'
@@ -351,6 +354,8 @@ export interface GuidedShellState {
   /** 是否打开「已安装」列表 */
   installedPanelOpen: boolean;
   connectedIds: string[];
+  /** 在 + → 连接器 里打开开关的连接器 id。开关是全局的：打开后所有对话都能用，直到手动关掉 */
+  enabledConnectorIds: string[];
   connectorDetailId: string | null;
   mcpFormOpen: boolean;
   mcpFormFilled: boolean;

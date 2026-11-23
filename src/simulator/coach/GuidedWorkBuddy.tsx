@@ -10,6 +10,7 @@ import {
   ExtensionsIcon,
   FilterIcon,
   FolderIcon,
+  LinkChainIcon,
   LibraryIcon,
   MicIcon,
   MobileLinkIcon,
@@ -29,12 +30,12 @@ import { RichText } from '../shell/RichText';
 import { AnimatedNumber } from './AnimatedNumber';
 import { GuidanceCallout } from './GuidanceCue';
 import { type ComposerChip, type GuidedShellState, type GuidedTargetId } from './guidedTypes';
-import type { PopoverId } from './types';
+import type { PlusSubmenu, PopoverId } from './types';
 import { SettingsViews5113 } from './SettingsViews5113';
 import { ExtensionsViews5113 } from './ExtensionsViews5113';
 import { ScheduleView5113 } from './ScheduleView5113';
 import { LibraryPickerModal, LibraryView5113, MobileLinkPopover, PhonePanel } from './LibraryPhoneViews';
-import { SLASH_SKILLS_BASE } from './extensionsData';
+import { CONNECTORS, SLASH_SKILLS_BASE } from './extensionsData';
 import { FIVE_PARTS_ITEMS, type FivePartsItem } from './fivePartsBrief';
 import { FakeQr, LetterIcon } from './targetKit';
 
@@ -52,6 +53,8 @@ interface GuidedWorkBuddyProps {
   /** 回到当前步骤所在页面（学员中途逛走后用） */
   onBackToView: (view: GuidedShellState['view']) => void;
   onAsideClick: (label: string, explain: string) => void;
+  /** 自由切换 + 菜单右侧的二级菜单（非课程目标时也能逛） */
+  onSelectPlusSubmenu: (sub: PlusSubmenu) => void;
 }
 
 /**
@@ -117,6 +120,7 @@ export function GuidedWorkBuddy({
   onNewTask,
   onBackToView,
   onAsideClick,
+  onSelectPlusSubmenu,
 }: GuidedWorkBuddyProps) {
   // 不在首页、但下一步要点首页输入框的按钮时，提示学员先点「新建任务」回首页
   const isNeedBackToHome =
@@ -171,12 +175,18 @@ export function GuidedWorkBuddy({
   /** 新视图共用的目标参数 */
   const kitProps = { waitTarget, waitCallout, urgent, onTargetClick, onAsideClick };
   // + 菜单要等学员点里面的「添加文件 / 资料库」时，菜单被点掉了就在 + 上亮圈，点它重新打开
-  const plusNeedsReopen =
-    (waitTarget === 'plusMenu.addFile' || waitTarget === 'plusMenu.library') && shell.popover !== 'plus';
+  const plusNeedsReopen = (waitTarget ?? '').startsWith('plusMenu.') && shell.popover !== 'plus';
   const ring = (id: GuidedTargetId) =>
     waitTarget === id || (id === 'composer.plus' && plusNeedsReopen) ? (urgent ? 'sim-ring-urgent' : 'sim-ring') : '';
   /** + 菜单右侧当前展开的是「添加文件」二级菜单 */
   const filesSub = shell.plusSubmenu === 'files';
+  /** + 菜单右侧当前展开的是「连接器」二级菜单 */
+  const connectorsSub = shell.plusSubmenu === 'connectors';
+  /** 底栏要显示的连接器：全局开着的（按连接器 id）+ 课程直接挂上的（如自定义 MCP） */
+  const enabledConnectorNames = [
+    ...shell.enabledConnectorIds.map((id) => CONNECTORS.find((c) => c.id === id)?.name ?? id),
+    ...shell.composerChips.filter((c) => c.kind === 'connector').map((c) => c.label),
+  ].filter((name, i, arr) => arr.indexOf(name) === i);
 
   const handleOrAside = (
     id: GuidedTargetId,
@@ -968,29 +978,132 @@ export function GuidedWorkBuddy({
                   </button>
                   <div
                     className={`w-full rounded-lg px-2.5 py-2 flex items-center justify-between ${
-                      filesSub ? 'text-[#2b2f36]' : 'bg-[#f4f4f5] font-semibold text-[#111318]'
+                      filesSub || connectorsSub ? 'text-[#2b2f36]' : 'bg-[#f4f4f5] font-semibold text-[#111318]'
                     }`}
                   >
                     <span>模式</span>
                     <ChevronRightIcon size={12} className="text-[#5c5f66]" />
                   </div>
                   <div className="h-px bg-[#eeeeeb] my-1 mx-1" />
-                  {['专家', '技能', '连接器'].map((label) => (
+                  {['专家', '技能'].map((label) => (
                     <button
                       key={label}
                       type="button"
                       onClick={() =>
                         onAsideClick(
                           label,
-                          `<b>${label}</b> 用来扩展 WorkBuddy 的专业能力和外部工具，第 3 章能力扩展里专门讲。`
+                          label === '专家'
+                            ? '从这里也能召唤专家：专家就是一段角色提示词加上几个技能，3.4 节专门讲。'
+                            : '从这里也能选技能，和在输入框里打 <b>/</b> 弹出的是同一份列表，3.2 节专门讲。'
                         )
                       }
-                      className="w-full border-0 bg-transparent hover:bg-[#f4f4f5] rounded-lg px-2.5 py-1.5 text-left text-[#4a4f57] cursor-pointer"
+                      className="w-full border-0 bg-transparent hover:bg-[#f4f4f5] rounded-lg px-2.5 py-2 flex items-center justify-between text-left text-[#2b2f36] cursor-pointer"
                     >
-                      {label}
+                      <span>{label}</span>
+                      <ChevronRightIcon size={12} className="text-[#8c9099]" />
                     </button>
                   ))}
+                  {/* 连接器：展开右侧二级菜单（对照真机 5.11.3 + → 连接器） */}
+                  <button
+                    type="button"
+                    data-guided-target="plusMenu.connectors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (waitTarget === 'plusMenu.connectors') {
+                        onTargetClick('plusMenu.connectors');
+                        return;
+                      }
+                      onSelectPlusSubmenu('connectors');
+                    }}
+                    className={`relative w-full border-0 rounded-lg px-2.5 py-2 flex items-center justify-between text-left cursor-pointer ${
+                      connectorsSub ? 'bg-[#f4f4f5] font-semibold text-[#111318]' : 'bg-transparent hover:bg-[#f4f4f5] text-[#2b2f36]'
+                    } ${ring('plusMenu.connectors')}`}
+                  >
+                    <span>连接器</span>
+                    <ChevronRightIcon size={12} className="text-[#8c9099]" />
+                    {waitTarget === 'plusMenu.connectors' && waitCallout && <GuidanceCallout text={waitCallout} placement="left" />}
+                  </button>
                 </div>
+
+                {/* 右侧二级：连接器列表。已连接的显示开关（全局生效），没连接的显示「连接」，底部「管理连接器」 */}
+                {connectorsSub && (
+                  <div
+                    className="w-[244px] rounded-[14px] bg-white border border-[#e6e6e3] shadow-[0_14px_36px_rgba(17,19,24,0.16)] p-1.5 flex flex-col"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="mx-1 mt-0.5 mb-1 h-8 rounded-lg bg-[#f4f4f5] px-2.5 flex items-center gap-1.5 text-[12.5px] text-[#9ea3ad]">
+                      <SearchIcon size={13} />
+                      搜索连接器
+                    </div>
+                    <div className="max-h-[236px] overflow-y-auto flex flex-col gap-0.5">
+                      {[
+                        ...CONNECTORS.filter((c) => shell.connectedIds.includes(c.id)),
+                        ...CONNECTORS.filter((c) => !shell.connectedIds.includes(c.id)),
+                      ].map((c) => {
+                        const connected = shell.connectedIds.includes(c.id);
+                        const on = shell.enabledConnectorIds.includes(c.id);
+                        const isTarget = c.id === 'feishu' && waitTarget === 'plusMenu.toggleFeishu';
+                        return (
+                          <div key={c.id} className="w-full rounded-lg px-2 py-1.5 flex items-center gap-2.5 hover:bg-[#f7f7f8]">
+                            <LetterIcon name={c.name} color={c.color} size={22} />
+                            <span className="flex-1 min-w-0 truncate text-[13px] text-[#111318]">{c.name}</span>
+                            {connected ? (
+                              <button
+                                type="button"
+                                role="switch"
+                                aria-checked={on}
+                                aria-label={`${c.name} 开关`}
+                                data-guided-target={c.id === 'feishu' ? 'plusMenu.toggleFeishu' : undefined}
+                                onClick={() =>
+                                  isTarget
+                                    ? onTargetClick('plusMenu.toggleFeishu')
+                                    : onAsideClick(
+                                        `${c.name} 开关`,
+                                        `这个开关是<b>全局</b>的：打开后所有对话都能用 ${c.name}，直到你回来关掉。这一步先不动它。`
+                                      )
+                                }
+                                className={`relative w-[34px] h-[19px] rounded-full border-0 p-0 shrink-0 cursor-pointer transition-colors ${
+                                  on ? 'bg-[#10b981]' : 'bg-[#dcdcd8]'
+                                } ${c.id === 'feishu' ? ring('plusMenu.toggleFeishu') : ''}`}
+                              >
+                                <span
+                                  className={`absolute top-[2px] w-[15px] h-[15px] rounded-full bg-white transition-all ${
+                                    on ? 'left-[17px]' : 'left-[2px]'
+                                  }`}
+                                />
+                                {isTarget && waitCallout && <GuidanceCallout text={waitCallout} placement="right" />}
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  onAsideClick(
+                                    `连接 ${c.name}`,
+                                    '还没接的连接器显示「连接」，点了会带你去登录授权。接好以后这里会变成开关。'
+                                  )
+                                }
+                                className="border-0 bg-transparent p-0 text-[12px] text-[#8c9099] hover:text-[#111318] inline-flex items-center gap-1 cursor-pointer shrink-0"
+                              >
+                                <LinkChainIcon size={13} />
+                                连接
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="h-px bg-[#eeeeeb] my-1 mx-1" />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onAsideClick('管理连接器', '跳到「专家·技能·连接器 → 连接器」页，在那里安装、查看可用功能、解除授权。')
+                      }
+                      className="w-full border-0 bg-transparent hover:bg-[#f4f4f5] rounded-lg px-2.5 py-2 text-left text-[13px] text-[#2b2f36] cursor-pointer"
+                    >
+                      ↗ 管理连接器
+                    </button>
+                  </div>
+                )}
 
                 {/* 右侧二级：添加文件（对照 01-加号添加文件菜单.png） */}
                 {filesSub && (
@@ -1028,7 +1141,7 @@ export function GuidedWorkBuddy({
                 )}
 
                 {/* 右侧二级：模式开关（Plan / Ask） */}
-                {!filesSub && (
+                {!filesSub && !connectorsSub && (
                 <div className="w-[244px] rounded-[14px] bg-white border border-[#e6e6e3] shadow-[0_14px_36px_rgba(17,19,24,0.16)] p-2 flex flex-col gap-1.5">
                   <div className="px-2 pt-1 text-[11px] text-[#8c9099]">
                     {shell.planOn
@@ -1424,28 +1537,26 @@ export function GuidedWorkBuddy({
                         </span>
                       ))}
 
-                    {/* 5.11.3 真机：连接器以图标紧跟在专家右侧 */}
-                    {shell.composerChips
-                      .filter((c) => c.kind === 'connector')
-                      .map((c) => (
-                        <button
-                          key={`conn-${c.label}`}
-                          type="button"
-                          title={`已启用连接器：${c.label}`}
-                          aria-label={`连接器：${c.label}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onAsideClick(
-                              `连接器 · ${c.label}`,
-                              `底栏图标亮起代表这次任务已连上 <b>${c.label}</b>，不需要时点开可取消勾选。这一步先保持连接。`
-                            );
-                          }}
-                          className="sim-pop-up border-0 bg-transparent hover:bg-[#f4f4f5] h-7 px-1.5 rounded-lg inline-flex items-center gap-1 text-[12px] font-medium text-[#2b2f36] whitespace-nowrap shrink-0 cursor-pointer transition-colors"
-                        >
-                          <ConnectorGlyph label={c.label} />
-                          {c.label !== '飞书' && <span>{c.label}</span>}
-                        </button>
-                      ))}
+                    {/* 5.11.3 真机：开着的连接器以图标紧跟在专家右侧（开关全局生效，不随发送清掉） */}
+                    {enabledConnectorNames.map((name) => (
+                      <button
+                        key={`conn-${name}`}
+                        type="button"
+                        title={`已开启连接器：${name}`}
+                        aria-label={`连接器：${name}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onAsideClick(
+                            `连接器 · ${name}`,
+                            `底栏有这个图标，说明 <b>${name}</b> 的开关开着。开关是全局的，所有对话都能用它；不用了在 <b>+ → 连接器</b> 里关掉。`
+                          );
+                        }}
+                        className="sim-pop-up border-0 bg-transparent hover:bg-[#f4f4f5] h-7 px-1.5 rounded-lg inline-flex items-center gap-1 text-[12px] font-medium text-[#2b2f36] whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+                      >
+                        <ConnectorGlyph label={name} />
+                        {name !== '飞书' && <span>{name}</span>}
+                      </button>
+                    ))}
                   </div>
 
                   <div className="flex items-center gap-2 text-[12.5px] text-[#2b2f36] shrink-0 whitespace-nowrap">

@@ -11,7 +11,7 @@ import { GuidedWorkBuddy } from './GuidedWorkBuddy';
 import type { FeedItem, FeedItemInput, NavTrailStep, PhaseIndex, PopoverId } from './types';
 
 const AUTO_COLLAPSE_WIDTH = 1140;
-const STORAGE_PREFIX = 'wblab:guided:v9:';
+const STORAGE_PREFIX = 'wblab:guided:v10:';
 
 let msgSeq = 0;
 const nextId = () => `gd-${++msgSeq}`;
@@ -106,6 +106,7 @@ function isAlreadySatisfiedByState(target: GuidedTargetId | undefined, s: Guided
   if (target === 'composer.group' && s.popover === 'group') return true;
   if (target === 'composer.model' && s.popover === 'model') return true;
   if (target === 'composer.plus' && s.popover === 'plus') return true;
+  if (target === 'plusMenu.connectors' && s.popover === 'plus' && s.plusSubmenu === 'connectors') return true;
   if (target === 'composer.permission' && s.popover === 'permission') return true;
   if (target === 'composer.mention' && s.mentionMenuOpen) return true;
   if (target === 'composer.slash' && s.slashMenuOpen) return true;
@@ -785,6 +786,14 @@ export default function GuidedLessonPlayer({
         onNewTask={handleNewTask}
         onBackToView={handleBackToView}
         onAsideClick={handleAsideClick}
+        onSelectPlusSubmenu={(sub) =>
+          setShell((p) => {
+            if (!p) return p;
+            const next = { ...p, plusSubmenu: sub };
+            shellRef.current = next;
+            return next;
+          })
+        }
       />
 
       <CoachRail

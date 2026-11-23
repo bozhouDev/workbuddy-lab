@@ -25,7 +25,8 @@ export type PopoverId =
   /** 左下角移动设备小图标弹出的连接面板（4.2） */
   | 'mobile';
 
-export type PlusSubmenu = 'files' | 'mode';
+/** + 菜单右侧展开的二级菜单：添加文件 / 模式 / 连接器 */
+export type PlusSubmenu = 'files' | 'mode' | 'connectors';
 
 export type CoachActionId =
   | 'discoverApps'
