@@ -268,7 +268,7 @@ export const makeSkillLesson: GuidedLessonDef = {
             file: 'SKILL.md',
             pathLabel: `用户自定义技能/${WEEKLY_SKILL}/SKILL.md`,
             badge: '技能说明书（节选）',
-            badgeTone: 'warn',
+            badgeTone: 'ok',
             title: 'SKILL.md',
             lines: [
               { text: `名字：${WEEKLY_SKILL}` },

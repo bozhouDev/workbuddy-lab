@@ -498,7 +498,7 @@ test.describe('第 03、04 章泊舟陪练模拟器', () => {
     await expect(page.getByText('挑对了').first()).toBeVisible({ timeout: 8000 });
     // 场景 3：什么都不挂，提示合同审查顾问更合适
     await walkLesson(page, ['btn:下一个场景', 'composer.send']);
-    await expect(page.getByText('没挂专家也能看')).toBeVisible({ timeout: 8000 });
+    await expect(page.getByText('没挂专家也看出了')).toBeVisible({ timeout: 8000 });
     // 场景 4：没开飞书先发，读不到
     await walkLesson(page, ['btn:下一个场景', 'composer.send']);
     await expect(page.getByText('飞书没打开')).toBeVisible({ timeout: 8000 });

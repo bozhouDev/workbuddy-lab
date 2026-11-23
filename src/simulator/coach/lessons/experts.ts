@@ -125,7 +125,7 @@ export const expertsLesson: GuidedLessonDef = {
       phase: 2,
       onEnter: () => ({ view: 'home', composerText: EMAIL_PROMPT }),
       say: [
-        '下一件活来了：给客户写延期道歉邮件。<b>注意输入框底栏：PPT制作专家还挂着</b>，很多人换活时根本不会注意。就这样发出去看看。',
+        '下一件活来了：给客户写延期道歉邮件。假设你接着在这个输入框里写，<b>没注意底栏的 PPT制作专家还挂着</b>。就这样发出去看看。',
       ],
       wait: { target: 'composer.send', callout: '专家还挂着，先这样发', label: '发送（不合适的活）' },
       runChat: () =>
