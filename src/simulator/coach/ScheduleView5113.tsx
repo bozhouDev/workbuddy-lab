@@ -127,6 +127,8 @@ export function ScheduleView5113(props: Props) {
                     {tasks.map((t) => {
                       const isLesson = t.id === LESSON_TASK_ID;
                       const records = isLesson ? shell.scheduleRecords.length : 0;
+                      // 入场动画和蓝圈都用 animation，会互相覆盖：带蓝圈时不加入场动画
+                      const ringClass = isLesson ? kit.ring('schedule.openTask') : '';
                       return (
                         <div
                           key={t.id}
@@ -138,7 +140,7 @@ export function ScheduleView5113(props: Props) {
                               ? kit.click('schedule.openTask', t.name, '点任务卡片打开编辑弹窗。')
                               : kit.aside(t.name, '从模板建的提醒，不用改。这节课要检查的是早报那张卡片。')
                           }
-                          className={`sim-msg-rise relative rounded-[16px] border border-[#ececea] bg-white px-5 pt-4 pb-3 flex flex-col gap-2 cursor-pointer hover:shadow-[0_6px_20px_rgba(17,19,24,0.08)] ${isLesson ? kit.ring('schedule.openTask') : ''}`}
+                          className={`${ringClass || 'sim-msg-rise'} relative rounded-[16px] border border-[#ececea] bg-white px-5 pt-4 pb-3 flex flex-col gap-2 cursor-pointer hover:shadow-[0_6px_20px_rgba(17,19,24,0.08)]`}
                         >
                           <div className="flex items-center justify-between gap-2">
                             <span className="font-semibold text-[14.5px] text-[#111318] truncate">{t.name}</span>
@@ -159,13 +161,13 @@ export function ScheduleView5113(props: Props) {
                                   onClick={kit.click('schedule.viewRecords', '查看运行记录', '看看它到底跑得怎么样。')}
                                   className={`relative border-0 bg-transparent text-accent-700 font-semibold cursor-pointer rounded px-1 ${kit.ring('schedule.viewRecords')}`}
                                 >
-                                  查看运行记录 ({records})
+                                  查看运行记录
                                   {kit.callout('schedule.viewRecords', 'bottom', 'end')}
                                 </button>
                               )}
                             </span>
                           </div>
-                          {isLesson && kit.callout('schedule.openTask', 'bottom', 'start')}
+                          {isLesson && kit.callout('schedule.openTask', 'top', 'end')}
                         </div>
                       );
                     })}

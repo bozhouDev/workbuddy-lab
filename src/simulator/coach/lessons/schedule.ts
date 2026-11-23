@@ -289,7 +289,7 @@ export const scheduleLesson: GuidedLessonDef = {
       id: 'view-records',
       phase: 2,
       navLabel: '运行记录',
-      say: ['卡片右下角多了「<b>查看运行记录 (1)</b>」，就是刚才那次试跑。点它。'],
+      say: ['卡片右下角多了「<b>查看运行记录</b>」，就是刚才那次试跑。点它。'],
       wait: { target: 'schedule.viewRecords', callout: '看试跑结果', label: '查看运行记录' },
       onAction: () => ({ scheduleTab: 'records' }),
     },
