@@ -319,6 +319,64 @@ header.header {
   pointer-events: none;
 }
 
+/* 2.4 五要素拆解弹窗 → 缓缓移入输入框动效 */
+@keyframes sim-brief-fly {
+  0% {
+    opacity: 1;
+    transform: translateY(-148px) scale(1);
+    box-shadow: 0 22px 54px -14px rgb(17 19 24 / 0.22);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-136px) scale(0.985);
+    box-shadow: 0 18px 44px -12px rgb(51 85 224 / 0.22);
+  }
+  74% {
+    opacity: 0.96;
+    transform: translateY(4px) scale(0.975);
+    box-shadow: 0 10px 26px -10px rgb(51 85 224 / 0.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.965);
+    box-shadow: 0 2px 8px rgb(51 85 224 / 0);
+  }
+}
+@keyframes sim-composer-receive {
+  0% {
+    border-color: #e6e6e6;
+    box-shadow: 0 2px 10px rgb(0 0 0 / 0.03);
+  }
+  38% {
+    border-color: #4d6be4;
+    box-shadow: 0 0 0 4px rgb(51 85 224 / 0.14), 0 8px 24px -8px rgb(51 85 224 / 0.22);
+  }
+  100% {
+    border-color: #e6e6e6;
+    box-shadow: 0 2px 10px rgb(0 0 0 / 0.03);
+  }
+}
+@keyframes sim-composer-text-land {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.sim-brief-fly {
+  animation: sim-brief-fly 960ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  pointer-events: none;
+}
+.sim-composer-receive {
+  animation: sim-composer-receive 900ms cubic-bezier(0.22, 1, 0.36, 1) 460ms both;
+}
+.sim-composer-text-land {
+  animation: sim-composer-text-land 480ms cubic-bezier(0.22, 1, 0.36, 1) 520ms both;
+}
+
 /* =========================================================
  * 全站克制动效（首页 / 文章页）：仅做位移与透明度，零额外依赖
  * ========================================================= */
@@ -592,6 +650,9 @@ html.wbl-js-anim [data-reveal].is-visible {
   .sim-warn-reveal,
   .sim-digit-roll,
   .sim-collapse-out,
+  .sim-brief-fly,
+  .sim-composer-receive,
+  .sim-composer-text-land,
   .sim-phase-thumb,
   .wbl-line-reveal,
   .wbl-hero-stagger,

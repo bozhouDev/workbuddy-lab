@@ -15,6 +15,14 @@ async function walkLesson(page: Page, steps: string[]) {
       await page.getByRole('button', { name: step.slice(4), exact: true }).click({ timeout: 10000 });
     } else if (step === 'home') {
       await page.getByRole('button', { name: '新建任务' }).first().click();
+    } else if (step === 'composer.mention') {
+      const target = page.locator('[data-guided-target="composer.mention"]').first();
+      await expect(target, '等待输入框亮起 @ 引导').toHaveClass(/sim-ring/, { timeout: 10000 });
+      await target.press('@');
+    } else if (step === 'composer.slash') {
+      const target = page.locator('[data-guided-target="composer.slash"]').first();
+      await expect(target, '等待输入框亮起 / 引导').toHaveClass(/sim-ring/, { timeout: 10000 });
+      await target.press('/');
     } else {
       const target = page.locator(`[data-guided-target="${step}"]`).first();
       await expect(target, `等待目标 ${step} 亮起`).toHaveClass(/sim-ring/, { timeout: 10000 });
@@ -48,33 +56,59 @@ test.describe('M1 首页与文章页验证', () => {
 });
 
 test.describe('泊舟陪练模拟器：第 1 课 0.4 认识界面', () => {
-  test('完整走通 4 段循环 + 快捷标签联动 + 最近分组 + 教练悬浮小窗切换', async ({ page }) => {
+  test('单步手把手走通 7 项 + 上一步回看 + 无跳过按钮 + 快捷标签联动 + 悬浮小窗切换', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/simulator/?route=interface');
 
     await expect(page.getByRole('button', { name: '好，开始认界面' })).toBeVisible();
     await page.getByRole('button', { name: '好，开始认界面' }).click();
 
-    await expect(page.getByText('首页 7 块核心区')).toBeVisible();
+    // 顶部常驻进度条，且不提供提前跳过按钮
+    await expect(page.getByText('第 1 / 7 步')).toBeVisible();
+    await expect(page.getByRole('button', { name: /去试右侧产物区/ })).toHaveCount(0);
+    await expect(page.locator('[data-coach-act].sim-ring')).toHaveCount(1);
 
-    await page.getByRole('button', { name: '代码开发' }).click();
-    await expect(page.getByText('做个今日待办清单的网站')).toBeVisible();
-    await expect(page.getByText('已认 1 / 7')).toBeVisible();
-
-    await page.locator('[data-coach-act="groupsList"]').click();
-    await expect(page.getByText('已认 2 / 7')).toBeVisible();
-
-    await page.locator('[data-coach-act="avatar"]').click();
-    await expect(page.getByText('Buddy加油站')).toBeVisible();
-    await expect(page.getByText('已认 3 / 7')).toBeVisible();
-
-    await page.locator('[data-coach-act="plus"]').click();
-    await expect(page.getByText('当前为默认模式')).toBeVisible();
-    await expect(page.getByText('已认 4 / 7')).toBeVisible();
-
+    // 顺手点非当前目标控件（模型选择）：正常弹出并解释，但不推进当前步骤
     await page.locator('[data-coach-act="model"]').click();
     await expect(page.getByRole('button', { name: /Hy4 flash 限时免费/ })).toBeVisible();
     await expect(page.getByText('你点的是 · 模型选择')).toBeVisible();
+    await expect(page.getByText('第 1 / 7 步')).toBeVisible();
+
+    // 第 1 步：点开「发现应用」后停在讲解态，不自动跳第 2 步
+    await page.locator('[data-coach-act="discoverApps"]').click();
+    await expect(page.locator('[data-coach-act].sim-ring')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: '懂了，看下一项（2/7）→' })).toBeVisible();
+    await page.getByRole('button', { name: '懂了，看下一项（2/7）→' }).click();
+
+    // 第 2 步：最近与分组
+    await expect(page.getByText('第 2 / 7 步')).toBeVisible();
+    await page.locator('[data-coach-act="groupsList"]').click();
+    await expect(page.getByRole('button', { name: '← 上一步' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '懂了，看下一项（3/7）→' })).toBeVisible();
+
+    // 测试「← 上一步」回看第 1 步，再回到第 2 步、进第 3 步
+    await page.getByRole('button', { name: '← 上一步' }).click();
+    await expect(page.getByText('第 1 / 7 步')).toBeVisible();
+    await page.getByRole('button', { name: '继续下一项（2/7）→' }).click();
+    await expect(page.getByText('第 2 / 7 步')).toBeVisible();
+    await page.getByRole('button', { name: '继续下一项（3/7）→' }).click();
+
+    // 第 3 步：左下角头像
+    await expect(page.getByText('第 3 / 7 步')).toBeVisible();
+    await page.locator('[data-coach-act="avatar"]').click();
+    await expect(page.getByText('Buddy加油站')).toBeVisible();
+    await page.getByRole('button', { name: '懂了，看下一项（4/7）→' }).click();
+
+    // 第 4 步：快捷场景标签
+    await expect(page.getByText('第 4 / 7 步')).toBeVisible();
+    await page.getByRole('button', { name: '代码开发' }).click();
+    await expect(page.getByText('做个今日待办清单的网站')).toBeVisible();
+    await page.getByRole('button', { name: '懂了，看下一项（5/7）→' }).click();
+
+    // 第 5 步：输入框 + 菜单 & 悬浮小窗形态切换
+    await expect(page.getByText('第 5 / 7 步')).toBeVisible();
+    await page.locator('[data-coach-act="plus"]').click();
+    await expect(page.getByText('当前为默认模式')).toBeVisible();
 
     await page.getByRole('button', { name: '切换为可拖动悬浮小窗' }).click();
     await expect(page.getByText('可拖动小窗')).toBeVisible();
@@ -83,7 +117,19 @@ test.describe('泊舟陪练模拟器：第 1 课 0.4 认识界面', () => {
     await expect(page.getByRole('region', { name: '泊舟陪练悬浮球' })).toBeVisible();
     await page.getByRole('button', { name: '教练靠右侧' }).click();
 
-    await page.getByRole('button', { name: /去试右侧产物区/ }).click();
+    await page.getByRole('button', { name: '懂了，看下一项（6/7）→' }).click();
+
+    // 第 6 步：选择分组
+    await expect(page.getByText('第 6 / 7 步')).toBeVisible();
+    await page.locator('[data-coach-act="group"]').click();
+    await page.getByRole('button', { name: '懂了，看下一项（7/7）→' }).click();
+
+    // 第 7 步：默认权限 -> 全部认齐进入右侧产物区
+    await expect(page.getByText('第 7 / 7 步')).toBeVisible();
+    await page.locator('[data-coach-act="permission"]').click();
+    await expect(page.getByRole('button', { name: '7 块认齐了，去试右侧产物区 →' })).toBeVisible();
+    await page.getByRole('button', { name: '7 块认齐了，去试右侧产物区 →' }).click();
+
     await expect(page.getByText('在左边点蓝圈里的 发送 按钮')).toBeVisible();
     await page.locator('[data-coach-act="send"]').click();
     await expect(page.getByText('刚生成')).toBeVisible({ timeout: 6000 });
@@ -252,16 +298,22 @@ test.describe('第 03/04 章图文 + 第 01 章 5 节陪练模拟器', () => {
 });
 
 test.describe('第 02 章「发任务」全部 7 节泊舟陪练模拟器', () => {
-  test('2.1 添加资料（@ 引用）与 2.2 模式（默认覆盖 vs Plan 改第 3 步）', async ({ page }) => {
+  test('2.1 添加资料（键盘输入 @ 点名 + 标出问题停留）与 2.2 模式（默认覆盖 vs Plan 改第 3 步）', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/simulator/?route=attach');
 
-    await page.getByRole('button', { name: '先看 没引用文件 会怎样' }).click();
+    await page.getByRole('button', { name: '先看 不点名直接发 会怎样' }).click();
     await page.locator('[data-guided-target="composer.send"]').click();
     await expect(page.getByRole('button', { name: '标出问题在哪' })).toBeVisible({ timeout: 6000 });
     await page.getByRole('button', { name: '标出问题在哪' }).click();
+    // 点「标出问题在哪」后必须留在对话页并亮出橙色标记
+    await expect(page.locator('.sim-warn-reveal').first()).toBeVisible();
+    await page.getByRole('button', { name: '好，回去用 @ 精准点名' }).click();
 
-    await page.locator('[data-guided-target="composer.mention"]').click();
+    // 真实键盘输入 @ 弹出分组文件列表（不再是点假按钮）
+    const mentionInput = page.locator('[data-guided-target="composer.mention"]');
+    await expect(mentionInput).toHaveClass(/sim-ring/);
+    await mentionInput.press('@');
     await page.locator('[data-guided-target="mentionMenu.pickChatLog"]').click();
     await page.locator('[data-guided-target="composer.send"]').click();
     await expect(page.getByText('静安寺青松咖啡二楼包间').first()).toBeVisible({ timeout: 6000 });
@@ -272,6 +324,8 @@ test.describe('第 02 章「发任务」全部 7 节泊舟陪练模拟器', () =
     await page.locator('[data-guided-target="composer.send"]').click();
     await expect(page.getByRole('button', { name: '标出问题在哪' })).toBeVisible({ timeout: 6000 });
     await page.getByRole('button', { name: '标出问题在哪' }).click();
+    await expect(page.locator('.sim-warn-reveal').first()).toBeVisible();
+    await page.getByRole('button', { name: '好，去开 Plan 模式' }).click();
 
     await page.locator('[data-guided-target="composer.plus"]').click();
     await page.locator('[data-guided-target="plusMenu.togglePlan"]').click();
@@ -289,6 +343,8 @@ test.describe('第 02 章「发任务」全部 7 节泊舟陪练模拟器', () =
     await page.locator('[data-guided-target="composer.send"]').click();
     await expect(page.getByRole('button', { name: '标出误删的地方' })).toBeVisible({ timeout: 6000 });
     await page.getByRole('button', { name: '标出误删的地方' }).click();
+    await expect(page.locator('.sim-warn-reveal').first()).toBeVisible();
+    await page.getByRole('button', { name: '好，回去关掉完全访问' }).click();
 
     await page.locator('[data-guided-target="composer.permission"]').click();
     await page.locator('[data-guided-target="permMenu.toggleFullAccess"]').click();
@@ -303,7 +359,10 @@ test.describe('第 02 章「发任务」全部 7 节泊舟陪练模拟器', () =
     await page.locator('[data-guided-target="composer.send"]').click();
     await expect(page.getByRole('button', { name: '标出 3 处问题' })).toBeVisible({ timeout: 6000 });
     await page.getByRole('button', { name: '标出 3 处问题' }).click();
-    await page.getByRole('button', { name: '换成 5 要素任务单重发' }).click();
+    await expect(page.locator('.sim-warn-reveal').first()).toBeVisible();
+    await page.getByRole('button', { name: '拆开看看 5 要素怎么写 →' }).click();
+    await expect(page.getByRole('dialog', { name: '5 要素任务单拆解' })).toBeVisible();
+    await page.getByRole('button', { name: '装进输入框 →' }).click();
     await page.locator('[data-guided-target="composer.send"]').click();
     await expect(page.getByText('什么时候用 5 要素 vs 什么时候让 AI 采访你')).toBeVisible({ timeout: 6000 });
   });
@@ -340,7 +399,7 @@ test.describe('第 03、04 章泊舟陪练模拟器', () => {
     await page.goto('/simulator/?route=choose');
     await walkLesson(page, [
       'btn:去看看入口在哪', 'nav.extensions', 'ext.tab.experts', 'ext.tab.connectors',
-      'composer.send', 'btn:标出问题', 'composer.send',
+      'composer.send', 'btn:标出问题', 'btn:好，配齐三样再试一次', 'composer.send',
     ]);
     await expect(page.getByText('你缺什么 → 用什么')).toBeVisible({ timeout: 8000 });
 
@@ -385,12 +444,12 @@ test.describe('第 03、04 章泊舟陪练模拟器', () => {
       'composer.send', 'chat.actionCard', 'nav.extensions', 'connectors.card',
     ]);
     await expect(page.getByText('可用功能').first()).toBeVisible();
-    await walkLesson(page, ['home', 'composer.send', 'composer.send', 'btn:标出问题', 'composer.send']);
+    await walkLesson(page, ['home', 'composer.send', 'composer.send', 'btn:标出问题', 'btn:好，说清范围再发一次', 'composer.send']);
     await expect(page.getByText('同一个连接器，两种说法')).toBeVisible({ timeout: 8000 });
 
     await page.getByRole('button', { name: /下一节：3.6 自定义连接器/ }).click();
     await walkLesson(page, [
-      'btn:先问问明天下不下雨', 'composer.send', 'btn:标出问题', 'composer.send', 'nav.extensions',
+      'btn:先问问明天下不下雨', 'composer.send', 'btn:标出问题', 'btn:好，让它写一个天气连接器', 'composer.send', 'nav.extensions',
       'ext.tab.connectors', 'connectors.custom', 'mcp.fill', 'mcp.submit', 'mcp.trust',
     ]);
     await expect(page.getByText('1/1 个工具已启用')).toBeVisible();

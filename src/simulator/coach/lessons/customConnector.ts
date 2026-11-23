@@ -53,12 +53,19 @@ export const customConnectorLesson: GuidedLessonDef = {
       buttons: [{ label: '标出问题', primary: true }],
     },
     {
+      id: 'reveal-none',
+      phase: 2,
+      revealMarksOnEnter: true,
+      say: [
+        '看左边橙色标出的内容，再对照上面执行步骤「<b>未调用任何工具</b>」：它没查任何数据，<b>40% 降水概率是编的</b>。天气这种每天在变的东西，它自己是不知道的。',
+      ],
+      buttons: [{ label: '好，让它写一个天气连接器', primary: true }],
+    },
+    {
       id: 'build',
       phase: 1,
-      revealMarksOnEnter: true,
       onEnter: () => ({ view: 'home', composerText: BUILD_PROMPT, composerChips: [] }),
       say: [
-        '执行步骤写着「<b>未调用任何工具</b>」：它没查任何数据，<b>40% 是编的</b>。天气这种每天在变的东西，它自己是不知道的。',
         '自定义连接器有三个来源：<b>让 WorkBuddy 帮你写</b>、<b>GitHub 上别人开源的 MCP</b>、<b>服务商给的远程地址（URL）</b>。新手用第一种最稳。我把要求写进输入框了，注意说清了<b>输入什么、返回什么、要不要 Key</b>。发送。',
       ],
       wait: { target: 'composer.send', callout: '让它写一个天气 MCP', label: '发送（写 MCP）' },

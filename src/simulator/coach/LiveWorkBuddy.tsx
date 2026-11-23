@@ -263,7 +263,7 @@ export function LiveWorkBuddy({
                 {shell.view === 'chat' ? 'WorkBuddy 新手 3 步上手清单' : '整理 11 月周报'}
               </span>
               {primaryTarget === 'recent' && primaryCallout && (
-                <GuidanceCallout text={primaryCallout} placement="right" />
+                <GuidanceCallout text={primaryCallout} placement="top" align="start" />
               )}
             </button>
             <button
@@ -503,7 +503,7 @@ export function LiveWorkBuddy({
                         </span>
                       )}
                       {primaryTarget === 'plus' && primaryCallout && (
-                        <GuidanceCallout text={primaryCallout} placement="top" />
+                        <GuidanceCallout text={primaryCallout} placement="top" align="start" />
                       )}
                     </button>
 
@@ -592,7 +592,7 @@ export function LiveWorkBuddy({
                   {isGroupOpen ? <ChevronUpIcon size={11} /> : <ChevronDownIcon size={11} />}
                   {dotFor('group', 'group') && <ExploreDot />}
                   {primaryTarget === 'group' && primaryCallout && (
-                    <GuidanceCallout text={primaryCallout} placement="bottom" />
+                    <GuidanceCallout text={primaryCallout} placement="bottom" align="start" />
                   )}
                 </button>
 

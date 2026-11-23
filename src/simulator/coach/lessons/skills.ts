@@ -158,9 +158,9 @@ export const skillsLesson: GuidedLessonDef = {
       navLabel: '/ 调用',
       onEnter: () => ({ view: 'home', composerText: SALES_PROMPT, skillSearch: '', composerChips: [] }),
       say: [
-        '装好了，右上角变成「已安装(16)」。回到首页用它：在输入框里打 <b>/</b> 就会弹出技能列表。点输入框下面的「/ 技能」。',
+        '装好了，右上角变成「已安装(16)」。回到首页用它：直接在蓝圈输入框里按键盘输入 <b>/</b>，就会弹出技能列表。',
       ],
-      wait: { target: 'composer.slash', callout: '打 / 调技能', label: '/ 技能' },
+      wait: { target: 'composer.slash', callout: '在输入框里输入 /', label: '输入 /' },
       onAction: () => ({ slashMenuOpen: true }),
     },
     {

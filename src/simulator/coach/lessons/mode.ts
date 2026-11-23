@@ -73,9 +73,17 @@ export const modeLesson: GuidedLessonDef = {
       buttons: [{ label: '标出问题在哪', primary: true }],
     },
     {
+      id: 'reveal-default-problem',
+      phase: 2,
+      revealMarksOnEnter: true,
+      say: [
+        '看左边橙色标出来的地方：需求只说了 <b>精简一下</b>，在默认模式下它二话不说<b>直接把你的原稿覆盖了</b>，还顺手删掉了客户案例！',
+      ],
+      buttons: [{ label: '好，去开 Plan 模式', primary: true }],
+    },
+    {
       id: 'open-plus',
       phase: 1,
-      revealMarksOnEnter: true,
       navLabel: '点 + 号',
       onEnter: () => ({
         view: 'home',
@@ -86,7 +94,6 @@ export const modeLesson: GuidedLessonDef = {
         composerText: MODE_TASK,
       }),
       say: [
-        '需求只说了 <b>精简一下</b>，在默认模式下它二话不说<b>直接把你的原稿覆盖了</b>，还顺手删掉了客户案例！',
         '复杂或拿不准的活，先开 <b>计划（Plan）</b> 模式。顺着下面路径打开它：',
       ],
       wait: {

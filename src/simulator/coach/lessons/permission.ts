@@ -66,9 +66,17 @@ export const permissionLesson: GuidedLessonDef = {
       buttons: [{ label: '标出误删的地方', primary: true }],
     },
     {
+      id: 'reveal-full-access',
+      phase: 2,
+      revealMarksOnEnter: true,
+      say: [
+        '看左边橙色标出来的路径：开着<b>允许完全访问</b>，它连确认都不弹，直接把你桌面里的 14 个客户备份给删了！',
+      ],
+      buttons: [{ label: '好，回去关掉完全访问', primary: true }],
+    },
+    {
       id: 'open-perm',
       phase: 1,
-      revealMarksOnEnter: true,
       navLabel: '点权限',
       onEnter: () => ({
         view: 'home',
@@ -78,7 +86,6 @@ export const permissionLesson: GuidedLessonDef = {
         composerText: CLEAN_TASK,
       }),
       say: [
-        '开着<b>允许完全访问</b>，它连确认都不弹，直接把你桌面里的 14 个客户备份给删了！',
         '现在把开关关回<b>默认权限</b>，用一模一样的话再跑一次，看审批弹窗怎么拦住它：',
       ],
       wait: {

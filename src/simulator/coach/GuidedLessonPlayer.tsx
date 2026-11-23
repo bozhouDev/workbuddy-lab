@@ -108,6 +108,7 @@ function isAlreadySatisfiedByState(target: GuidedTargetId | undefined, s: Guided
   if (target === 'composer.plus' && s.popover === 'plus') return true;
   if (target === 'composer.permission' && s.popover === 'permission') return true;
   if (target === 'composer.mention' && s.mentionMenuOpen) return true;
+  if (target === 'composer.slash' && s.slashMenuOpen) return true;
   if (target === 'nav.mobileLink' && s.popover === 'mobile') return true;
   return false;
 }
@@ -681,9 +682,13 @@ export default function GuidedLessonPlayer({
       const dedupeKey = `${label}::${explain}`;
       if (lastAsideRef.current === dedupeKey) return;
       lastAsideRef.current = dedupeKey;
-      const hint = currentStep?.wait
-        ? `看完了点蓝圈里的 <b>${currentStep.wait.label}</b> 继续。`
-        : '点右边底部按钮继续下一步。';
+      const hint = !currentStep?.wait
+        ? '点右边底部按钮继续下一步。'
+        : currentStep.wait.target === 'composer.mention'
+          ? '看完了在左边输入框里按键盘输入 <b>@</b> 继续。'
+          : currentStep.wait.target === 'composer.slash'
+            ? '看完了在左边输入框里按键盘输入 <b>/</b> 继续。'
+            : `看完了点蓝圈里的 <b>${currentStep.wait.label}</b> 继续。`;
       setFeed((prev) => [
         ...prev,
         {
@@ -736,9 +741,19 @@ export default function GuidedLessonPlayer({
 
   const waitPrompt = useMemo(() => {
     if (isRunningChat) return 'WorkBuddy 正在执行任务并统计积分…';
-    if (currentStep?.wait) return `在左边点蓝圈里的 ${currentStep.wait.label}`;
+    if (currentStep?.wait) {
+      if (currentStep.wait.target === 'composer.mention') {
+        return '在左边蓝圈的输入框里，用键盘输入 @';
+      }
+      if (currentStep.wait.target === 'composer.slash') {
+        return shell?.view === 'home'
+          ? '在左边蓝圈的输入框里，用键盘输入 /'
+          : '先点左上角「新建任务」回首页，再在输入框里输入 /';
+      }
+      return `在左边点蓝圈里的 ${currentStep.wait.label}`;
+    }
     return null;
-  }, [isRunningChat, currentStep]);
+  }, [isRunningChat, currentStep, shell?.view]);
 
   if (!lesson || !shell) {
     return (

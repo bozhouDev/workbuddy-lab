@@ -313,6 +313,8 @@ export interface GuidedShellState {
   askOn: boolean;
   fullAccessOn: boolean;
   mentionMenuOpen: boolean;
+  /** 2.4 写清任务：5 要素拆解教学弹窗（open 展示拆解；flying 缓缓移入输入框；null 关闭） */
+  fivePartsCard: 'open' | 'flying' | null;
   followupText: string;
   // 输入框与对话动效
   composerText: string;

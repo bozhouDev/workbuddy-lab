@@ -1,9 +1,8 @@
 import type { GuidedLessonDef } from '../guidedTypes';
+import { FIVE_PARTS_BRIEF } from '../fivePartsBrief';
 import { createBaseGuidedState } from './baseState';
 
 const VAGUE_BRIEF = '@周末读书会群聊.txt 帮我整理一下这份记录。';
-const FIVE_PARTS_BRIEF =
-  '@周末读书会群聊.txt 整理成《周末读书会筹备纪要.md》存到当前分组。包含：活动信息、待办表格（事项/负责人/截止时间/备注）。原记录没写明的负责人或时间一律标“未明确”，不要改原文件，完成后列出最需要我核对的 3 处内容。';
 
 export const taskBriefLesson: GuidedLessonDef = {
   id: 'task-brief',
@@ -29,7 +28,7 @@ export const taskBriefLesson: GuidedLessonDef = {
     {
       id: 'run-vague',
       phase: 1,
-      onEnter: () => ({ view: 'home', popover: null, composerText: VAGUE_BRIEF }),
+      onEnter: () => ({ view: 'home', popover: null, fivePartsCard: null, composerText: VAGUE_BRIEF }),
       say: ['点右下角<b>发送</b>。'],
       wait: {
         target: 'composer.send',
@@ -62,13 +61,29 @@ export const taskBriefLesson: GuidedLessonDef = {
     },
     {
       id: 'prep-5parts',
-      phase: 1,
+      phase: 2,
       revealMarksOnEnter: true,
       say: [
         '看橙色标出来的：① 原文里印桌签和拍照根本<b>没定人</b>，它擅自硬塞给了阿林和小周；② 没告诉它交付什么文件，它只扔在对话里没生成 <code>.md</code>；③ 也没提示你该核对哪几处。',
-        '任务心里有数时，按 <b>5 要素</b>交代清楚就行：<b>有什么材料 + 要做什么 + 哪些不能做（标未明确、不改原件）+ 交付文件名 + 怎么检查</b>。我帮你填进输入框，再发一次看差别。',
+        '任务心里有数时，按 <b>5 要素</b>把要求交代清楚就能一次避开这 3 个坑。先拆开看看这 5 要素分别写什么：',
       ],
-      buttons: [{ label: '换成 5 要素任务单重发', primary: true }],
+      buttons: [{ label: '拆开看看 5 要素怎么写 →', primary: true }],
+    },
+    {
+      id: 'inspect-5parts',
+      phase: 1,
+      onEnter: () => ({
+        view: 'home',
+        activeChat: null,
+        showArtifacts: false,
+        composerText: '',
+        fivePartsCard: 'open',
+      }),
+      say: [
+        '看左边拆解弹窗：整句提示词其实是 <b>5 个模块拼出来的</b>——<b>① 材料、② 交付物、③ 目标内容、④ 禁止事项、⑤ 怎么检查</b>，每一段负责什么一眼看清。',
+        '重点看第 <b>④ 条橙色防编造保命句</b>：写上它，AI 遇到原文没定人的事就会老老实实标「未明确」。看清后点下面，把它装进输入框里。',
+      ],
+      buttons: [{ label: '装进输入框 →', primary: true }],
     },
     {
       id: 'run-5parts',
@@ -78,8 +93,10 @@ export const taskBriefLesson: GuidedLessonDef = {
         activeChat: null,
         showArtifacts: false,
         composerText: FIVE_PARTS_BRIEF,
+        fivePartsCard: 'flying',
       }),
-      say: ['看输入框里已经写齐 5 要素，特别是那句防编造保命句。点<b>发送</b>！'],
+      onAction: () => ({ fivePartsCard: null }),
+      say: ['5 要素提示词已经顺着移进输入框里了。点右下角<b>发送</b>，看它怎么按规矩交作业！'],
       wait: {
         target: 'composer.send',
         callout: '按 5 要素发送',

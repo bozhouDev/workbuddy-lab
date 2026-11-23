@@ -21,6 +21,7 @@ import type {
 } from './types';
 
 const AUTO_COLLAPSE_WIDTH = 1140;
+const SIDEBAR_AREAS: ReadonlySet<AreaId> = new Set(['nav', 'historyGroups', 'avatar']);
 
 let msgSeq = 0;
 const nextId = () => `if-${++msgSeq}`;
@@ -68,16 +69,37 @@ export default function InterfaceLesson({
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [exploredAreas, setExploredAreas] = useState<Set<AreaId>>(() => new Set());
-  const [focusedAreaId, setFocusedAreaId] = useState<AreaId | null>('nav');
+  const [exploreIndex, setExploreIndex] = useState(0);
+  const [stepPhase, setStepPhase] = useState<'prompt' | 'explained'>('prompt');
   const [quizHintVisible, setQuizHintVisible] = useState(false);
   const [urgent, setUrgent] = useState(false);
 
   const lastAsideRef = useRef<CoachActionId | null>(null);
   const timersRef = useRef<number[]>([]);
+  const pendingSayRef = useRef<{
+    items: FeedItemInput[];
+    next: number;
+    timers: number[];
+    onDone?: () => void;
+  } | null>(null);
 
   const clearAllTimers = useCallback(() => {
     for (const id of timersRef.current) window.clearTimeout(id);
     timersRef.current = [];
+    pendingSayRef.current = null;
+  }, []);
+
+  const flushPendingSay = useCallback(() => {
+    const pending = pendingSayRef.current;
+    if (!pending) return;
+    pendingSayRef.current = null;
+    for (const id of pending.timers) window.clearTimeout(id);
+    const rest = pending.items.slice(pending.next);
+    if (rest.length > 0) {
+      setFeed((prev) => [...prev, ...rest.map((item) => ({ ...item, id: nextId() }) as FeedItem)]);
+    }
+    setIsTyping(false);
+    pending.onDone?.();
   }, []);
 
   const schedule = useCallback((fn: () => void, ms: number) => {
@@ -88,25 +110,32 @@ export default function InterfaceLesson({
 
   const saySequence = useCallback(
     (items: FeedItemInput[], onDone?: () => void) => {
+      flushPendingSay();
       if (items.length === 0) {
         onDone?.();
         return;
       }
       setIsTyping(true);
+      const pending = { items, next: 0, timers: [] as number[], onDone };
+      pendingSayRef.current = pending;
       let elapsed = 0;
       items.forEach((item, idx) => {
-        const delay = idx === 0 ? 220 : 360;
+        const delay = idx === 0 ? 180 : 300;
         elapsed += delay;
-        schedule(() => {
+        const id = schedule(() => {
+          if (pendingSayRef.current !== pending) return;
           setFeed((prev) => [...prev, { ...item, id: nextId() } as FeedItem]);
+          pending.next = idx + 1;
           if (idx === items.length - 1) {
+            pendingSayRef.current = null;
             setIsTyping(false);
             onDone?.();
           }
         }, elapsed);
+        pending.timers.push(id);
       });
     },
-    [schedule]
+    [flushPendingSay, schedule]
   );
 
   const bootLesson = useCallback(() => {
@@ -119,19 +148,21 @@ export default function InterfaceLesson({
       )
     );
     setExploredAreas(new Set());
-    setFocusedAreaId('nav');
+    setExploreIndex(0);
+    setStepPhase('prompt');
     setQuizHintVisible(false);
     setUrgent(false);
+    setIsTyping(false);
     setFeed([]);
 
     saySequence([
       {
         kind: 'coach',
-        html: '第一次打开 WorkBuddy，按钮看起来不少，其实认清 <b>7 块</b>首页区域 + <b>右侧产物区</b>就够用了。',
+        html: '第一次打开 WorkBuddy，按钮看起来不少，其实认清 <b>7 块首页区域</b> + <b>右侧产物区</b>就够用了。',
       },
       {
         kind: 'coach',
-        html: '左边是 5.11.3 的真实界面还原——<b>不压暗、不锁死</b>，你点哪块都会弹出真菜单，我坐旁边给你讲。',
+        html: '左边是 5.11.3 的真实界面还原——接下来我带你<b>一步一步认完这 7 块</b>：点开一块、看懂一块，再点按钮看下一块。',
       },
     ]);
   }, [clearAllTimers, saySequence, coachMode]);
@@ -157,13 +188,17 @@ export default function InterfaceLesson({
 
   useEffect(() => {
     setUrgent(false);
-    if (stage !== 'explore' && stage !== 'demo-ready' && stage !== 'quiz') return;
+    const waitingClick =
+      (stage === 'explore' && stepPhase === 'prompt') ||
+      stage === 'demo-ready' ||
+      stage === 'quiz';
+    if (!waitingClick) return;
     const t = window.setTimeout(() => {
       setUrgent(true);
       if (stage === 'quiz') setQuizHintVisible(true);
     }, 6000);
     return () => window.clearTimeout(t);
-  }, [stage, exploredAreas.size, focusedAreaId]);
+  }, [stage, exploreIndex, stepPhase]);
 
   const phase: PhaseIndex = useMemo(() => {
     if (stage === 'intro') return 0;
@@ -172,22 +207,17 @@ export default function InterfaceLesson({
     return 3;
   }, [stage]);
 
-  const recommendedArea = useMemo(() => {
-    if (stage !== 'explore') return null;
-    if (focusedAreaId && !exploredAreas.has(focusedAreaId)) {
-      return EXPLORE_AREAS.find((a) => a.id === focusedAreaId) ?? null;
-    }
-    return EXPLORE_AREAS.find((a) => !exploredAreas.has(a.id)) ?? null;
-  }, [stage, focusedAreaId, exploredAreas]);
+  const currentArea = stage === 'explore' ? EXPLORE_AREAS[exploreIndex] ?? null : null;
 
   const { primaryTarget, primaryCallout } = useMemo((): {
     primaryTarget: CoachActionId | null;
     primaryCallout: string | null;
   } => {
-    if (stage === 'explore' && recommendedArea) {
+    // 只在等待点击时亮起当前步的 1 个目标；点开讲解停留期间隐藏催促蓝圈，让用户安心看菜单
+    if (stage === 'explore' && stepPhase === 'prompt' && currentArea) {
       return {
-        primaryTarget: recommendedArea.actions[0],
-        primaryCallout: recommendedArea.callout,
+        primaryTarget: currentArea.actions[0],
+        primaryCallout: currentArea.callout,
       };
     }
     if (stage === 'demo-ready') {
@@ -197,29 +227,68 @@ export default function InterfaceLesson({
       return { primaryTarget: 'group', primaryCallout: '点这里选分组' };
     }
     return { primaryTarget: null, primaryCallout: null };
-  }, [stage, recommendedArea, quizHintVisible]);
+  }, [stage, stepPhase, currentArea, quizHintVisible]);
 
   const startExplore = useCallback(() => {
-    clearAllTimers();
-    setIsTyping(false);
+    flushPendingSay();
+    lastAsideRef.current = null;
+    const first = EXPLORE_AREAS[0];
     setFeed((prev) => [...prev, { id: nextId(), kind: 'mine', text: '好，开始认界面' }]);
     setStage('explore');
-    setFocusedAreaId('nav');
-    saySequence([
-      {
-        kind: 'coach',
-        html: '不用死记硬背。左边带蓝圈或蓝点的地方<b>随便点</b>，点哪块我讲哪块，顺序全看你。',
-      },
-      { kind: 'checklist' },
-    ]);
-  }, [clearAllTimers, saySequence]);
+    setExploreIndex(0);
+    setStepPhase('prompt');
+    setShell((p) => ({
+      ...p,
+      popover: null,
+      sidebarCollapsed: SIDEBAR_AREAS.has(first.id) ? false : p.sidebarCollapsed,
+    }));
+    saySequence([{ kind: 'coach', html: first.leadIn }]);
+  }, [flushPendingSay, saySequence]);
+
+  const goToExploreStep = useCallback(
+    (targetIdx: number, reason: 'next' | 'prev' | 'jump') => {
+      const targetArea = EXPLORE_AREAS[targetIdx];
+      if (!targetArea) return;
+      flushPendingSay();
+      lastAsideRef.current = null;
+      setExploreIndex(targetIdx);
+      setStepPhase('prompt');
+      setShell((p) => ({
+        ...p,
+        popover: null,
+        sidebarCollapsed: SIDEBAR_AREAS.has(targetArea.id) ? false : p.sidebarCollapsed,
+      }));
+
+      if (reason === 'next') {
+        setFeed((prev) => [...prev, { id: nextId(), kind: 'mine', text: '懂了，看下一项' }]);
+        saySequence([{ kind: 'coach', html: targetArea.leadIn }]);
+      } else if (reason === 'prev') {
+        setFeed((prev) => [...prev, { id: nextId(), kind: 'mine', text: '回看上一步' }]);
+        saySequence([
+          {
+            kind: 'coach',
+            html: `回到 <b>第 ${targetIdx + 1}/${EXPLORE_AREAS.length} 步（${targetArea.title}）</b>：再点一次左边蓝圈，对照着看一遍。`,
+          },
+        ]);
+      } else {
+        saySequence([
+          {
+            kind: 'coach',
+            html: `回到 <b>第 ${targetIdx + 1}/${EXPLORE_AREAS.length} 步（${targetArea.title}）</b>：点一下左边蓝圈再看一遍。`,
+          },
+        ]);
+      }
+    },
+    [flushPendingSay, saySequence]
+  );
 
   const enterDemoReady = useCallback(() => {
-    const btnText =
-      exploredAreas.size === EXPLORE_AREAS.length
-        ? '7 块认齐了，看看右侧产物区'
-        : '先看右侧产物区长什么样';
-    setFeed((prev) => [...prev, { id: nextId(), kind: 'mine', text: btnText }]);
+    flushPendingSay();
+    lastAsideRef.current = null;
+    setFeed((prev) => [
+      ...prev,
+      { id: nextId(), kind: 'mine', text: '7 块认齐了，去试右侧产物区' },
+    ]);
     setStage('demo-ready');
     setShell((prev) => ({
       ...prev,
@@ -238,9 +307,10 @@ export default function InterfaceLesson({
         html: '我帮你选好了 <b>WorkBuddy-练习</b> 分组、填好了小任务。点右下角蓝圈里的<b>发送</b>，看它干活。',
       },
     ]);
-  }, [exploredAreas.size, saySequence]);
+  }, [flushPendingSay, saySequence]);
 
   const runDemoAnimation = useCallback(() => {
+    flushPendingSay();
     setStage('demo-running');
     setFeed((prev) => [...prev, { id: nextId(), kind: 'did', text: '发送' }]);
     setShell((prev) => ({
@@ -312,9 +382,10 @@ export default function InterfaceLesson({
       };
       tick();
     }, 1160);
-  }, [schedule, saySequence]);
+  }, [flushPendingSay, schedule, saySequence]);
 
   const enterQuiz = useCallback(() => {
+    flushPendingSay();
     setFeed((prev) => [...prev, { id: nextId(), kind: 'mine', text: '记住了，考我一下' }]);
     setStage('quiz');
     setQuizHintVisible(false);
@@ -332,9 +403,10 @@ export default function InterfaceLesson({
         html: '收个尾，10 秒小验证：待会你要整理第一份周报，<b>发任务前最该先点哪个按钮指定保存文件夹</b>？直接在左边点出来。',
       },
     ]);
-  }, [saySequence]);
+  }, [flushPendingSay, saySequence]);
 
   const finishSummary = useCallback(() => {
+    flushPendingSay();
     setStage('summary');
     saySequence([
       {
@@ -347,7 +419,7 @@ export default function InterfaceLesson({
       },
       { kind: 'summary' },
     ]);
-  }, [saySequence]);
+  }, [flushPendingSay, saySequence]);
 
   const handleShellAction = useCallback(
     (action: CoachActionId, detail?: string) => {
@@ -410,44 +482,46 @@ export default function InterfaceLesson({
         return;
       }
 
-      if (stage === 'explore') {
-        const matchedArea = EXPLORE_AREAS.find((a) => a.actions.includes(action));
-        if (matchedArea) {
+      if (stage === 'explore' && currentArea) {
+        const isCurrentTarget = currentArea.actions.includes(action);
+        if (isCurrentTarget) {
           lastAsideRef.current = null;
-          const alreadyDone = exploredAreas.has(matchedArea.id);
-          if (!alreadyDone) {
+          if (stepPhase === 'prompt') {
+            flushPendingSay();
             const nextSet = new Set(exploredAreas);
-            nextSet.add(matchedArea.id);
+            nextSet.add(currentArea.id);
             setExploredAreas(nextSet);
-            const nextTodo = EXPLORE_AREAS.find((a) => !nextSet.has(a.id));
-            setFocusedAreaId(nextTodo?.id ?? null);
+            setStepPhase('explained');
 
             setFeed((prev) => [
               ...prev,
               { id: nextId(), kind: 'did', text: detail || ACTION_LABEL[action] },
             ]);
-            const replies: FeedItemInput[] = [
-              { kind: 'coach', html: matchedArea.coachReply },
-            ];
-            if (nextSet.size === EXPLORE_AREAS.length) {
+
+            const replies: FeedItemInput[] = [{ kind: 'coach', html: currentArea.coachReply }];
+            if (exploreIndex === EXPLORE_AREAS.length - 1) {
               replies.push({
                 kind: 'coach',
-                html: '首页 7 块都认全了。接下来点右下角按钮，亲手发一次小任务看看<b>右侧产物区</b>。',
+                html: '首页 7 块都认齐了！点下面按钮，亲手发一次小任务看看<b>右侧产物区</b>。',
               });
             }
             saySequence(replies);
           }
+          // 处于 explained 停留期间，允许用户在当前区域/菜单继续点着玩，不刷屏、不跳步
           return;
         }
       }
 
+      // 点到非当前目标控件：给一句轻量解释，不跳过当前主线
       if (lastAsideRef.current === action) return;
       lastAsideRef.current = action;
       const tailTip =
         stage === 'demo-ready'
           ? '看完了点右下角蓝圈里的<b>发送</b>。'
-          : stage === 'explore'
-            ? '接着点左边带蓝圈或蓝点的区域就行。'
+          : stage === 'explore' && currentArea
+            ? stepPhase === 'prompt'
+              ? `先跟着看第 ${exploreIndex + 1}/${EXPLORE_AREAS.length} 步：点左边蓝圈里的<b>${currentArea.title}</b>。`
+              : '看完了点右下角按钮继续下一步。'
             : '点右边底部按钮继续。';
       setFeed((prev) => [
         ...prev,
@@ -459,19 +533,17 @@ export default function InterfaceLesson({
         },
       ]);
     },
-    [stage, exploredAreas, runDemoAnimation, finishSummary, saySequence]
-  );
-
-  const handleFocusArea = useCallback(
-    (areaId: AreaId) => {
-      if (stage !== 'explore') return;
-      setFocusedAreaId(areaId);
-      setUrgent(true);
-      if ((areaId === 'nav' || areaId === 'historyGroups' || areaId === 'avatar') && shell.sidebarCollapsed) {
-        setShell((p) => ({ ...p, sidebarCollapsed: false }));
-      }
-    },
-    [stage, shell.sidebarCollapsed]
+    [
+      stage,
+      currentArea,
+      stepPhase,
+      exploredAreas,
+      exploreIndex,
+      flushPendingSay,
+      runDemoAnimation,
+      finishSummary,
+      saySequence,
+    ]
   );
 
   const { waitPrompt, buttons } = useMemo(() => {
@@ -481,19 +553,56 @@ export default function InterfaceLesson({
         buttons: [{ label: '好，开始认界面', primary: true, onClick: startExplore }],
       };
     }
-    if (stage === 'explore') {
-      const allDone = exploredAreas.size === EXPLORE_AREAS.length;
+    if (stage === 'explore' && currentArea) {
+      const isLast = exploreIndex === EXPLORE_AREAS.length - 1;
+      const isCurrentDone = exploredAreas.has(currentArea.id);
+      const btns: Array<{ label: string; primary?: boolean; onClick: () => void }> = [];
+
+      if (exploreIndex > 0) {
+        btns.push({
+          label: '← 上一步',
+          primary: false,
+          onClick: () => goToExploreStep(exploreIndex - 1, 'prev'),
+        });
+      }
+
+      if (stepPhase === 'explained') {
+        btns.push(
+          isLast
+            ? {
+                label: '7 块认齐了，去试右侧产物区 →',
+                primary: true,
+                onClick: enterDemoReady,
+              }
+            : {
+                label: `懂了，看下一项（${exploreIndex + 2}/${EXPLORE_AREAS.length}）→`,
+                primary: true,
+                onClick: () => goToExploreStep(exploreIndex + 1, 'next'),
+              }
+        );
+        return { waitPrompt: null, buttons: btns };
+      }
+
+      // 回看已完成步骤时，也允许直接点前进；未完成步骤绝不提供跳过按钮
+      if (isCurrentDone) {
+        btns.push(
+          isLast
+            ? {
+                label: '7 块认齐了，去试右侧产物区 →',
+                primary: true,
+                onClick: enterDemoReady,
+              }
+            : {
+                label: `继续下一项（${exploreIndex + 2}/${EXPLORE_AREAS.length}）→`,
+                primary: true,
+                onClick: () => goToExploreStep(exploreIndex + 1, 'next'),
+              }
+        );
+      }
+
       return {
-        waitPrompt: allDone
-          ? null
-          : `在左边点蓝圈或蓝点（已认 ${exploredAreas.size}/${EXPLORE_AREAS.length}）`,
-        buttons: [
-          {
-            label: allDone ? '7 块认齐了，看看右侧产物区 →' : '看完了，去试右侧产物区 →',
-            primary: allDone,
-            onClick: enterDemoReady,
-          },
-        ],
+        waitPrompt: currentArea.waitPrompt,
+        buttons: btns,
       };
     }
     if (stage === 'demo-ready') {
@@ -534,7 +643,31 @@ export default function InterfaceLesson({
         { label: '重来一遍', primary: false, onClick: bootLesson },
       ],
     };
-  }, [stage, exploredAreas.size, startExplore, enterDemoReady, enterQuiz, bootLesson, onSelectLesson]);
+  }, [
+    stage,
+    currentArea,
+    exploreIndex,
+    stepPhase,
+    exploredAreas,
+    startExplore,
+    goToExploreStep,
+    enterDemoReady,
+    enterQuiz,
+    bootLesson,
+    onSelectLesson,
+  ]);
+
+  const exploreProgress = useMemo(
+    () =>
+      stage === 'explore'
+        ? {
+            currentIndex: exploreIndex,
+            stepPhase,
+            onSelectStep: (idx: number) => goToExploreStep(idx, 'jump'),
+          }
+        : null,
+    [stage, exploreIndex, stepPhase, goToExploreStep]
+  );
 
   return (
     <>
@@ -543,7 +676,7 @@ export default function InterfaceLesson({
         primaryTarget={primaryTarget}
         primaryCallout={primaryCallout}
         urgent={urgent}
-        showExploreDots={stage === 'explore'}
+        showExploreDots={false}
         exploredAreas={exploredAreas}
         onAction={handleShellAction}
         onToggleSidebar={() =>
@@ -578,10 +711,10 @@ export default function InterfaceLesson({
         feed={feed}
         isTyping={isTyping}
         exploredAreas={exploredAreas}
-        recommendedAreaId={recommendedArea?.id ?? null}
+        exploreProgress={exploreProgress}
+        subtitle="跟着蓝圈一步一步认，点开一块讲一块"
         waitPrompt={waitPrompt}
         buttons={buttons}
-        onFocusArea={handleFocusArea}
       />
     </>
   );

@@ -158,9 +158,9 @@ export const makeSkillLesson: GuidedLessonDef = {
       navLabel: '/ 调用',
       say: [
         '已安装分三组：<b>用户自定义</b>（你自己做的，刚才那个在这）、<b>来自市场</b>（上节装的 WPS 在这）、<b>套件</b>。卸载也在这里。',
-        '现在测一下：回首页新开一个任务，用 / 调出你的技能。',
+        '现在测一下：先点左上角<b>新建任务</b>回首页，再在输入框里按键盘输入 <b>/</b> 调出你的技能。',
       ],
-      wait: { target: 'composer.slash', callout: '打 / 调技能', label: '/ 技能' },
+      wait: { target: 'composer.slash', callout: '在输入框里输入 /', label: '输入 /' },
       onEnter: () => ({ composerText: LAZY_PROMPT, composerChips: [] }),
       onAction: () => ({ view: 'home', installedPanelOpen: false, slashMenuOpen: true }),
     },

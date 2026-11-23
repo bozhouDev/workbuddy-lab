@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import {
   AssistantIcon,
   BellIcon,
@@ -34,6 +35,7 @@ import { ExtensionsViews5113 } from './ExtensionsViews5113';
 import { ScheduleView5113 } from './ScheduleView5113';
 import { LibraryPickerModal, LibraryView5113, MobileLinkPopover, PhonePanel } from './LibraryPhoneViews';
 import { SLASH_SKILLS_BASE } from './extensionsData';
+import { FIVE_PARTS_ITEMS, type FivePartsItem } from './fivePartsBrief';
 import { FakeQr, LetterIcon } from './targetKit';
 
 interface GuidedWorkBuddyProps {
@@ -73,6 +75,36 @@ export function GuidedWorkBuddy({
   // 不在首页、但下一步要点首页输入框的按钮时，提示学员先点「新建任务」回首页
   const isNeedBackToHome =
     shell.view !== 'home' && shell.view !== 'settings' && /^(composer|plusMenu)\./.test(waitTarget ?? '');
+  const isWaitingMention = shell.view === 'home' && waitTarget === 'composer.mention';
+  const isWaitingSlash = shell.view === 'home' && waitTarget === 'composer.slash';
+  const isWaitingComposerKey = isWaitingMention || isWaitingSlash;
+  const composerInputRef = useRef<HTMLTextAreaElement>(null);
+  const [composerDraft, setComposerDraft] = useState(shell.composerText);
+  const [wrongKeyHint, setWrongKeyHint] = useState(false);
+  const [fivePartsFlyDone, setFivePartsFlyDone] = useState(false);
+
+  useEffect(() => {
+    setComposerDraft(shell.composerText);
+    setWrongKeyHint(false);
+  }, [shell.composerText, waitTarget]);
+
+  useEffect(() => {
+    if (shell.fivePartsCard !== 'flying') {
+      setFivePartsFlyDone(false);
+      return;
+    }
+    setFivePartsFlyDone(false);
+    const id = window.setTimeout(() => setFivePartsFlyDone(true), 1020);
+    return () => window.clearTimeout(id);
+  }, [shell.fivePartsCard]);
+
+  useEffect(() => {
+    if (!isWaitingComposerKey) return;
+    const el = composerInputRef.current;
+    if (!el) return;
+    el.focus();
+    el.setSelectionRange(0, 0);
+  }, [isWaitingComposerKey, waitTarget]);
   // 第 3、4 章的三个侧栏入口：作为课程目标时可点进对应页面
   const navTargets: Record<string, GuidedTargetId> = {
     extensions: 'nav.extensions',
@@ -471,6 +503,103 @@ export function GuidedWorkBuddy({
         <LibraryView5113 shell={shell} {...kitProps} />
       ) : shell.view === 'home' ? (
         <div className="flex-1 min-w-0 relative flex flex-col items-center justify-center px-6 xl:px-10 pb-8 bg-white">
+          {/* 2.4 写清任务：5 要素拆解教学弹窗（先把完整提示词拆成 5 块看清，点下一步后缓缓移入下方输入框） */}
+          {shell.fivePartsCard === 'open' && (() => {
+            const toneStyle: Record<FivePartsItem['tone'], { badge: string; row: string; inline: string }> = {
+              blue: {
+                badge: 'bg-[#eef2ff] text-accent-700 border-[#c9d3f7]',
+                row: 'bg-white border-[#eceef2]',
+                inline: 'bg-[#eef2ff] text-accent-800',
+              },
+              teal: {
+                badge: 'bg-[#ecfdf5] text-[#047857] border-[#a7f3d0]',
+                row: 'bg-white border-[#eceef2]',
+                inline: 'bg-[#ecfdf5] text-[#065f46]',
+              },
+              indigo: {
+                badge: 'bg-[#f5f3ff] text-[#6d28d9] border-[#ddd6fe]',
+                row: 'bg-white border-[#eceef2]',
+                inline: 'bg-[#f5f3ff] text-[#5b21b6]',
+              },
+              amber: {
+                badge: 'bg-[#fff1e8] text-[#c2410c] border-[#f6d7c2]',
+                row: 'bg-[#fffaf6] border-[#f6d7c2]',
+                inline: 'bg-[#fff1e8] text-[#9a3412]',
+              },
+              slate: {
+                badge: 'bg-[#f1f5f9] text-[#334155] border-[#cbd5e1]',
+                row: 'bg-white border-[#eceef2]',
+                inline: 'bg-[#f1f5f9] text-[#334155]',
+              },
+            };
+            return (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="absolute inset-0 z-40 flex items-center justify-center p-5 bg-white/65 backdrop-blur-[2px]"
+              >
+                <div
+                  role="dialog"
+                  aria-label="5 要素任务单拆解"
+                  className="sim-pop-up w-[590px] max-w-full rounded-[18px] bg-white border border-[#dfe2ea] shadow-[0_24px_64px_rgba(17,19,24,0.22)] overflow-hidden text-[13px]"
+                >
+                  <div className="px-4 py-3 bg-[#f8f9fb] border-b border-[#eceef2] flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-md bg-accent-600 text-white text-[11px] font-bold shrink-0">
+                        5
+                      </span>
+                      <span className="font-bold text-[13.5px] text-[#111318] truncate">
+                        5 要素任务单拆解
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-medium text-[#6b7079] bg-white border border-[#e6e8ee] rounded-full px-2.5 py-0.5 shrink-0">
+                      把一句话拆开看 · 每块负责一件事
+                    </span>
+                  </div>
+
+                  <div className="p-3.5 flex flex-col gap-2 max-h-[58vh] overflow-y-auto">
+                    {FIVE_PARTS_ITEMS.map((item, idx) => {
+                      const st = toneStyle[item.tone];
+                      return (
+                        <div
+                          key={item.label}
+                          style={{ animationDelay: `${idx * 65}ms` }}
+                          className={`sim-msg-rise rounded-[12px] border px-3 py-2 flex items-start gap-2.5 ${st.row}`}
+                        >
+                          <span
+                            className={`shrink-0 mt-[1px] inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[11.5px] font-semibold whitespace-nowrap ${st.badge}`}
+                          >
+                            <span>{item.num}</span>
+                            <span>{item.label}</span>
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-[13px] font-semibold text-[#111318] leading-[1.55]">
+                              {item.text.trim()}
+                            </div>
+                            <div className="text-[11.5px] text-[#6b7079] mt-0.5 leading-[1.45]">
+                              {item.why}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="px-4 py-2.5 bg-[#fafaf9] border-t border-[#eceef2] text-[12px] leading-[1.7] text-[#4a4f57]">
+                    <span className="text-[11px] font-semibold text-[#8c9099] mr-1.5">拼在一起：</span>
+                    {FIVE_PARTS_ITEMS.map((item) => (
+                      <span
+                        key={item.label}
+                        className={`inline rounded px-1 py-[1px] mr-0.5 ${toneStyle[item.tone].inline}`}
+                      >
+                        {item.text.trim()}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
           <div className="absolute right-4 top-3 text-[#6b7079]">
             <PanelRightIcon size={16} />
           </div>
@@ -695,18 +824,29 @@ export function GuidedWorkBuddy({
                   )}
                 </button>
                 {[
-                  { icon: 'M', name: '项目背景.md', dir: '/WorkBuddy-工作区/00_临时/WorkBuddy-练习/' },
-                  { icon: 'X', name: '上月销售数据.xlsx', dir: '/WorkBuddy-工作区/00_临时/WorkBuddy-练习/' },
+                  {
+                    icon: 'T',
+                    name: '上月读书会群聊_旧版.txt',
+                    dir: '/WorkBuddy-工作区/00_临时/WorkBuddy-练习/',
+                    note: '这是上个月的旧记录——刚才没打 <b>@</b> 点名时，它自己搜目录抓错的就是这份。这步请点上面蓝圈里的最新记录 <b>周末读书会群聊.txt</b>。',
+                  },
+                  {
+                    icon: 'M',
+                    name: '项目背景.md',
+                    dir: '/WorkBuddy-工作区/00_临时/WorkBuddy-练习/',
+                    note: '文件起名清楚（比如 <b>项目背景.md</b> 而不是 文档1），AI 扫一眼文件名就能判断用途。这步先选上面蓝圈里的 <b>周末读书会群聊.txt</b>。',
+                  },
+                  {
+                    icon: 'X',
+                    name: '上月销售数据.xlsx',
+                    dir: '/WorkBuddy-工作区/00_临时/WorkBuddy-练习/',
+                    note: '文件起名清楚（比如 <b>上月销售数据.xlsx</b> 而不是 文档1），AI 扫一眼文件名就能判断用途。这步先选上面蓝圈里的 <b>周末读书会群聊.txt</b>。',
+                  },
                 ].map((f) => (
                   <button
                     key={f.name}
                     type="button"
-                    onClick={() =>
-                      onAsideClick(
-                        f.name,
-                        `文件起名清楚（比如 <b>${f.name}</b> 而不是 文档1），AI 扫一眼文件名就能判断用途。这步先选上面蓝圈里的 <b>周末读书会群聊.txt</b>。`
-                      )
-                    }
+                    onClick={() => onAsideClick(f.name, f.note)}
                     className="w-full border-0 bg-transparent hover:bg-[#f5f5f5] rounded-[10px] px-2.5 py-2 flex items-center gap-2 text-left cursor-pointer"
                   >
                     <span className="w-4.5 h-4.5 rounded bg-[#14b8a6] text-white text-[10px] font-bold inline-flex items-center justify-center shrink-0">
@@ -1021,19 +1161,110 @@ export function GuidedWorkBuddy({
               </div>
             )}
 
-            <div className="rounded-[22px] bg-[#f4f4f5] p-[1px]">
-              <div className="rounded-[20px] bg-white border border-[#e6e6e6] px-4 pt-3.5 pb-2.5 shadow-[0_2px_10px_rgba(0,0,0,0.03)]">
-                <div className="min-h-[54px] text-[14.5px] leading-[1.65]">
-                  {hasText ? (
-                    <span className="text-[#111318]">
-                      <RichText text={shell.composerText} />
-                    </span>
-                  ) : (
-                    <span className="text-[#9ea3ad]">
-                      今天帮你做些什么？@ 添加上下文，/调用技能与指令
-                    </span>
-                  )}
+            {/* 2.4 五要素提示词缓缓移入输入框的飞行卡片 */}
+            {shell.fivePartsCard === 'flying' && !fivePartsFlyDone && (
+              <div
+                aria-hidden="true"
+                className="sim-brief-fly absolute left-0 right-0 top-0 z-30 rounded-[18px] bg-white/98 border border-accent-300 px-4 py-3 text-[13.5px] leading-[1.65] text-[#111318]"
+              >
+                <div className="flex items-center gap-1.5 mb-1.5 text-[11px] font-semibold text-accent-600">
+                  <span className="inline-flex items-center gap-1">
+                    {FIVE_PARTS_ITEMS.map((item) => (
+                      <span
+                        key={item.label}
+                        className="px-1.5 py-[1px] rounded bg-[#eef2ff] text-accent-700 text-[10.5px]"
+                      >
+                        {item.num} {item.label}
+                      </span>
+                    ))}
+                  </span>
                 </div>
+                <div className="text-[#1f2329]">
+                  <RichText text={shell.composerText} />
+                </div>
+              </div>
+            )}
+
+            <div className="rounded-[22px] bg-[#f4f4f5] p-[1px]">
+              <div
+                className={`rounded-[20px] bg-white border border-[#e6e6e6] px-4 pt-3.5 pb-2.5 shadow-[0_2px_10px_rgba(0,0,0,0.03)] ${
+                  shell.fivePartsCard === 'flying' ? 'sim-composer-receive' : ''
+                }`}
+              >
+                {isWaitingComposerKey ? (
+                  <div className="relative">
+                    <textarea
+                      ref={composerInputRef}
+                      rows={2}
+                      data-guided-target={isWaitingMention ? 'composer.mention' : 'composer.slash'}
+                      aria-label={isWaitingMention ? '在输入框里输入 @ 引用文件' : '在输入框里输入 / 调用技能'}
+                      value={composerDraft}
+                      onKeyDown={(e) => {
+                        if (isWaitingMention && (e.key === '@' || e.key === '＠')) {
+                          e.preventDefault();
+                          setWrongKeyHint(false);
+                          onTargetClick('composer.mention');
+                          return;
+                        }
+                        if (isWaitingSlash && (e.key === '/' || e.key === '／' || e.key === '、')) {
+                          e.preventDefault();
+                          setWrongKeyHint(false);
+                          onTargetClick('composer.slash');
+                          return;
+                        }
+                      }}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (isWaitingMention && /[@＠]/.test(val)) {
+                          setWrongKeyHint(false);
+                          onTargetClick('composer.mention');
+                          return;
+                        }
+                        if (isWaitingSlash && /[/／、]/.test(val)) {
+                          setWrongKeyHint(false);
+                          onTargetClick('composer.slash');
+                          return;
+                        }
+                        setComposerDraft(val);
+                        setWrongKeyHint(true);
+                      }}
+                      placeholder="今天帮你做些什么？@ 添加上下文，/调用技能与指令"
+                      className={`w-full min-h-[56px] resize-none rounded-xl border-0 bg-white px-2 py-1 -mx-2 -my-1 text-[14.5px] leading-[1.65] text-[#111318] outline-none select-text ${ring(
+                        isWaitingMention ? 'composer.mention' : 'composer.slash'
+                      )}`}
+                    />
+                    <div
+                      className={`mt-1 flex items-center justify-end gap-1.5 text-[11.5px] ${
+                        wrongKeyHint ? 'text-[#c2410c] font-medium' : 'text-[#6b7079]'
+                      }`}
+                    >
+                      <span>{wrongKeyHint ? '还没触发：请直接按键盘' : '直接按键盘'}</span>
+                      <kbd className="inline-flex items-center justify-center min-w-[22px] h-5 px-1.5 rounded-md border border-[#d6d6d2] bg-[#fafaf9] font-mono text-[12px] font-bold text-[#111318] shadow-[0_1px_0_#d6d6d2]">
+                        {isWaitingMention ? '@' : '/'}
+                      </kbd>
+                      <span>{isWaitingMention ? '弹出文件列表' : '弹出技能列表'}</span>
+                    </div>
+                    {waitCallout && (
+                      <GuidanceCallout text={waitCallout} placement="top" align="start" />
+                    )}
+                  </div>
+                ) : (
+                  <div className="min-h-[54px] text-[14.5px] leading-[1.65]">
+                    {hasText ? (
+                      <span
+                        className={`block text-[#111318] ${
+                          shell.fivePartsCard === 'flying' ? 'sim-composer-text-land' : ''
+                        }`}
+                      >
+                        <RichText text={shell.composerText} />
+                      </span>
+                    ) : (
+                      <span className="text-[#9ea3ad]">
+                        今天帮你做些什么？@ 添加上下文，/调用技能与指令
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between pt-2">
                   <div className="flex items-center gap-1.5">
@@ -1055,48 +1286,6 @@ export function GuidedWorkBuddy({
                     >
                       +
                       {waitTarget === 'composer.plus' && waitCallout && (
-                        <GuidanceCallout text={waitCallout} placement="top" align="start" />
-                      )}
-                    </button>
-
-                    <button
-                      type="button"
-                      data-guided-target="composer.mention"
-                      onClick={() =>
-                        handleOrAside(
-                          'composer.mention',
-                          '@ 引用文件',
-                          '在输入框里打 <b>@</b> 可以精准点名引用当前分组里的文件或子文件夹，不让 AI 瞎猜。'
-                        )
-                      }
-                      className={`relative h-7 px-2 rounded-lg border border-[#e6e6e3] bg-[#fafaf9] hover:bg-[#f2f2f0] text-[12px] font-medium text-[#4a4f57] inline-flex items-center gap-1 cursor-pointer transition-colors ${ring(
-                        'composer.mention'
-                      )}`}
-                    >
-                      <span className="font-mono text-accent-600 font-bold">@</span>
-                      <span>引用文件</span>
-                      {waitTarget === 'composer.mention' && waitCallout && (
-                        <GuidanceCallout text={waitCallout} placement="top" align="start" />
-                      )}
-                    </button>
-
-                    <button
-                      type="button"
-                      data-guided-target="composer.slash"
-                      onClick={() =>
-                        handleOrAside(
-                          'composer.slash',
-                          '/ 调用技能',
-                          '在输入框里打 <b>/</b> 会弹出技能列表，选一个，这次任务就按这个技能的步骤来做。'
-                        )
-                      }
-                      className={`relative h-7 px-2 rounded-lg border border-[#e6e6e3] bg-[#fafaf9] hover:bg-[#f2f2f0] text-[12px] font-medium text-[#4a4f57] inline-flex items-center gap-1 cursor-pointer transition-colors ${ring(
-                        'composer.slash'
-                      )}`}
-                    >
-                      <span className="font-mono text-accent-600 font-bold">/</span>
-                      <span>技能</span>
-                      {waitTarget === 'composer.slash' && waitCallout && (
                         <GuidanceCallout text={waitCallout} placement="top" align="start" />
                       )}
                     </button>

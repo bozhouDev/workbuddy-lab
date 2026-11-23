@@ -33,6 +33,7 @@ export function createBaseGuidedState(
     askOn: false,
     fullAccessOn: false,
     mentionMenuOpen: false,
+    fivePartsCard: null,
     followupText: '',
     composerText: '',
     activeChat: null,

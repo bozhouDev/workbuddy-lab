@@ -153,6 +153,15 @@ describe.each(LESSONS.map((l) => [l.id, l] as const))('课程：%s', (_id, lesso
     }
   });
 
+  it('带 revealMarksOnEnter 的步骤不能同时把视图切回 home（否则橙色标注还没看就被切走）', () => {
+    const base = lesson.initialState();
+    for (const step of lesson.steps) {
+      if (!step.revealMarksOnEnter || !step.onEnter) continue;
+      const patch = step.onEnter({ ...base, view: 'chat' });
+      expect(patch.view, `步骤 ${step.id} 在标出问题的同时切走了视图`).not.toBe('home');
+    }
+  });
+
   it('初始状态能正常生成', () => {
     expect(() => lesson.initialState()).not.toThrow();
   });

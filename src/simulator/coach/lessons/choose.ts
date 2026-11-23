@@ -94,12 +94,19 @@ export const chooseLesson: GuidedLessonDef = {
       buttons: [{ label: '标出问题', primary: true }],
     },
     {
-      id: 'run-full',
+      id: 'reveal-bare',
       phase: 2,
       revealMarksOnEnter: true,
+      say: [
+        '看左边橙色标出的两处：<b>① 完成率是编的</b>，它根本读不到飞书（缺数据线）；<b>② 结论放在第 5 页</b>，老板最关心的东西翻到最后才看到（缺岗位脑子）。而且最后只给了文字大纲，没有能改的 PPT 文件（缺操作手册）。',
+      ],
+      buttons: [{ label: '好，配齐三样再试一次', primary: true }],
+    },
+    {
+      id: 'run-full',
+      phase: 2,
       onEnter: () => ({ view: 'home', composerText: PPT_PROMPT, composerChips: FULL_CHIPS, popover: null }),
       say: [
-        '橙色两处：<b>① 完成率是编的</b>，它根本读不到飞书（缺数据线）；<b>② 结论放在第 5 页</b>，老板最关心的东西翻到最后才看到（缺岗位脑子）。而且最后只给了文字大纲，没有能改的 PPT 文件（缺操作手册）。',
         '我已经在输入框里挂好三枚胶囊：<b>连接器 飞书</b>、<b>专家 PPT制作专家</b>、<b>技能 WPS Office 全家桶</b>（后面三节会一个个教你怎么挂上）。同一句话，再发一次。',
       ],
       wait: { target: 'composer.send', callout: '配齐三样再发', label: '发送（配齐三样）' },

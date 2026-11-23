@@ -16,6 +16,12 @@ interface CoachButton {
   onClick: () => void;
 }
 
+export interface ExploreProgressState {
+  currentIndex: number;
+  stepPhase: 'prompt' | 'explained';
+  onSelectStep: (index: number) => void;
+}
+
 interface CoachRailProps {
   mode: CoachMode;
   onChangeMode: (mode: CoachMode) => void;
@@ -28,6 +34,8 @@ interface CoachRailProps {
   waitPrompt: string | null;
   buttons: CoachButton[];
   onFocusArea?: (areaId: AreaId) => void;
+  /** 第 1 课「认识界面」顶部常驻单步进度条 */
+  exploreProgress?: ExploreProgressState | null;
   subtitle?: string;
   /** 可回跳的已完成阶段索引（用于点击 4 段进度条或底部「上一阶段」） */
   jumpablePhases?: PhaseIndex[];
@@ -52,11 +60,18 @@ export function CoachRail({
   waitPrompt,
   buttons,
   onFocusArea,
+  exploreProgress = null,
   subtitle = '左边真界面哪里都能点，点了就讲',
   jumpablePhases = [],
   onJumpPhase,
 }: CoachRailProps) {
   const feedRef = useRef<HTMLDivElement>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // 切步或退出探索阶段时自动收起步骤目录，保持消息区清爽
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [exploreProgress?.currentIndex, Boolean(exploreProgress)]);
 
   // 悬浮小窗坐标与尺寸（支持拖拽移动 + 拖拽缩放 + 快捷放大/还原）
   const [floatBox, setFloatBox] = useState(() => {
@@ -391,6 +406,106 @@ export function CoachRail({
           </div>
         </div>
       </div>
+
+      {/* 第 1 课常驻单步进度条（点开可回看已认过的项，未认项按顺序解锁、不可跳过） */}
+      {exploreProgress && (() => {
+        const total = EXPLORE_AREAS.length;
+        const curIdx = exploreProgress.currentIndex;
+        const curArea = EXPLORE_AREAS[curIdx];
+        if (!curArea) return null;
+        return (
+          <div className="shrink-0 border-b border-[#eeeeeb] bg-[#fafaf9]">
+            <button
+              type="button"
+              aria-expanded={drawerOpen}
+              onClick={() => setDrawerOpen((v) => !v)}
+              className="w-full border-0 bg-transparent hover:bg-[#f3f3f0] px-4 py-2 text-left cursor-pointer transition-colors"
+            >
+              <div className="flex items-center justify-between gap-2 text-[12px]">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="font-mono text-[11px] font-semibold text-accent-600 bg-accent-50 border border-accent-200 rounded-md px-1.5 py-[1px] shrink-0 tabular-nums">
+                    第 {curIdx + 1} / {total} 步
+                  </span>
+                  <span className="font-semibold text-gray-900 truncate">{curArea.title}</span>
+                </div>
+                <span className="text-[11px] text-gray-500 shrink-0">
+                  {drawerOpen ? '收起 ▴' : '目录 ▾'}
+                </span>
+              </div>
+              <div className="mt-1.5 grid grid-cols-7 gap-1" aria-hidden="true">
+                {EXPLORE_AREAS.map((area, idx) => {
+                  const done = exploredAreas.has(area.id);
+                  const isCur = idx === curIdx;
+                  return (
+                    <span
+                      key={area.id}
+                      className={`h-1.5 rounded-full transition-colors ${
+                        done
+                          ? 'bg-accent-600'
+                          : isCur
+                            ? 'bg-accent-300'
+                            : 'bg-gray-200'
+                      }`}
+                    />
+                  );
+                })}
+              </div>
+            </button>
+
+            {drawerOpen && (
+              <div className="sim-pop-down border-t border-[#eeeeeb] bg-white divide-y divide-[#f2f2ef] max-h-[240px] overflow-y-auto">
+                {EXPLORE_AREAS.map((area, idx) => {
+                  const done = exploredAreas.has(area.id);
+                  const isCur = idx === curIdx;
+                  // 只允许回看已完成的步骤，或点击当前步，不能跳过前面步骤
+                  const canJump = done && !isCur;
+                  return (
+                    <button
+                      key={area.id}
+                      type="button"
+                      disabled={!canJump}
+                      onClick={() => {
+                        if (canJump) {
+                          setDrawerOpen(false);
+                          exploreProgress.onSelectStep(idx);
+                        }
+                      }}
+                      className={`w-full border-0 text-left px-4 py-2 flex items-center justify-between gap-2 transition-colors ${
+                        isCur
+                          ? 'bg-accent-50/70 cursor-default'
+                          : canJump
+                            ? 'bg-white hover:bg-gray-50 cursor-pointer'
+                            : 'bg-white opacity-55 cursor-not-allowed'
+                      }`}
+                    >
+                      <div className="min-w-0">
+                        <div className="text-[12.5px] font-medium text-gray-900 truncate">
+                          <span className="font-mono text-[11px] text-gray-400 mr-1.5">
+                            {idx + 1}.
+                          </span>
+                          {area.title}
+                        </div>
+                        <div className="text-[11px] text-gray-500 truncate">{area.shortHint}</div>
+                      </div>
+                      {isCur ? (
+                        <span className="text-[10.5px] font-semibold text-accent-600 bg-white border border-accent-200 rounded-full px-2 py-0.5 shrink-0">
+                          {exploreProgress.stepPhase === 'explained' ? '已看完' : '当前步'}
+                        </span>
+                      ) : done ? (
+                        <span className="text-[10.5px] font-medium text-[#047857] bg-[#ecfdf5] rounded-full px-2 py-0.5 shrink-0">
+                          ✓ 回看
+                        </span>
+                      ) : (
+                        <span className="w-3.5 h-3.5 rounded-full border border-gray-300 shrink-0" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* 消息流（历史记录可往回翻） */}
       <div
