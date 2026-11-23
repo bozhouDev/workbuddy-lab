@@ -466,6 +466,32 @@ const cases = [
           ))}
         </div>
       </section>
+
+      <!-- 作者 / 下一步：学完 WorkBuddy 想自己做产品的人，去泊舟的 AI 编程课 -->
+      <section id="author" class="border-t border-[#eeeeeb] bg-white">
+        <div class="max-w-[1200px] mx-auto px-4 sm:px-6 py-14 sm:py-20">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-8 p-5 sm:p-8 border border-gray-200 rounded-[16px] bg-[#fafaf8]">
+            <img src="/avatar-bozhou.jpg" alt="泊舟头像" width="72" height="72" class="w-14 h-14 sm:w-[72px] sm:h-[72px] rounded-full object-cover shrink-0" />
+            <div class="flex flex-col gap-2 min-w-0 flex-1">
+              <div class="font-mono text-[12px] text-accent-600 tracking-[0.06em]">学完之后</div>
+              <h2 class="m-0 text-[19px] sm:text-[24px] leading-[1.35] tracking-[-0.01em] font-bold">
+                想把自己的想法做成能用的产品？
+              </h2>
+              <p class="m-0 text-[14.5px] leading-[1.75] text-gray-600">
+                我是泊舟。这个站免费教你用 WorkBuddy 干活；如果你想再往前一步，用 AI 从零做出能发给别人用的网站和小产品，可以看看我的 AI 编程零基础实战课。不用会写代码，第 1 章可以免费看。
+              </p>
+            </div>
+            <a
+              href={SITE.courseUrl}
+              target="_blank"
+              rel="noopener"
+              class="self-start sm:self-center shrink-0 inline-flex items-center h-11 px-5 rounded-[10px] bg-gray-900 text-white text-[14px] font-semibold no-underline hover:bg-black"
+            >
+              免费看第 1 章 →
+            </a>
+          </div>
+        </div>
+      </section>
     </main>
 
     <!-- 页脚 -->
@@ -481,6 +507,7 @@ const cases = [
         <div class="flex gap-7 items-start">
           <a href={SITE.repoUrl} target="_blank" rel="noreferrer" class="text-gray-600 hover:text-gray-900 no-underline">GitHub</a>
           <a href={SITE.issueUrl} target="_blank" rel="noreferrer" class="text-gray-600 hover:text-gray-900 no-underline">内容过时了？反馈</a>
+          <a href={SITE.courseUrl} target="_blank" rel="noopener" class="text-gray-600 hover:text-gray-900 no-underline">泊舟的 AI 编程课</a>
           <a href="/features/basics/what-is/" class="text-gray-600 hover:text-gray-900 no-underline">开始阅读</a>
         </div>
       </div>

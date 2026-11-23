@@ -35,6 +35,12 @@ const feedbackHref = `${SITE.issueUrl}${encodeURIComponent(entry.data.title)}`;
       内容过时了，去反馈 →
     </a>
   </div>
+
+  <!-- 作者课程：一行低调链接，不做弹窗、不打断阅读 -->
+  <div class="wbl-author">
+    <span>作者泊舟 · 想用 AI 把自己的想法做成产品，可以看我的</span>
+    <a href={SITE.courseUrl} target="_blank" rel="noopener" class="wbl-outdated-link">AI 编程零基础实战课 →</a>
+  </div>
 </footer>
 
 <style>
@@ -97,6 +103,15 @@ const feedbackHref = `${SITE.issueUrl}${encodeURIComponent(entry.data.title)}`;
     align-items: center;
     flex-wrap: wrap;
     gap: 12px;
+    font-size: 13px;
+    color: #6b7079;
+  }
+
+  .wbl-author {
+    margin-top: -12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
     font-size: 13px;
     color: #6b7079;
   }
