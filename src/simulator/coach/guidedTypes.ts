@@ -382,9 +382,9 @@ export interface GuidedShellState {
   // ===== 4.2 助理 =====
   mobileLinkOn: boolean;
   phonePanelOpen: boolean;
-  /** 手机标题下「云电脑 ▾」：cloud = 云电脑，computer = 本地电脑 */
+  /** 手机标题下「☁ 云电脑 ›」：cloud = 云电脑，computer = 学员自己的电脑 */
   phoneMode: 'cloud' | 'computer';
-  /** 手机上「切换电脑」面板 */
+  /** 手机上「选择设备」面板 */
   phoneDeviceSheetOpen: boolean;
   phoneMessages: PhoneMessage[];
 }
