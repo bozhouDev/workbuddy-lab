@@ -321,8 +321,6 @@ export const memoryLesson: GuidedLessonDef = {
         rightHtml: '干净两列表格：<code>11-18 | 官网首页与 23 节功能篇上线</code>（日期在第一列、仅 3 行、零套话）',
       },
       buttons: [
-        { label: '下一节：1.4 个性化：指令 →', primary: true, nextLesson: 'personalization' },
-        { label: '读本节图文教程', href: '/features/setup/memory/' },
         { label: '重来一遍', restart: true },
       ],
     },

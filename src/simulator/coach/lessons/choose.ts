@@ -76,7 +76,7 @@ const SCENARIOS: Scenario[] = [
       const sk = skillsOf(s);
       const ex = expertsOf(s);
       if (sk.includes('会议纪要整理')) {
-        const lines = ['<b>挑对了</b>。每周都做、格式要一样，正是技能的活：格式写在技能里，每周都照着来。想更贴合你们团队的格式，可以照 3.3 的做法自己做一个。'];
+        const lines = ['<b>挑对了</b>。每周都做、格式要一样，正是技能的活：格式写在技能里，每周都照着来。想更贴合你们团队的格式，可以照技能那节做日报技能的办法，自己做一个。'];
         if (ex.length) lines.push(`另外挂的 ${names(ex)} 可以去掉：格式一致靠技能，用不上专家视角。`);
         return lines;
       }
@@ -84,7 +84,7 @@ const SCENARIOS: Scenario[] = [
       if (ex.length)
         return [`你只挂了专家 ${names(ex)}。专家管视角，管不了「每周格式都一样」，这要靠技能把格式写死。该挂的是 <b>会议纪要整理</b> 技能。`];
       return [
-        '什么都不挂也能整理，你看它交了一段话。要每周格式一样，就得每周重新交代一遍，这正是 3.3 说的「说到第二遍」。',
+        '什么都不挂也能整理，你看它交了一段话。要每周格式一样，就得每周重新交代一遍，这正是技能那节说的「说到第二遍」。',
         '这件活该用技能：+ → 技能 里的 <b>会议纪要整理</b>，或自己做一个。',
       ];
     },
@@ -194,7 +194,7 @@ const SCENARIOS: Scenario[] = [
       if (sk.includes('WPS Office 全家桶') || sk.includes('pptx')) {
         lines.push(`技能挑对了：${names(sk.filter((n) => n === 'WPS Office 全家桶' || n === 'pptx'))} 交出能改的 .pptx。`);
       } else if (sk.includes('网页 PPT（演讲版）')) {
-        lines.push('<b>网页 PPT（演讲版）</b> 交出的是网页，WPS 里改不了，3.2 节踩过这个坑。要能改，挂 <b>WPS Office 全家桶</b>。');
+        lines.push('<b>网页 PPT（演讲版）</b> 交出的是网页，WPS 里改不了，技能那节踩过这个坑。要能改，挂 <b>WPS Office 全家桶</b>。');
       } else if (feishuOn(s)) {
         lines.push('这次没挂技能，它也交出了 .pptx。但没点名时用哪个技能是它自己挑的；交付格式要紧，<b>自己选上</b> WPS Office 全家桶，或直接说「用 X 技能」，更稳。');
       }
@@ -284,8 +284,6 @@ export const chooseLesson: GuidedLessonDef = {
         '缺几样就挂几样，比如飞书周报做 PPT 就是连接器 + 技能。挂完第一次<b>拿小样本试</b>，不合适就移除。',
       ],
       buttons: [
-        { label: '下一节：3.8 资料库 →', primary: true, nextLesson: 'library' },
-        { label: '读本节图文教程', href: '/features/extend/choose/' },
         { label: '重来一遍', restart: true },
       ],
     },

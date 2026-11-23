@@ -161,8 +161,6 @@ export const attachLesson: GuidedLessonDef = {
         rightHtml: '一步读准《周末读书会群聊.txt》：<b>周六下午 2 点 / 静安寺青松咖啡二楼包间 / 预算 500 元以内</b>。',
       },
       buttons: [
-        { label: '下一节：2.2 模式：默认 / Plan / Ask →', primary: true, nextLesson: 'mode' },
-        { label: '读本节图文教程', href: '/features/send-task/attach/' },
         { label: '重来一遍', restart: true },
       ],
     },

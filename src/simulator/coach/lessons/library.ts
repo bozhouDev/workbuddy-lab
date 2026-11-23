@@ -179,8 +179,6 @@ export const libraryLesson: GuidedLessonDef = {
       },
       after: ['资料多了以后，可以让它「给资料库生成一份索引清单：标题、一句话摘要、适用场景」，自己隔段时间翻一遍删旧的。'],
       buttons: [
-        { label: '下一章：4.1 定时任务 →', primary: true, nextLesson: 'schedule' },
-        { label: '读本节图文教程', href: '/features/extend/library/' },
         { label: '重来一遍', restart: true },
       ],
     },

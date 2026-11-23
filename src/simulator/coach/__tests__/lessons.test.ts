@@ -8,55 +8,13 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { extname, join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
-import { LESSON_CATALOG, type GuidedLessonDef } from '../guidedTypes';
-import { attachLesson } from '../lessons/attach';
-import { executionLesson } from '../lessons/execution';
-import { groupsLesson } from '../lessons/groups';
-import { memoryLesson } from '../lessons/memory';
-import { modeLesson } from '../lessons/mode';
-import { modelsCreditsLesson } from '../lessons/modelsCredits';
-import { permissionLesson } from '../lessons/permission';
-import { personalizationLesson } from '../lessons/personalization';
-import { reviewLesson } from '../lessons/review';
-import { reviseLesson } from '../lessons/revise';
-import { settingsLesson } from '../lessons/settings';
-import { taskBriefLesson } from '../lessons/taskBrief';
-import { anatomyLesson } from '../lessons/anatomy';
-import { chooseLesson } from '../lessons/choose';
-import { expertsLesson } from '../lessons/experts';
-import { skillsLesson } from '../lessons/skills';
-import { makeSkillLesson } from '../lessons/makeSkill';
-import { connectorsLesson } from '../lessons/connectors';
-import { customConnectorLesson } from '../lessons/customConnector';
-import { libraryLesson } from '../lessons/library';
-import { scheduleLesson } from '../lessons/schedule';
-import { assistantLesson } from '../lessons/assistant';
+import { LESSON_CATALOG, type GuidedLessonDef, type LessonId } from '../guidedTypes';
+import { loadLesson } from '../lessons/catalog';
 
-// 用步骤数据驱动的课程（「认识界面」是单独写的 InterfaceLesson 组件，不在这里）
-const LESSONS: GuidedLessonDef[] = [
-  settingsLesson,
-  groupsLesson,
-  memoryLesson,
-  personalizationLesson,
-  modelsCreditsLesson,
-  attachLesson,
-  modeLesson,
-  permissionLesson,
-  taskBriefLesson,
-  executionLesson,
-  reviewLesson,
-  reviseLesson,
-  anatomyLesson,
-  chooseLesson,
-  expertsLesson,
-  skillsLesson,
-  makeSkillLesson,
-  connectorsLesson,
-  customConnectorLesson,
-  libraryLesson,
-  scheduleLesson,
-  assistantLesson,
-];
+// 用步骤数据驱动的课程，按课程目录逐节拼好（「认识界面」是单独写的 InterfaceLesson 组件，不在这里）
+const LESSONS: GuidedLessonDef[] = await Promise.all(
+  LESSON_CATALOG.filter((l) => l.id !== 'interface').map((l) => loadLesson(l.id as Exclude<LessonId, 'interface'>))
+);
 
 const COACH_DIR = join(process.cwd(), 'src/simulator/coach');
 
@@ -94,19 +52,7 @@ describe('课程目录', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it('除「认识界面」外，目录里每节课都有课程定义，且编号、标题、图文地址一致', () => {
-    for (const meta of LESSON_CATALOG.filter((l) => l.id !== 'interface')) {
-      const def = LESSONS.find((l) => l.id === meta.id);
-      expect(def, `缺少课程定义：${meta.id}`).toBeDefined();
-      expect({ code: def!.code, title: def!.title, guideUrl: def!.guideUrl }).toEqual({
-        code: meta.code,
-        title: meta.title,
-        guideUrl: meta.guideUrl,
-      });
-    }
-  });
-
-  it('图文里填了 simRoute 的，课程的图文地址就是这篇文章', () => {
+  it('图文里填的 simRoute 都在课程目录里（图文和陪练只对齐大章节，一节课可以对应几篇图文）', () => {
     const linked = listDocs(DOCS_DIR)
       .map((file) => ({ file, simRoute: readSimRoute(file) }))
       .filter((d) => d.simRoute);
@@ -114,7 +60,13 @@ describe('课程目录', () => {
     for (const { file, simRoute } of linked) {
       const meta = LESSON_CATALOG.find((l) => l.id === simRoute);
       expect(meta, `${relative(DOCS_DIR, file)} 的 simRoute「${simRoute}」不在课程目录里`).toBeDefined();
-      expect(meta!.guideUrl).toBe(docUrl(file));
+    }
+  });
+
+  it('每节课的「对应图文」指向存在的文章', () => {
+    const urls = new Set(listDocs(DOCS_DIR).map(docUrl));
+    for (const meta of LESSON_CATALOG) {
+      expect(urls.has(meta.guideUrl), `${meta.id} 的 guideUrl ${meta.guideUrl} 没有对应文章`).toBe(true);
     }
   });
 });
@@ -125,9 +77,13 @@ describe.each(LESSONS.map((l) => [l.id, l] as const))('课程：%s', (_id, lesso
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it('4 段（是什么 / 动手 / 看结果 / 记住）都走到', () => {
-    const phases = new Set(lesson.steps.map((s) => s.phase));
-    expect([...phases].sort()).toEqual([0, 1, 2, 3]);
+  it('每个小段都把 4 段（是什么 / 动手 / 看结果 / 记住）走到', () => {
+    const marks = lesson.parts ?? [{ title: lesson.title, startIdx: 0 }];
+    marks.forEach((m, k) => {
+      const end = marks[k + 1]?.startIdx ?? lesson.steps.length;
+      const phases = new Set(lesson.steps.slice(m.startIdx, end).map((s) => s.phase));
+      expect([...phases].sort(), `小段「${m.title}」`).toEqual([0, 1, 2, 3]);
+    });
   });
 
   it('每一步都有推进方式，不会卡住', () => {

@@ -29,7 +29,7 @@ export const connectorsLesson: GuidedLessonDef = {
       id: 'intro',
       phase: 0,
       say: [
-        '3.1 拆开看过：连接器是<b>一个授权通道</b>，让它读得到飞书、QQ邮箱、腾讯文档里的东西。它只管<b>拿得到什么</b>，不管怎么做。',
+        '连接器是<b>一个授权通道</b>，让它读得到飞书、QQ邮箱、腾讯文档里的东西。它只管<b>拿得到什么</b>，不管怎么做。',
         '这节用飞书走一整圈：<b>安装 → 授权 → 看清给了它什么权限 → 在对话里打开开关 → 小范围试读 → 说清范围再用 → 用完关掉</b>。先去装。',
       ],
       buttons: [{ label: '去装飞书', primary: true }],
@@ -285,8 +285,6 @@ export const connectorsLesson: GuidedLessonDef = {
         '用连接器记住 4 条：<b>① 在 + → 连接器 里打开开关它才会用；开关是全局的，用完就关</b>；<b>② 刚接上先做只读、小范围的试读</b>；<b>③ 删除、发消息、发邮件这类收不回的动作，提示词里写死「先列清单给我确认」</b>；<b>④ 彻底不用了，在详情里点「解除授权」</b>。',
       ],
       buttons: [
-        { label: '下一节：3.6 自定义连接器（MCP）→', primary: true, nextLesson: 'custom-connector' },
-        { label: '读本节图文教程', href: '/features/extend/connectors/' },
         { label: '重来一遍', restart: true },
       ],
     },

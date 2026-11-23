@@ -98,8 +98,6 @@ export const settingsLesson: GuidedLessonDef = {
         ],
       },
       buttons: [
-        { label: '下一节：1.2 分组与文件夹 →', primary: true, nextLesson: 'groups' },
-        { label: '读本节图文教程', href: '/features/setup/settings/' },
         { label: '重来一遍', restart: true },
       ],
     },

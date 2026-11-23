@@ -358,8 +358,6 @@ export const scheduleLesson: GuidedLessonDef = {
         ],
       },
       buttons: [
-        { label: '下一节：4.2 助理：手机遥控电脑 →', primary: true, nextLesson: 'assistant' },
-        { label: '读本节图文教程', href: '/features/automation/schedule/' },
         { label: '重来一遍', restart: true },
       ],
     },

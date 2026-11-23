@@ -25,8 +25,9 @@ export const skillsLesson: GuidedLessonDef = {
       id: 'intro',
       phase: 0,
       say: [
-        '3.1 拆开看过：技能就是<b>一份说明书</b>，把一类活的做法写下来，用来<b>减少重复</b>。',
-        '这节走完整一圈：<b>挑 → 装 → 用</b>，最后看看<b>挑错了会怎样</b>。手上的活：把上月销售分析做成 PPT 发给老板。先去技能页挑一个能做 PPT 的。',
+        '第 3 章讲「给它加能力」：<b>技能、专家、连接器</b>。三样都不是装上就变强，挂得不对反而会把它带偏，所以每样都学怎么用、什么时候用，最后练怎么选。',
+        '先学技能。技能就是<b>一份说明书</b>，把一类活的做法写下来，用来<b>减少重复</b>。',
+        '这一段走完整一圈：<b>挑 → 装 → 用</b>，最后看看<b>挑错了会怎样</b>。手上的活：把上月销售分析做成 PPT 发给老板。先去技能页挑一个能做 PPT 的。',
       ],
       buttons: [{ label: '去技能页', primary: true }],
     },
@@ -99,6 +100,25 @@ export const skillsLesson: GuidedLessonDef = {
       ],
       wait: { target: 'skills.pickCard', callout: '点开这个', label: 'WPS Office 全家桶（认证开发者）' },
       onAction: () => ({ skillDetailId: 'wps-b' }),
+    },
+    {
+      id: 'structure',
+      phase: 1,
+      navLabel: '拆开看',
+      say: ['装之前先拆开看看技能里面是什么。一个技能就是一个文件夹，结构大概是这样：'],
+      card: {
+        kind: 'doc',
+        title: '一个技能里面有什么（示意）',
+        badge: '技能文件夹',
+        badgeTone: 'plain',
+        lines: [
+          'WPS Office 全家桶/',
+          '├─ SKILL.md　核心说明书：名字、什么时候用、按什么步骤做、不许做什么',
+          '└─ 脚本、模板（可选）　有的技能会带上，照着说明书调用',
+        ],
+      },
+      after: ['详情页的「简介」就是说明书的摘要，写着它<b>能做什么、交出什么</b>：这个是用自然语言操作 WPS 文字、表格、演示。'],
+      buttons: [{ label: '看完了，接着装', primary: true }],
     },
     {
       id: 'install',
@@ -231,8 +251,6 @@ export const skillsLesson: GuidedLessonDef = {
         '用技能记住 5 条：<b>① 挑技能看 ⚡ 使用量 / ⬇ 安装或下载量 / ☆ 收藏和来源，再看简介里它交出的是什么</b>；<b>② 手动调用两种：打 / 或 + → 技能 选上，或者直接说「用 X 技能做 Y」</b>；<b>③ 第一次用拿小样本试，不对就换</b>；<b>④ 用到再装、别囤，不用的在「已安装」里卸载</b>；<b>⑤ 技能自动更新 1.1 节讲过，保持开启</b>。',
       ],
       buttons: [
-        { label: '下一节：3.3 做一个自己的技能 →', primary: true, nextLesson: 'make-skill' },
-        { label: '读本节图文教程', href: '/features/extend/skills/' },
         { label: '重来一遍', restart: true },
       ],
     },

@@ -186,8 +186,6 @@ export const permissionLesson: GuidedLessonDef = {
         rightHtml: '高风险删除自动暂停，一眼看出路径越界，点 <b>其他补充</b> 零损失拦住。',
       },
       buttons: [
-        { label: '下一节：2.4 写清任务：5 要素与采访法 →', primary: true, nextLesson: 'task-brief' },
-        { label: '读本节图文教程', href: '/features/send-task/permission/' },
         { label: '重来一遍', restart: true },
       ],
     },

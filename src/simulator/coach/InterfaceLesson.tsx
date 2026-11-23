@@ -629,9 +629,9 @@ export default function InterfaceLesson({
       waitPrompt: null,
       buttons: [
         {
-          label: '下一节：1.1 系统设置 →',
+          label: '下一节：1.1 装好先调的：设置与积分 →',
           primary: true,
-          onClick: () => onSelectLesson('settings'),
+          onClick: () => onSelectLesson('setup'),
         },
         {
           label: '读本节图文教程',

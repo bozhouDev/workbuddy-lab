@@ -10,13 +10,54 @@ const GuidedLessonPlayer = lazy(() => import('./coach/GuidedLessonPlayer'));
 const MIN_DESKTOP_WIDTH = 1024;
 const VALID_LESSON_IDS = new Set<string>(LESSON_CATALOG.map((l) => l.id));
 
+/**
+ * 合并课程前的旧课程 ID → 现在所在的课（2026-11-23 从 23 节合并成 12 节）
+ * 旧链接、收藏夹、外部文章里的 ?route=旧ID 仍能打开对应的课。
+ */
+const LEGACY_LESSON_IDS: Record<string, LessonId> = {
+  settings: 'setup',
+  'models-credits': 'setup',
+  groups: 'know-you',
+  memory: 'know-you',
+  personalization: 'know-you',
+  library: 'attach',
+  mode: 'send',
+  permission: 'send',
+  'task-brief': 'send',
+  execution: 'send',
+  revise: 'review',
+  'make-skill': 'skills',
+  anatomy: 'skills',
+  'custom-connector': 'connectors',
+};
+
+/** 从地址栏 ?route= 读出要打开的课，认不出的回到「认识界面」 */
 function readInitialLesson(): LessonId {
   if (typeof window === 'undefined') return 'interface';
   const param = new URLSearchParams(window.location.search).get('route');
   if (param && VALID_LESSON_IDS.has(param)) {
     return param as LessonId;
   }
+  if (param && LEGACY_LESSON_IDS[param]) return LEGACY_LESSON_IDS[param];
   return 'interface';
+}
+
+/**
+ * 地址栏是旧课程 ID 时，返回它（作为合并课里要直达的那一段），并把地址换成新 ID，
+ * 这样刷新页面会接着已保存的进度，不会每次都跳回那一段开头。
+ */
+function consumeLegacyRoute(): string | undefined {
+  if (typeof window === 'undefined') return undefined;
+  try {
+    const url = new URL(window.location.href);
+    const param = url.searchParams.get('route');
+    if (!param || VALID_LESSON_IDS.has(param) || !LEGACY_LESSON_IDS[param]) return undefined;
+    url.searchParams.set('route', LEGACY_LESSON_IDS[param]);
+    window.history.replaceState({}, '', url.toString());
+    return param;
+  } catch {
+    return undefined;
+  }
 }
 
 export default function App() {
@@ -24,6 +65,8 @@ export default function App() {
     typeof window !== 'undefined' ? window.innerWidth : 1440
   );
   const [lessonId, setLessonId] = useState<LessonId>(readInitialLesson);
+  // 旧链接要直达的小段（只在第一次打开时用，见 consumeLegacyRoute）
+  const [startFrom] = useState(consumeLegacyRoute);
   const [coachMode, setCoachMode] = useState<CoachMode>('docked');
   const [restartSignal, setRestartSignal] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -140,7 +183,7 @@ export default function App() {
 
           <span className="h-4 w-px bg-gray-200 shrink-0" aria-hidden="true" />
 
-          {/* 课程切换菜单：已上线 0.4 + 1.1～1.5 共 6 节互动陪练 */}
+          {/* 课程切换菜单：按章分组列出全部陪练课 */}
           <div ref={menuRef} className="relative">
             <button
               type="button"
@@ -266,6 +309,7 @@ export default function App() {
           ) : (
             <GuidedLessonPlayer
               lessonId={lessonId}
+              startFrom={startFrom}
               coachMode={coachMode}
               onChangeCoachMode={setCoachMode}
               restartSignal={restartSignal}

@@ -24,7 +24,7 @@ export const customConnectorLesson: GuidedLessonDef = {
       phase: 0,
       say: [
         '连接器列表里没有你要的服务怎么办？<b>自己接一个</b>。连接器的本质叫 <b>MCP</b>，可以理解成 AI 的 Type-C 接口：只要按这个标准做个「插头」，WorkBuddy 就能插上用。',
-        '这节做一个真能用的小东西：<b>天气连接器</b>。用的是 Open-Meteo 的免费接口，<b>不需要注册、不需要 Key</b>。先看没有它的时候。',
+        '这一段做一个真能用的小东西：<b>天气连接器</b>。用的是 Open-Meteo 的免费接口，<b>不需要注册、不需要 Key</b>。先看没有它的时候。',
       ],
       buttons: [{ label: '先问问明天下不下雨', primary: true }],
     },
@@ -211,8 +211,6 @@ export const customConnectorLesson: GuidedLessonDef = {
         '想自己真做一遍，图文教程里有完整代码和每一步截图位置。同样的套路还能接：公司内部的查询接口、快递单号查询、汇率换算……',
       ],
       buttons: [
-        { label: '下一节：3.7 怎么选：判断练习 →', primary: true, nextLesson: 'choose' },
-        { label: '读本节图文教程（含完整代码）', href: '/features/extend/custom-connector/' },
         { label: '重来一遍', restart: true },
       ],
     },

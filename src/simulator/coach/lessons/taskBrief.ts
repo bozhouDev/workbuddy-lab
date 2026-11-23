@@ -153,8 +153,6 @@ export const taskBriefLesson: GuidedLessonDef = {
         ],
       },
       buttons: [
-        { label: '下一节：2.5 看执行过程 →', primary: true, nextLesson: 'execution' },
-        { label: '读本节图文教程', href: '/features/send-task/task-brief/' },
         { label: '重来一遍', restart: true },
       ],
     },

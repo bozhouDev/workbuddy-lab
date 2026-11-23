@@ -45,7 +45,7 @@ export const makeSkillLesson: GuidedLessonDef = {
       phase: 0,
       say: [
         '技能是用来<b>减少重复</b>的。判断标准很简单：<b>同样的要求，你说到第二遍了，就该做成技能。</b>',
-        '拿最常见的日报举例：每天都要写，格式每天都一样。这节教两种做法：<b>先做一遍再沉淀成技能</b>，和<b>直接从零描述一个技能</b>。先做一遍今天的日报。',
+        '拿最常见的日报举例：每天都要写，格式每天都一样。这一段教两种做法：<b>先做一遍再沉淀成技能</b>，和<b>直接从零描述一个技能</b>。先做一遍今天的日报。',
       ],
       buttons: [{ label: '先写今天的日报', primary: true }],
     },
@@ -103,7 +103,7 @@ export const makeSkillLesson: GuidedLessonDef = {
       onEnter: () => ({ followupText: SAVE_PROMPT }),
       say: [
         '这就是你要的样子。可是<b>明天、后天还得写</b>：每天都把刚才那段要求重打一遍？这就是「说到第二遍」的信号。',
-        '把它沉淀成技能。用 3.2 学的第二种用法，<b>直接点名</b> skill-creator（内置的「做技能的技能」）。我已经填好，发送。',
+        '把它沉淀成技能。用上一段学的第二种用法，<b>直接点名</b> skill-creator（内置的「做技能的技能」）。我已经填好，发送。',
       ],
       wait: { target: 'chat.followupSend', callout: '让它把做法存成技能', label: '发送（做成技能）' },
       onAction: (s) => ({
@@ -299,8 +299,6 @@ export const makeSkillLesson: GuidedLessonDef = {
         '两条提醒：<b>技能里别写密码和 API Key</b>，技能可能被分享出去；做好的技能文件夹打包成 zip，别人用「上传技能」就能导入。',
       ],
       buttons: [
-        { label: '下一节：3.4 专家 →', primary: true, nextLesson: 'experts' },
-        { label: '读本节图文教程', href: '/features/extend/make-skill/' },
         { label: '重来一遍', restart: true },
       ],
     },

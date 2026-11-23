@@ -11,59 +11,28 @@ import { GuidedWorkBuddy } from './GuidedWorkBuddy';
 import type { FeedItem, FeedItemInput, NavTrailStep, PhaseIndex, PopoverId } from './types';
 
 const AUTO_COLLAPSE_WIDTH = 1140;
-const STORAGE_PREFIX = 'wblab:guided:v11:';
+const STORAGE_PREFIX = 'wblab:guided:v12:';
 
 let msgSeq = 0;
 const nextId = () => `gd-${++msgSeq}`;
 
+/** 按课程 ID 加载拼好的课（一节课可由几个小段组成，见 lessons/catalog.ts） */
 async function loadLessonDef(id: Exclude<LessonId, 'interface'>): Promise<GuidedLessonDef> {
-  switch (id) {
-    case 'settings':
-      return (await import('./lessons/settings')).settingsLesson;
-    case 'groups':
-      return (await import('./lessons/groups')).groupsLesson;
-    case 'memory':
-      return (await import('./lessons/memory')).memoryLesson;
-    case 'personalization':
-      return (await import('./lessons/personalization')).personalizationLesson;
-    case 'models-credits':
-      return (await import('./lessons/modelsCredits')).modelsCreditsLesson;
-    case 'attach':
-      return (await import('./lessons/attach')).attachLesson;
-    case 'mode':
-      return (await import('./lessons/mode')).modeLesson;
-    case 'permission':
-      return (await import('./lessons/permission')).permissionLesson;
-    case 'task-brief':
-      return (await import('./lessons/taskBrief')).taskBriefLesson;
-    case 'execution':
-      return (await import('./lessons/execution')).executionLesson;
-    case 'review':
-      return (await import('./lessons/review')).reviewLesson;
-    case 'revise':
-      return (await import('./lessons/revise')).reviseLesson;
-    case 'anatomy':
-      return (await import('./lessons/anatomy')).anatomyLesson;
-    case 'choose':
-      return (await import('./lessons/choose')).chooseLesson;
-    case 'experts':
-      return (await import('./lessons/experts')).expertsLesson;
-    case 'skills':
-      return (await import('./lessons/skills')).skillsLesson;
-    case 'make-skill':
-      return (await import('./lessons/makeSkill')).makeSkillLesson;
-    case 'connectors':
-      return (await import('./lessons/connectors')).connectorsLesson;
-    case 'custom-connector':
-      return (await import('./lessons/customConnector')).customConnectorLesson;
-    case 'library':
-      return (await import('./lessons/library')).libraryLesson;
-    case 'schedule':
-      return (await import('./lessons/schedule')).scheduleLesson;
-    case 'assistant':
-      return (await import('./lessons/assistant')).assistantLesson;
-  }
+  return (await import('./lessons/catalog')).loadLesson(id);
 }
+
+/** 某一步属于第几个小段（没分段的课恒为 0） */
+function partIndexOf(def: GuidedLessonDef, idx: number): number {
+  if (!def.parts) return 0;
+  let k = 0;
+  def.parts.forEach((p, i) => {
+    if (p.startIdx <= idx) k = i;
+  });
+  return k;
+}
+
+/** 阶段快照的键：小段下标 + 阶段，合并课里每个小段各有一轮 4 段进度 */
+const snapKey = (part: number, phase: PhaseIndex) => `${part}:${phase}`;
 
 /** 步进流式文本光标，避免在 {{wrong:...}} / {{ok:...}} 标签中间切断导致闪现原码 */
 function advanceSafeCursor(text: string, current: number, step: number): number {
@@ -163,6 +132,8 @@ interface GuidedLessonPlayerProps {
   onChangeCoachMode: (mode: CoachMode) => void;
   restartSignal: number;
   onSelectLesson: (id: LessonId) => void;
+  /** 旧链接直达合并课里的某一段（小段脚本名，如 'memory'）；只在第一次打开时生效 */
+  startFrom?: string;
 }
 
 export default function GuidedLessonPlayer({
@@ -171,7 +142,10 @@ export default function GuidedLessonPlayer({
   onChangeCoachMode,
   restartSignal,
   onSelectLesson,
+  startFrom,
 }: GuidedLessonPlayerProps) {
+  // 直达某段只用一次，之后切课、重来都从头开始
+  const startFromRef = useRef(startFrom);
   const [lesson, setLesson] = useState<GuidedLessonDef | null>(null);
   const [stepIdx, setStepIdx] = useState(0);
   const [shell, setShell] = useState<GuidedShellState | null>(null);
@@ -179,7 +153,8 @@ export default function GuidedLessonPlayer({
   const [isTyping, setIsTyping] = useState(false);
   const [isRunningChat, setIsRunningChat] = useState(false);
   const [urgent, setUrgent] = useState(false);
-  const [jumpablePhases, setJumpablePhases] = useState<PhaseIndex[]>([]);
+  /** 已到达过的阶段快照键（见 snapKey），进度条只显示当前小段能回跳的阶段 */
+  const [snapKeys, setSnapKeys] = useState<string[]>([]);
 
   const timersRef = useRef<number[]>([]);
   const lastAsideRef = useRef<string | null>(null);
@@ -192,7 +167,7 @@ export default function GuidedLessonPlayer({
     nextIdx: number;
     runSpec: ChatRunSpec;
   } | null>(null);
-  const phaseSnapshotsRef = useRef<Partial<Record<PhaseIndex, SavedSnapshot>>>({});
+  const phaseSnapshotsRef = useRef<Record<string, SavedSnapshot>>({});
   const prevRestartRef = useRef(restartSignal);
 
   /**
@@ -327,15 +302,14 @@ export default function GuidedLessonPlayer({
       }
 
       // 记录每个阶段首次到达时的干净里程碑快照，支持点击顶部 4 段进度条回跳
-      if (!phaseSnapshotsRef.current[step.phase]) {
-        phaseSnapshotsRef.current[step.phase] = {
+      const key = snapKey(partIndexOf(def, targetIdx), step.phase);
+      if (!phaseSnapshotsRef.current[key]) {
+        phaseSnapshotsRef.current[key] = {
           stepIdx: targetIdx,
           shell: nextShell,
           feed: feedRef.current,
         };
-        setJumpablePhases(
-          Object.keys(phaseSnapshotsRef.current).map(Number) as PhaseIndex[]
-        );
+        setSnapKeys(Object.keys(phaseSnapshotsRef.current));
       }
 
       const sayLines = [...(step.sayFrom ? step.sayFrom(nextShell) : []), ...step.say];
@@ -376,7 +350,7 @@ export default function GuidedLessonPlayer({
     clearAllTimers();
     activeRunRef.current = null;
     phaseSnapshotsRef.current = {};
-    setJumpablePhases([]);
+    setSnapKeys([]);
     setLesson(null);
     setFeed([]);
     setIsTyping(false);
@@ -393,6 +367,19 @@ export default function GuidedLessonPlayer({
         coachMode === 'docked' &&
         window.innerWidth < AUTO_COLLAPSE_WIDTH;
 
+      // 旧链接直达某段：从那一段开头走（那段第一步会自己换成该段的初始界面）
+      const jumpPart = startFromRef.current ? (def.parts?.findIndex((p) => p.key === startFromRef.current) ?? -1) : -1;
+      startFromRef.current = undefined;
+      if (!isExplicitRestart && jumpPart > 0 && def.parts) {
+        clearSaved(lessonId);
+        const init = { ...def.initialState(), sidebarCollapsed: collapsed };
+        setLesson(def);
+        setShell(init);
+        shellRef.current = init;
+        enterStep(def, def.parts[jumpPart].startIdx, init);
+        return;
+      }
+
       const saved = isExplicitRestart ? null : readSaved(lessonId);
       if (saved && saved.stepIdx < def.steps.length) {
         const restoredShell: GuidedShellState = {
@@ -407,13 +394,16 @@ export default function GuidedLessonPlayer({
         shellRef.current = restoredShell;
         setFeed(saved.feed);
         feedRef.current = saved.feed;
-        // 至少允许从第 0 阶段重新开始
-        phaseSnapshotsRef.current[0] = {
-          stepIdx: 0,
+        // 至少允许从当前小段的开头重新开始（第 2 段起的开头一步会自己换成该段的初始界面）
+        const part = partIndexOf(def, saved.stepIdx);
+        const startIdx = def.parts?.[part]?.startIdx ?? 0;
+        const startKey = snapKey(part, def.steps[startIdx]?.phase ?? 0);
+        phaseSnapshotsRef.current[startKey] = {
+          stepIdx: startIdx,
           shell: { ...def.initialState(), sidebarCollapsed: collapsed },
           feed: [],
         };
-        setJumpablePhases([0]);
+        setSnapKeys([startKey]);
         return;
       }
 
@@ -667,7 +657,7 @@ export default function GuidedLessonPlayer({
   const handleJumpPhase = useCallback(
     (targetPhase: PhaseIndex) => {
       if (!lesson) return;
-      const snap = phaseSnapshotsRef.current[targetPhase];
+      const snap = phaseSnapshotsRef.current[snapKey(partIndexOf(lesson, stepIdx), targetPhase)];
       if (!snap) return;
       clearAllTimers();
       activeRunRef.current = null;
@@ -681,7 +671,7 @@ export default function GuidedLessonPlayer({
       feedRef.current = snap.feed;
       enterStep(lesson, snap.stepIdx, restored);
     },
-    [lesson, clearAllTimers, coachMode, enterStep]
+    [lesson, stepIdx, clearAllTimers, coachMode, enterStep]
   );
 
   /** 不推进课程、只改左边界面状态（自由逛菜单、判断练习里随手挂东西），同步更新 shellRef 供点击推进时读取 */
@@ -743,7 +733,7 @@ export default function GuidedLessonPlayer({
           clearAllTimers();
           clearSaved(lesson.id);
           phaseSnapshotsRef.current = {};
-          setJumpablePhases([]);
+          setSnapKeys([]);
           const collapsed = coachMode === 'docked' && window.innerWidth < AUTO_COLLAPSE_WIDTH;
           const init = { ...lesson.initialState(), sidebarCollapsed: collapsed };
           setShell(init);
@@ -777,6 +767,16 @@ export default function GuidedLessonPlayer({
     }
     return null;
   }, [isRunningChat, currentStep, shell?.view]);
+
+  // 当前小段：进度条只回跳本段已走过的阶段，并显示「第几段」
+  const partIdx = lesson ? partIndexOf(lesson, stepIdx) : 0;
+  const jumpablePhases = snapKeys
+    .filter((k) => k.startsWith(`${partIdx}:`))
+    .map((k) => Number(k.split(':')[1]) as PhaseIndex);
+  const partLabel =
+    lesson?.parts && lesson.parts.length > 1
+      ? `第 ${partIdx + 1} / ${lesson.parts.length} 段 · ${lesson.parts[partIdx].title}`
+      : undefined;
 
   if (!lesson || !shell) {
     return (
@@ -835,6 +835,7 @@ export default function GuidedLessonPlayer({
         subtitle={`${lesson.code} ${lesson.title} · 左边随时可点`}
         jumpablePhases={jumpablePhases}
         onJumpPhase={handleJumpPhase}
+        partLabel={partLabel}
       />
     </>
   );

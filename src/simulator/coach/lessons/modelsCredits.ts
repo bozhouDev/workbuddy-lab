@@ -161,8 +161,6 @@ export const modelsCreditsLesson: GuidedLessonDef = {
         '记住 3 个省积分习惯：<b>① 按任务轻重选档位；② 换新事就点 新建任务（长对话每次重读历史更费积分）；③ 需求模糊先用 仅问答 Ask 聊思路再动手。</b>',
       ],
       buttons: [
-        { label: '下一章：2.1 添加资料：+ 和 @ →', primary: true, nextLesson: 'attach' },
-        { label: '读 模型与积分 完整图文', href: '/features/setup/models-credits/' },
         { label: '重来一遍', restart: true },
       ],
     },

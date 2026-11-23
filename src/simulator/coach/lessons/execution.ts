@@ -119,8 +119,6 @@ export const executionLesson: GuidedLessonDef = {
         ],
       },
       buttons: [
-        { label: '下一节：2.6 检查结果 →', primary: true, nextLesson: 'review' },
-        { label: '读本节图文教程', href: '/features/send-task/execution/' },
         { label: '重来一遍', restart: true },
       ],
     },

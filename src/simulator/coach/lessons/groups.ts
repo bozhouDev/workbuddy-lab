@@ -208,8 +208,6 @@ export const groupsLesson: GuidedLessonDef = {
         '目录不用建太复杂，照着 <code>00_临时</code> <code>01_任务</code> <code>02_项目</code> <code>03_知识库</code> <code>99_归档</code> 分 5 个大类就够用很久。',
       ],
       buttons: [
-        { label: '下一节：1.3 记忆与进化 →', primary: true, nextLesson: 'memory' },
-        { label: '读本节图文教程', href: '/features/setup/groups/' },
         { label: '重来一遍', restart: true },
       ],
     },

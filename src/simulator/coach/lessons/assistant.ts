@@ -150,8 +150,6 @@ export const assistantLesson: GuidedLessonDef = {
         '到这里，基础功能篇全部学完了。下一步去实战篇，把这些串起来做几个完整的活。',
       ],
       buttons: [
-        { label: '回课程首页看实战篇 →', primary: true, href: '/#cases' },
-        { label: '读本节图文教程', href: '/features/automation/assistant/' },
         { label: '重来一遍', restart: true },
       ],
     },

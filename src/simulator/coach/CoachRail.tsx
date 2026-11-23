@@ -40,6 +40,8 @@ interface CoachRailProps {
   /** 可回跳的已完成阶段索引（用于点击 4 段进度条或底部「上一阶段」） */
   jumpablePhases?: PhaseIndex[];
   onJumpPhase?: (phase: PhaseIndex) => void;
+  /** 合并课的当前小段，如「第 1 / 2 段 · 挑、装、用」；单段课不传 */
+  partLabel?: string;
 }
 
 const MIN_W = 310;
@@ -63,6 +65,7 @@ export function CoachRail({
   exploreProgress = null,
   subtitle = '左边真界面哪里都能点，点了就讲',
   jumpablePhases = [],
+  partLabel,
   onJumpPhase,
 }: CoachRailProps) {
   const feedRef = useRef<HTMLDivElement>(null);
@@ -351,6 +354,9 @@ export function CoachRail({
             </button>
           </div>
         </div>
+
+        {/* 合并课：当前是第几段（每段各走一轮 4 段进度） */}
+        {partLabel && <div className="mt-2.5 text-[11.5px] font-medium text-gray-600 truncate">{partLabel}</div>}
 
         {/* 4 段循环进度条（#35 标签切换滑动指示条；已走过的阶段可点击回看） */}
         <div

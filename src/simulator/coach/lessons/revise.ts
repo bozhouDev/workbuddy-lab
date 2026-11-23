@@ -157,7 +157,7 @@ export const reviseLesson: GuidedLessonDef = {
       id: 'summary',
       phase: 3,
       say: [
-        '一次改到位！而且这次改出来的排序和加粗格式如果以后都想沿用，改完顺嘴补一句：<code>记住这个表格排序和加粗习惯，以后整理纪要都照这样来</code>——直接跟 1.3 记忆与进化接上了。',
+        '一次改到位！而且这次改出来的排序和加粗格式如果以后都想沿用，改完顺嘴补一句：<code>记住这个表格排序和加粗习惯，以后整理纪要都照这样来</code>——直接跟 1.2 里学的记忆接上了。',
       ],
       card: {
         kind: 'compare',
@@ -171,8 +171,6 @@ export const reviseLesson: GuidedLessonDef = {
       },
       after: ['到这里，第 2 章 <b>发任务全闭环</b>（+/@ → 模式 → 权限 → 5 要素 → 看过程 → 验收 → 二次修改）已经全部走通！下一章给它加能力：专家、技能、连接器。'],
       buttons: [
-        { label: '下一章：3.1 怎么选：专家 / 技能 / 连接器 →', primary: true, nextLesson: 'choose' },
-        { label: '读本节图文教程', href: '/features/send-task/revise/' },
         { label: '重来一遍', restart: true },
       ],
     },

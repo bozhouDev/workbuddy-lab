@@ -30,7 +30,7 @@ export const expertsLesson: GuidedLessonDef = {
       id: 'intro',
       phase: 0,
       say: [
-        '3.1 拆开看过：<b>专家 = 一段角色提示词 + 可选的一组技能</b>。它改变的是<b>看问题的视角和干活的方法</b>。',
+        '专家改变的是<b>看问题的视角和干活的方法</b>，先拆开看看它里面是什么。',
         '视角对得上，它能帮你看到内行才看得到的东西；对不上，它会把你往它擅长的方向带。这节学怎么召唤、用在对的地方，以及用完怎么移除。',
       ],
       buttons: [{ label: '去召唤一位专家', primary: true }],
@@ -71,6 +71,15 @@ export const expertsLesson: GuidedLessonDef = {
       ],
       wait: { target: 'experts.card', callout: '点开看详情', label: 'PPT制作专家' },
       onAction: () => ({ expertDetailId: 'ppt' }),
+    },
+    {
+      id: 'read-expert',
+      phase: 2,
+      say: [
+        '详情里看两块：<b>「具体能力介绍」</b>写的是它被设定成怎么想、怎么干，背后就是一段<b>角色提示词</b>；<b>「使用技能」</b>列着它干活时会调用的技能：WPS Office 全家桶、网页 PPT（演讲版）。',
+        '所以 <b>专家 = 一段角色提示词 + 可选的一组技能</b>。说「可选」，是因为有的专家没配技能，只有提示词。',
+      ],
+      buttons: [{ label: '接着看要不要召唤', primary: true }],
     },
     {
       id: 'summon',
@@ -202,8 +211,6 @@ export const expertsLesson: GuidedLessonDef = {
         '用专家记住 4 条：<b>① 召唤前看「具体能力介绍」，和手上的活对得上再用</b>；<b>② 专家页或 + → 专家 都能召唤</b>；<b>③ 换活前看一眼底栏，对不上就点 × 移除</b>；<b>④ 专家只管视角，不替你核对事实</b>，数字还得自己对。要几个岗位一起干活，专家页里还有「专家团」，用法一样。',
       ],
       buttons: [
-        { label: '下一节：3.5 连接器 →', primary: true, nextLesson: 'connectors' },
-        { label: '读本节图文教程', href: '/features/extend/experts/' },
         { label: '重来一遍', restart: true },
       ],
     },

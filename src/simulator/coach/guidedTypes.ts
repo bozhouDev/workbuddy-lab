@@ -2,26 +2,15 @@ import type { PhaseIndex, PlusSubmenu, PopoverId } from './types';
 
 export type LessonId =
   | 'interface'
-  | 'settings'
-  | 'groups'
-  | 'memory'
-  | 'personalization'
-  | 'models-credits'
+  | 'setup'
+  | 'know-you'
   | 'attach'
-  | 'mode'
-  | 'permission'
-  | 'task-brief'
-  | 'execution'
+  | 'send'
   | 'review'
-  | 'revise'
-  | 'anatomy'
-  | 'choose'
-  | 'experts'
   | 'skills'
-  | 'make-skill'
+  | 'experts'
   | 'connectors'
-  | 'custom-connector'
-  | 'library'
+  | 'choose'
   | 'schedule'
   | 'assistant';
 
@@ -34,27 +23,16 @@ export interface LessonNavMeta {
 }
 
 export const LESSON_CATALOG: readonly LessonNavMeta[] = [
-  { id: 'interface', code: '0.4', chapter: '00 入门', title: '认识界面', guideUrl: '/features/basics/interface/' },
-  { id: 'settings', code: '1.1', chapter: '01 开局设置', title: '系统设置', guideUrl: '/features/setup/settings/' },
-  { id: 'groups', code: '1.2', chapter: '01 开局设置', title: '分组与文件夹', guideUrl: '/features/setup/groups/' },
-  { id: 'memory', code: '1.3', chapter: '01 开局设置', title: '记忆与进化', guideUrl: '/features/setup/memory/' },
-  { id: 'personalization', code: '1.4', chapter: '01 开局设置', title: '个性化：指令', guideUrl: '/features/setup/personalization/' },
-  { id: 'models-credits', code: '1.5', chapter: '01 开局设置', title: '模型与积分', guideUrl: '/features/setup/models-credits/' },
-  { id: 'attach', code: '2.1', chapter: '02 发任务', title: '添加资料：+ 和 @', guideUrl: '/features/send-task/attach/' },
-  { id: 'mode', code: '2.2', chapter: '02 发任务', title: '模式：默认 / Plan / Ask', guideUrl: '/features/send-task/mode/' },
-  { id: 'permission', code: '2.3', chapter: '02 发任务', title: '权限与审批弹窗', guideUrl: '/features/send-task/permission/' },
-  { id: 'task-brief', code: '2.4', chapter: '02 发任务', title: '写清任务：5 要素与采访法', guideUrl: '/features/send-task/task-brief/' },
-  { id: 'execution', code: '2.5', chapter: '02 发任务', title: '看执行过程', guideUrl: '/features/send-task/execution/' },
-  { id: 'review', code: '2.6', chapter: '02 发任务', title: '检查结果', guideUrl: '/features/send-task/review/' },
-  { id: 'revise', code: '2.7', chapter: '02 发任务', title: '二次修改', guideUrl: '/features/send-task/revise/' },
-  { id: 'anatomy', code: '3.1', chapter: '03 能力扩展', title: '拆开看：专家、技能、连接器', guideUrl: '/features/extend/choose/' },
-  { id: 'skills', code: '3.2', chapter: '03 能力扩展', title: '技能：挑、装、用', guideUrl: '/features/extend/skills/' },
-  { id: 'make-skill', code: '3.3', chapter: '03 能力扩展', title: '做一个自己的技能', guideUrl: '/features/extend/make-skill/' },
-  { id: 'experts', code: '3.4', chapter: '03 能力扩展', title: '专家：召唤、用对、移除', guideUrl: '/features/extend/experts/' },
-  { id: 'connectors', code: '3.5', chapter: '03 能力扩展', title: '连接器：接飞书', guideUrl: '/features/extend/connectors/' },
-  { id: 'custom-connector', code: '3.6', chapter: '03 能力扩展', title: '自定义连接器：做一个自己的 MCP', guideUrl: '/features/extend/custom-connector/' },
-  { id: 'choose', code: '3.7', chapter: '03 能力扩展', title: '怎么选：判断练习', guideUrl: '/features/extend/choose/' },
-  { id: 'library', code: '3.8', chapter: '03 能力扩展', title: '资料库', guideUrl: '/features/extend/library/' },
+  { id: 'interface', code: '0.1', chapter: '00 入门', title: '认识界面', guideUrl: '/features/basics/interface/' },
+  { id: 'setup', code: '1.1', chapter: '01 开局设置', title: '装好先调的：设置与积分', guideUrl: '/features/setup/settings/' },
+  { id: 'know-you', code: '1.2', chapter: '01 开局设置', title: '让它更懂你：分组、记忆、指令', guideUrl: '/features/setup/memory/' },
+  { id: 'attach', code: '2.1', chapter: '02 发任务', title: '给它资料：+、@ 和资料库', guideUrl: '/features/send-task/attach/' },
+  { id: 'send', code: '2.2', chapter: '02 发任务', title: '发出一个任务：模式、权限、写清、看过程', guideUrl: '/features/send-task/task-brief/' },
+  { id: 'review', code: '2.3', chapter: '02 发任务', title: '检查和修改', guideUrl: '/features/send-task/review/' },
+  { id: 'skills', code: '3.1', chapter: '03 能力扩展', title: '技能：挑、装、用，再做一个自己的', guideUrl: '/features/extend/skills/' },
+  { id: 'experts', code: '3.2', chapter: '03 能力扩展', title: '专家：召唤、用对、移除', guideUrl: '/features/extend/experts/' },
+  { id: 'connectors', code: '3.3', chapter: '03 能力扩展', title: '连接器：接飞书，再自己做一个', guideUrl: '/features/extend/connectors/' },
+  { id: 'choose', code: '3.4', chapter: '03 能力扩展', title: '怎么选：判断练习', guideUrl: '/features/extend/choose/' },
   { id: 'schedule', code: '4.1', chapter: '04 自动化', title: '定时任务：建一个，看结果', guideUrl: '/features/automation/schedule/' },
   { id: 'assistant', code: '4.2', chapter: '04 自动化', title: '助理：手机遥控电脑', guideUrl: '/features/automation/assistant/' },
 ];
@@ -464,10 +442,13 @@ export interface GuidedStep {
 }
 
 export interface GuidedLessonDef {
-  id: Exclude<LessonId, 'interface'>;
+  /** 拼好的课程用课程目录里的 ID；单个小段脚本用自己的名字（只作步骤 ID 前缀） */
+  id: string;
   code: string;
   title: string;
   guideUrl: string;
   initialState: () => GuidedShellState;
   steps: GuidedStep[];
+  /** 由几个小段拼成时，各段的脚本名、标题和起始步骤下标（进度条按小段显示；旧链接按脚本名直达该段） */
+  parts?: Array<{ key: string; title: string; startIdx: number }>;
 }

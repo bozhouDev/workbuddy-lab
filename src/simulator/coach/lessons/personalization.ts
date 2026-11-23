@@ -222,8 +222,6 @@ export const personalizationLesson: GuidedLessonDef = {
       },
       after: ['顺手记牢个性化 3 个框的分工：<b>指令管做事红线</b>、<b>人设管说话性格</b>、<b>长期记忆写你的固定背景（职业/受众/常用软件）</b>。'],
       buttons: [
-        { label: '下一节：1.5 模型与积分 →', primary: true, nextLesson: 'models-credits' },
-        { label: '读本节图文教程', href: '/features/setup/personalization/' },
         { label: '重来一遍', restart: true },
       ],
     },

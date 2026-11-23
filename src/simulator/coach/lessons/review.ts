@@ -122,8 +122,6 @@ export const reviewLesson: GuidedLessonDef = {
         ],
       },
       buttons: [
-        { label: '下一节：2.7 二次修改 →', primary: true, nextLesson: 'revise' },
-        { label: '读本节图文教程', href: '/features/send-task/review/' },
         { label: '重来一遍', restart: true },
       ],
     },

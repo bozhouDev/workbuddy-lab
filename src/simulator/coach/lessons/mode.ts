@@ -207,8 +207,6 @@ export const modeLesson: GuidedLessonDef = {
         ],
       },
       buttons: [
-        { label: '下一节：2.3 权限与审批弹窗 →', primary: true, nextLesson: 'permission' },
-        { label: '读本节图文教程', href: '/features/send-task/mode/' },
         { label: '重来一遍', restart: true },
       ],
     },
