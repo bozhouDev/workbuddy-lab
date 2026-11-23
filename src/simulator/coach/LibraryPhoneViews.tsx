@@ -336,10 +336,10 @@ export function PhonePanel(props: Props & { draft: string }) {
             </span>
           ))}
         </div>
-        {/* 切换电脑面板 */}
+        {/* 切换电脑面板（底部留白给蓝圈提示，避免被手机外框裁掉） */}
         {shell.phoneDeviceSheetOpen && (
           <div className="absolute inset-0 bg-black/25 flex items-end">
-            <div className="sim-pop-up w-full rounded-t-[18px] bg-white p-3 flex flex-col gap-2">
+            <div className="sim-pop-up w-full rounded-t-[18px] bg-white px-3 pt-3 pb-10 flex flex-col gap-2">
               <div className="text-center font-semibold text-[13px] text-[#111318]">
                 切换电脑 <span className="font-normal text-[10.5px] text-[#9ea3ad]">（模拟）</span>
               </div>
@@ -364,7 +364,7 @@ export function PhonePanel(props: Props & { draft: string }) {
                       {d.icon} {d.name} {on && <span className="text-accent-700">✓</span>}
                     </div>
                     <div className="text-[10.5px] text-[#6b7079] leading-[1.5]">{d.desc}</div>
-                    {isTarget && kit.callout('phone.modeComputer', 'top', 'center')}
+                    {isTarget && kit.callout('phone.modeComputer', 'bottom', 'center')}
                   </button>
                 );
               })}
