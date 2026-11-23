@@ -107,7 +107,7 @@ export const chooseLesson: GuidedLessonDef = {
       phase: 2,
       onEnter: () => ({ view: 'home', composerText: PPT_PROMPT, composerChips: FULL_CHIPS, popover: null }),
       say: [
-        '我已经在输入框里挂好三枚胶囊：<b>连接器 飞书</b>、<b>专家 PPT制作专家</b>、<b>技能 WPS Office 全家桶</b>（后面三节会一个个教你怎么挂上）。同一句话，再发一次。',
+        '我已经帮你配齐三样：输入框正文开头嵌上了技能 <b>WPS Office 全家桶</b>，底栏挂上了专家 <b>PPT制作专家</b> 和 <b>飞书</b> 连接器图标（后面三节会一个个教你怎么挂上）。同一句话，再发一次。',
       ],
       wait: { target: 'composer.send', callout: '配齐三样再发', label: '发送（配齐三样）' },
       onAction: () => ({ composerChips: [] }),

@@ -111,7 +111,7 @@ export const expertsLesson: GuidedLessonDef = {
       id: 'run-expert',
       phase: 2,
       say: [
-        '顶上提示「已成功召唤专家「PPT制作专家」」，自动回到首页，输入框里多了一枚<b>专家胶囊</b>。同一句话，再发一次。',
+        '顶上提示「已成功召唤专家「PPT制作专家」」，自动回到首页，输入框底栏出现了<b>头像 + PPT制作专家</b>。同一句话，再发一次。',
       ],
       wait: { target: 'composer.send', callout: '带着专家再发', label: '发送（已召唤专家）' },
       onAction: () => ({ composerChips: [] }),

@@ -176,7 +176,7 @@ export const skillsLesson: GuidedLessonDef = {
     {
       id: 'run-skill',
       phase: 2,
-      say: ['输入框里挂上了技能胶囊。同一句话，再发一次。'],
+      say: ['输入框正文开头嵌上了技能胶囊。同一句话，再发一次。'],
       wait: { target: 'composer.send', callout: '带着技能再发', label: '发送（用技能）' },
       onAction: () => ({ composerChips: [] }),
       runChat: () =>

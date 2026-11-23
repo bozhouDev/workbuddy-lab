@@ -28,7 +28,7 @@ import {
 import { RichText } from '../shell/RichText';
 import { AnimatedNumber } from './AnimatedNumber';
 import { GuidanceCallout } from './GuidanceCue';
-import { chipKindLabel, type GuidedShellState, type GuidedTargetId } from './guidedTypes';
+import { type ComposerChip, type GuidedShellState, type GuidedTargetId } from './guidedTypes';
 import type { PopoverId } from './types';
 import { SettingsViews5113 } from './SettingsViews5113';
 import { ExtensionsViews5113 } from './ExtensionsViews5113';
@@ -58,6 +58,52 @@ interface GuidedWorkBuddyProps {
  * 通用 5.11.3 高还原活界面（服务 1.1～1.5 全部陪练课）
  * 内含：首页 + 可自由点开的真菜单 + 可回看的「最近」历史会话 + 5.11.3 设置页 + 带「预计消耗 ✧ / 已消耗 ✧」真实积分明细的流式对话与右侧产物区
  */
+/** 5.11.3 真机风格：技能小图标（嵌在输入框正文开头胶囊里） */
+function SkillWandIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0 text-[#2b2f36]">
+      <path
+        d="M3.2 12.8 10 6m-1.5-1.5L10 6l1.5-1.5L10 3 8.5 4.5Z"
+        stroke="currentColor"
+        strokeWidth="1.35"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M12.5 9.5v2M11.5 10.5h2M5 2.5v1.8M4.1 3.4h1.8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** 5.11.3 真机风格：连接器小图标（飞书为蓝绿双翼，自定义 MCP 为插头徽章） */
+function ConnectorGlyph({ label }: { label: string }) {
+  if (label === '飞书') {
+    return (
+      <svg width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true" className="shrink-0">
+        <path d="M3.5 5.2 10.6 9l-2.3 2.5L3.5 9V5.2Z" fill="#00D6B9" />
+        <path d="M3.5 9l4.8 2.5 5.8-3.8c1.1-.7 2.4.1 2.4 1.3v.4c0 3.7-3 6.6-6.8 6.6-3.4 0-6.2-2.6-6.2-6V9Z" fill="#3370FF" />
+        <path d="M10.6 9 14 7.7c.7-.3 1.4.2 1.4.9 0 .4-.2.8-.6 1L8.3 11.5 10.6 9Z" fill="#133C9A" opacity="0.28" />
+      </svg>
+    );
+  }
+  return (
+    <span className="w-4.5 h-4.5 rounded-md bg-[#eef2ff] text-accent-600 text-[10px] font-bold inline-flex items-center justify-center shrink-0">
+      ⚡
+    </span>
+  );
+}
+
+/** 5.11.3 真机风格：专家圆形小头像 */
+function ExpertAvatar({ label }: { label: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="w-5 h-5 rounded-full bg-gradient-to-br from-[#c7d2fe] via-[#ddd6fe] to-[#bfdbfe] text-[#312e81] text-[10px] font-bold inline-flex items-center justify-center shrink-0 ring-1 ring-black/8"
+    >
+      {label.slice(0, 1)}
+    </span>
+  );
+}
+
 export function GuidedWorkBuddy({
   shell,
   waitTarget,
@@ -1250,12 +1296,64 @@ export function GuidedWorkBuddy({
                   </div>
                 ) : (
                   <div className="min-h-[54px] text-[14.5px] leading-[1.65]">
-                    {hasText ? (
+                    {/* 资料库添加的文件附件显示在输入框上方 */}
+                    {shell.composerChips.some((c) => c.kind === 'file') && (
+                      <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                        {shell.composerChips
+                          .filter((c) => c.kind === 'file')
+                          .map((c) => (
+                            <span
+                              key={`file-${c.label}`}
+                              className="sim-pop-up inline-flex items-center gap-1.5 h-6 px-2.5 rounded-lg bg-[#f4f4f5] border border-[#e6e6e3] text-[12px] font-medium text-[#2b2f36]"
+                            >
+                              <span className="text-[11px]">📄</span>
+                              <span className="truncate max-w-[220px]">{c.label}</span>
+                              <button
+                                type="button"
+                                aria-label={`移除 ${c.label}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onAsideClick('移除附件', `点 × 会把「${c.label}」从这次任务里移出，这一步先留着它。`);
+                                }}
+                                className="border-0 bg-transparent p-0 text-[#8c9099] hover:text-[#111318] cursor-pointer leading-none"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
+                      </div>
+                    )}
+
+                    {hasText || shell.composerChips.some((c) => c.kind === 'skill') ? (
                       <span
                         className={`block text-[#111318] ${
                           shell.fivePartsCard === 'flying' ? 'sim-composer-text-land' : ''
                         }`}
                       >
+                        {/* 5.11.3 真机：技能胶囊嵌在输入框正文开头 */}
+                        {shell.composerChips
+                          .filter((c) => c.kind === 'skill')
+                          .map((c) => (
+                            <span
+                              key={`skill-${c.label}`}
+                              title={`已调用技能：${c.label}`}
+                              className="sim-pop-up inline-flex items-center gap-1.5 rounded-full bg-[#f2f3f5] px-2.5 py-[2px] mr-1.5 align-middle text-[13px] font-medium text-[#111318]"
+                            >
+                              <SkillWandIcon />
+                              <span>{c.label}</span>
+                              <button
+                                type="button"
+                                aria-label={`移除 ${c.label}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onAsideClick('移除技能', `技能胶囊嵌在提示词开头，点 × 可取消调用「${c.label}」。这一步先留着它。`);
+                                }}
+                                className="border-0 bg-transparent p-0 text-[#8c9099] hover:text-[#111318] cursor-pointer leading-none text-[13px]"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
                         <RichText text={shell.composerText} />
                       </span>
                     ) : (
@@ -1266,8 +1364,8 @@ export function GuidedWorkBuddy({
                   </div>
                 )}
 
-                <div className="flex items-center justify-between pt-2">
-                  <div className="flex items-center gap-1.5">
+                <div className="flex items-center justify-between gap-2 pt-2">
+                  <div className="flex items-center gap-2 min-w-0 flex-wrap">
                     <button
                       type="button"
                       data-guided-target="composer.plus"
@@ -1280,7 +1378,7 @@ export function GuidedWorkBuddy({
                           'plus'
                         )
                       }
-                      className={`relative w-8 h-8 rounded-lg border-0 inline-flex items-center justify-center text-[19px] text-[#2b2f36] cursor-pointer transition-colors ${
+                      className={`relative w-8 h-8 rounded-lg border-0 inline-flex items-center justify-center text-[19px] text-[#2b2f36] shrink-0 cursor-pointer transition-colors ${
                         shell.popover === 'plus' ? 'bg-[#ececef]' : 'bg-transparent hover:bg-[#f4f4f5]'
                       } ${ring('composer.plus')}`}
                     >
@@ -1290,44 +1388,68 @@ export function GuidedWorkBuddy({
                       )}
                     </button>
 
-                    {/* 输入框里挂着的专家 / 技能 / 连接器胶囊 */}
-                    {shell.composerChips.map((c) => (
-                      <span
-                        key={`${c.kind}-${c.label}`}
-                        className="sim-pop-up h-6 px-2 rounded-full bg-[#f3f5fe] border border-accent-200 text-accent-700 text-[11.5px] font-semibold inline-flex items-center gap-1 max-w-[170px]"
-                        title={c.label}
-                      >
-                        <span className="text-[10px] text-accent-500">{chipKindLabel(c.kind)}</span>
-                        <span className="truncate">{c.label}</span>
-                        {/* × 移除：真机点了会把胶囊拿掉，课程里只做解释，避免打乱当前步骤 */}
-                        <button
-                          type="button"
-                          aria-label={`移除 ${c.label}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onAsideClick('移除', `点 × 会把「${c.label}」从这次任务里拿掉。换活的时候记得移除，这一步先留着它。`);
-                          }}
-                          className="border-0 bg-transparent p-0 text-accent-400 hover:text-accent-700 cursor-pointer leading-none"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-
                     {shell.planOn && (
-                      <span className="sim-pop-up h-6 px-2 rounded-full bg-accent-50 border border-accent-200 text-accent-700 text-[11.5px] font-semibold inline-flex items-center">
+                      <span className="sim-pop-up h-6 px-2 rounded-full bg-accent-50 border border-accent-200 text-accent-700 text-[12px] font-semibold inline-flex items-center whitespace-nowrap shrink-0">
                         计划 Plan
                       </span>
                     )}
                     {shell.askOn && (
-                      <span className="sim-pop-up h-6 px-2 rounded-full bg-[#ecfdf5] border border-[#a7f3d0] text-[#047857] text-[11.5px] font-semibold inline-flex items-center">
+                      <span className="sim-pop-up h-6 px-2 rounded-full bg-[#ecfdf5] border border-[#a7f3d0] text-[#047857] text-[12px] font-semibold inline-flex items-center whitespace-nowrap shrink-0">
                         仅问答 Ask
                       </span>
                     )}
+
+                    {/* 5.11.3 真机：专家以「圆形头像 + 专家名」放在底栏 */}
+                    {shell.composerChips
+                      .filter((c) => c.kind === 'expert')
+                      .map((c) => (
+                        <span
+                          key={`expert-${c.label}`}
+                          title={`已召唤专家：${c.label}`}
+                          className="sim-pop-up inline-flex items-center gap-1.5 h-7 px-2 rounded-full hover:bg-[#f4f4f5] text-[12.5px] font-medium text-[#1f2329] whitespace-nowrap shrink-0"
+                        >
+                          <ExpertAvatar label={c.label} />
+                          <span>{c.label}</span>
+                          <button
+                            type="button"
+                            aria-label={`移除 ${c.label}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onAsideClick('移除专家', `点 × 会取消召唤「${c.label}」。换活时记得点掉，这一步先留着它。`);
+                            }}
+                            className="border-0 bg-transparent p-0 text-[#9ea3ad] hover:text-[#111318] cursor-pointer leading-none text-[13px]"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+
+                    {/* 5.11.3 真机：连接器以图标紧跟在专家右侧 */}
+                    {shell.composerChips
+                      .filter((c) => c.kind === 'connector')
+                      .map((c) => (
+                        <button
+                          key={`conn-${c.label}`}
+                          type="button"
+                          title={`已启用连接器：${c.label}`}
+                          aria-label={`连接器：${c.label}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onAsideClick(
+                              `连接器 · ${c.label}`,
+                              `底栏图标亮起代表这次任务已连上 <b>${c.label}</b>，不需要时点开可取消勾选。这一步先保持连接。`
+                            );
+                          }}
+                          className="sim-pop-up border-0 bg-transparent hover:bg-[#f4f4f5] h-7 px-1.5 rounded-lg inline-flex items-center gap-1 text-[12px] font-medium text-[#2b2f36] whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+                        >
+                          <ConnectorGlyph label={c.label} />
+                          {c.label !== '飞书' && <span>{c.label}</span>}
+                        </button>
+                      ))}
                   </div>
 
-                  <div className="flex items-center gap-2.5 text-[12.5px] text-[#2b2f36]">
-                    {hasText && <SparkleIcon size={15} className="text-[#4a4f57]" />}
+                  <div className="flex items-center gap-2 text-[12.5px] text-[#2b2f36] shrink-0 whitespace-nowrap">
+                    {hasText && <SparkleIcon size={15} className="text-[#4a4f57] shrink-0" />}
 
                     <button
                       type="button"
@@ -1340,7 +1462,7 @@ export function GuidedWorkBuddy({
                           'model'
                         )
                       }
-                      className={`relative border-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-medium cursor-pointer transition-colors ${
+                      className={`relative border-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-medium whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
                         shell.popover === 'model' ? 'bg-[#f4f4f5]' : 'bg-transparent hover:bg-[#f4f4f5]'
                       } ${ring('composer.model')}`}
                     >
@@ -1462,20 +1584,59 @@ export function GuidedWorkBuddy({
 
             {chat && (
               <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-5">
-                {/* 用户消息（上方挂着这次带上的专家 / 技能 / 连接器） */}
-                {chat.promptChips && chat.promptChips.length > 0 && (
-                  <div className="self-end flex flex-wrap justify-end gap-1.5 -mb-3">
-                    {chat.promptChips.map((c) => (
-                      <span key={`${c.kind}-${c.label}`} className="h-6 px-2 rounded-full bg-[#f3f5fe] border border-accent-200 text-accent-700 text-[11.5px] font-semibold inline-flex items-center gap-1">
-                        <span className="text-[10px] text-accent-500">{chipKindLabel(c.kind)}</span>
-                        {c.label}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <div className="sim-msg-rise self-end max-w-[85%] rounded-[16px] bg-[#f4f4f5] px-4 py-2.5 text-[13.5px] leading-[1.65] text-[#111318]">
-                  <RichText text={chat.prompt} />
-                </div>
+                {/* 用户消息（按 5.11.3 真机：专家/连接器/附件在上方轻提示，技能胶囊嵌在消息正文开头） */}
+                {(() => {
+                  const chips: ComposerChip[] = chat.promptChips ?? [];
+                  const metaChips = chips.filter((c) => c.kind !== 'skill');
+                  const skillChips = chips.filter((c) => c.kind === 'skill');
+                  return (
+                    <>
+                      {metaChips.length > 0 && (
+                        <div className="self-end flex flex-wrap items-center justify-end gap-2 -mb-3 text-[12px] text-[#4a4f57]">
+                          {metaChips.map((c) =>
+                            c.kind === 'expert' ? (
+                              <span
+                                key={`m-exp-${c.label}`}
+                                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white border border-[#e6e6e3] font-medium text-[#1f2329]"
+                              >
+                                <ExpertAvatar label={c.label} />
+                                <span>{c.label}</span>
+                              </span>
+                            ) : c.kind === 'connector' ? (
+                              <span
+                                key={`m-conn-${c.label}`}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white border border-[#e6e6e3] font-medium text-[#1f2329]"
+                              >
+                                <ConnectorGlyph label={c.label} />
+                                <span>{c.label}</span>
+                              </span>
+                            ) : (
+                              <span
+                                key={`m-file-${c.label}`}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#f4f4f5] border border-[#e6e6e3] text-[#2b2f36]"
+                              >
+                                <span>📄</span>
+                                <span>{c.label}</span>
+                              </span>
+                            )
+                          )}
+                        </div>
+                      )}
+                      <div className="sim-msg-rise self-end max-w-[85%] rounded-[16px] bg-[#f4f4f5] px-4 py-2.5 text-[13.5px] leading-[1.65] text-[#111318]">
+                        {skillChips.map((c) => (
+                          <span
+                            key={`p-skill-${c.label}`}
+                            className="inline-flex items-center gap-1 rounded-full bg-white border border-[#e4e6eb] px-2 py-[1px] mr-1.5 align-middle text-[12.5px] font-medium text-[#111318]"
+                          >
+                            <SkillWandIcon />
+                            <span>{c.label}</span>
+                          </span>
+                        ))}
+                        <RichText text={chat.prompt} />
+                      </div>
+                    </>
+                  );
+                })()}
 
                 {/* WorkBuddy 回复区（精确还原 BA0B1FEF：预计消耗 ✧ + 工具步骤 + 流式正文 + 已消耗 ✧） */}
                 <div className="sim-msg-rise flex flex-col gap-3 text-[13.5px] leading-[1.78] text-[#2b2f36]">
