@@ -439,9 +439,9 @@ test.describe('第 03、04 章泊舟陪练模拟器', () => {
 
     await page.getByRole('button', { name: /下一节：4.2 助理/ }).click();
     await walkLesson(page, ['btn:去连手机', 'nav.mobileLink', 'mobile.toggle', 'btn:假装用手机扫好了（模拟）', 'phone.send']);
-    await expect(page.getByText(/云端沙箱访问不到本机文件/)).toBeVisible();
-    await walkLesson(page, ['phone.modeComputer', 'phone.send']);
-    await expect(page.getByText('云端工作 vs 连接电脑')).toBeVisible({ timeout: 8000 });
+    await expect(page.getByText(/我现在在云电脑上运行/)).toBeVisible();
+    await walkLesson(page, ['phone.deviceSwitch', 'phone.modeComputer', 'phone.send']);
+    await expect(page.getByText('云电脑 vs 本地电脑')).toBeVisible({ timeout: 8000 });
     // 窄屏侧栏自动折叠，「最近」列表不显示，只在宽屏检查
     if (WALK_WIDTH >= 1140) await expect(page.getByText('来自手机 · 读书会筹备纪要').first()).toBeVisible();
   });

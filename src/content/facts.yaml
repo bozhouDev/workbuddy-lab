@@ -46,9 +46,9 @@
   status: pending
   source: 待截取 5.11.3 飞书连接器详情页
 - id: phone-work-modes
-  text: 手机端派活分「云端工作」和「连接电脑」两种方式，云端访问不到本机文件；模拟器里手机界面是教学抽象，入口文字待核对。
+  text: 手机端对话标题下方显示任务运行位置（默认「云电脑」），可在云电脑和本地电脑之间切换；云电脑无法处理本地未上传的资料。点开后的切换面板样式待核对。
   status: pending
-  source: 云端限制文案来自 5.11.3 语言包；手机端界面待截图核对
+  source: 标题下「云电脑」来自泊舟手机小程序截图（2026-11-23）；选项说明来自 5.11.3 语言包 home.taskTarget.* / remoteDevice.switcher.*；切换面板待截图
 - id: schedule-default-permission
   text: 从对话新建的定时任务，执行权限默认是「需逐次确认」还是「免确认执行」待核对；模拟器按需逐次确认演示，让学员自己改成免确认。
   status: pending

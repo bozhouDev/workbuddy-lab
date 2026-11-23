@@ -244,60 +244,133 @@ export function MobileLinkPopover(props: Props) {
   );
 }
 
-/** 手机模拟面板：云端工作 / 连接电脑 两种方式 + 对话 */
+/** 切换电脑面板里的两个选项（说明文字取自 5.11.3 语言包 home.taskTarget.*） */
+const PHONE_DEVICES = [
+  { id: 'cloud' as const, icon: '☁', name: '云电脑', desc: '云端运行，关机不中断、多端同步接力；无法处理本地未上传的资料。' },
+  { id: 'computer' as const, icon: '💻', name: '本地电脑', desc: '本地运行，直接处理本机资料、操作当前电脑；需保持电脑在线。' },
+];
+
+/**
+ * 手机模拟面板（对照泊舟手机上 WorkBuddy 微信小程序截图）
+ * 顶栏：≡、新会话、标题 + 「☁ 云电脑 ▾」（任务在哪台电脑跑）、小程序胶囊；中间对话；底部输入框和 任务 / 定时任务 / 发现 / 我的
+ */
 export function PhonePanel(props: Props & { draft: string }) {
   const { shell, draft } = props;
   const kit = makeTargetKit(props);
+  const device = PHONE_DEVICES.find((d) => d.id === shell.phoneMode) ?? PHONE_DEVICES[0];
+  const title = shell.phoneMessages.length > 0 ? '读书会筹备纪要' : '打招呼开始新会话';
   return (
-    <div className="sim-slide-in-panel absolute right-4 top-4 bottom-4 z-20 w-[262px] rounded-[30px] bg-[#111318] p-2 shadow-[0_24px_60px_rgba(17,19,24,0.35)]" onClick={(e) => e.stopPropagation()}>
-      <div className="h-full rounded-[24px] bg-[#f7f7f6] flex flex-col overflow-hidden text-[12.5px]">
-        <div className="pt-3 pb-2 px-3 text-center border-b border-[#ebebeb] bg-white">
-          <div className="text-[11px] text-[#8c9099]">手机端（模拟）</div>
-          <div className="font-semibold text-[#111318]">WorkBuddy</div>
-          <div className="mt-2 inline-flex rounded-full bg-[#f1f1ef] p-0.5 text-[11.5px]">
-            <span className={`px-2.5 py-1 rounded-full ${shell.phoneMode === 'cloud' ? 'bg-white font-semibold shadow-sm' : 'text-[#5c5f66]'}`}>云端工作</span>
+    <div className="sim-slide-in-panel absolute right-4 top-4 bottom-4 z-20 w-[272px] rounded-[30px] bg-[#111318] p-2 shadow-[0_24px_60px_rgba(17,19,24,0.35)]" onClick={(e) => e.stopPropagation()}>
+      <div className="relative h-full rounded-[24px] bg-[#f7f7f7] flex flex-col overflow-hidden text-[12.5px]">
+        <div className="px-4 pt-2 flex items-center justify-between text-[10.5px] font-semibold text-[#111318]">
+          <span>9:58</span>
+          <span className="text-[9.5px] text-[#8c9099] font-normal">手机端（模拟）</span>
+        </div>
+        {/* 顶栏 */}
+        <div className="px-3 pt-1.5 pb-2 flex items-center gap-2">
+          <span className="text-[15px] text-[#111318]" aria-hidden="true">≡</span>
+          <span className="w-5 h-5 rounded-full border border-[#111318] text-[12px] leading-none inline-flex items-center justify-center text-[#111318]" aria-hidden="true">+</span>
+          <div className="flex-1 min-w-0 flex flex-col items-center">
+            <span className="font-semibold text-[13px] text-[#111318] truncate max-w-full">{title}</span>
             <button
               type="button"
-              data-guided-target="phone.modeComputer"
-              onClick={kit.click('phone.modeComputer', '连接电脑', '切到「连接电脑」，活就会在你家里那台电脑上跑。')}
-              className={`relative border-0 px-2.5 py-1 rounded-full cursor-pointer ${shell.phoneMode === 'computer' ? 'bg-white font-semibold shadow-sm' : 'bg-transparent text-[#5c5f66]'} ${kit.ring('phone.modeComputer')}`}
+              data-guided-target="phone.deviceSwitch"
+              aria-label="切换电脑"
+              onClick={kit.click('phone.deviceSwitch', '切换电脑', '这行小字是这个活在哪台电脑上跑，点它能在云电脑和本地电脑之间切换。')}
+              className={`relative border-0 bg-transparent px-1.5 rounded text-[11px] text-[#6b7079] cursor-pointer ${kit.ring('phone.deviceSwitch')}`}
             >
-              连接电脑
-              {kit.callout('phone.modeComputer', 'bottom', 'end')}
+              {device.icon} {device.name} ▾
+              {kit.callout('phone.deviceSwitch', 'bottom', 'center')}
             </button>
           </div>
+          <span className="h-6 px-2 rounded-full border border-[#e6e6e3] bg-white text-[10px] text-[#111318] inline-flex items-center gap-1.5" aria-hidden="true">
+            ••• <span className="w-px h-3 bg-[#e6e6e3]" /> ◉
+          </span>
         </div>
-        <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
-          {shell.phoneMessages.map((m, i) => (
-            <div
-              key={i}
-              className={`sim-msg-rise max-w-[88%] rounded-[12px] px-2.5 py-1.5 leading-[1.6] ${
-                m.from === 'me'
-                  ? 'self-end bg-[#111318] text-white'
-                  : m.tone === 'warn'
-                    ? 'self-start bg-[#fff1e8] text-[#9a3412]'
-                    : m.tone === 'ok'
-                      ? 'self-start bg-[#eef2ff] text-accent-700'
-                      : 'self-start bg-white text-[#2b2f36]'
-              }`}
-            >
-              {m.text}
-            </div>
+        {/* 对话 */}
+        <div className="flex-1 overflow-y-auto px-3 pb-2 flex flex-col gap-2.5">
+          <div className="text-center text-[10.5px] text-[#9ea3ad]">内容由 AI 生成</div>
+          {shell.phoneMessages.map((m, i) =>
+            m.from === 'me' ? (
+              <div key={i} className="sim-msg-rise self-end max-w-[86%] rounded-[14px] bg-[#ebebeb] px-2.5 py-1.5 leading-[1.6] text-[#111318]">
+                {m.text}
+              </div>
+            ) : (
+              <div
+                key={i}
+                className={`sim-msg-rise self-start max-w-[96%] leading-[1.7] text-[#111318] ${
+                  m.tone === 'warn' ? 'border-l-2 border-[#f97316] pl-2' : m.tone === 'ok' ? 'border-l-2 border-accent-500 pl-2' : ''
+                }`}
+              >
+                {m.text}
+              </div>
+            )
+          )}
+        </div>
+        {/* 输入框 */}
+        <div className="px-2.5 pb-1.5">
+          <div className="h-10 rounded-full bg-white shadow-[0_2px_10px_rgba(17,19,24,0.08)] flex items-center gap-1.5 pl-3 pr-1.5">
+            <span className="text-[11px] text-[#111318]" aria-hidden="true">•))</span>
+            <div className={`flex-1 min-w-0 truncate ${draft ? 'text-[#111318]' : 'text-[#9ea3ad]'}`}>{draft || '发消息或按住说话…'}</div>
+            {draft ? (
+              <button
+                type="button"
+                data-guided-target="phone.send"
+                aria-label="手机发送"
+                onClick={kit.click('phone.send', '手机发送', '跟着蓝圈来。')}
+                className={`relative w-7 h-7 rounded-full border-0 bg-[#111318] text-white inline-flex items-center justify-center cursor-pointer ${kit.ring('phone.send')}`}
+              >
+                <SendPlaneIcon size={11} />
+                {kit.callout('phone.send', 'top', 'end')}
+              </button>
+            ) : (
+              <span className="w-7 h-7 inline-flex items-center justify-center text-[17px] text-[#111318]" aria-hidden="true">+</span>
+            )}
+          </div>
+        </div>
+        {/* 底部标签栏 */}
+        <div className="grid grid-cols-4 pb-2.5 pt-1 text-[10px] text-[#8c9099]">
+          {['任务', '定时任务', '发现', '我的'].map((t) => (
+            <span key={t} className={`text-center ${t === '任务' ? 'font-semibold text-[#111318]' : ''}`}>
+              {t}
+            </span>
           ))}
         </div>
-        <div className="p-2 bg-white border-t border-[#ebebeb] flex items-center gap-1.5">
-          <div className={`flex-1 min-w-0 rounded-full bg-[#f4f4f5] px-3 py-1.5 truncate ${draft ? 'text-[#111318]' : 'text-[#9ea3ad]'}`}>{draft || '说点什么…'}</div>
-          <button
-            type="button"
-            data-guided-target="phone.send"
-            aria-label="手机发送"
-            onClick={kit.click('phone.send', '手机发送', '跟着蓝圈来。')}
-            className={`relative w-7 h-7 rounded-full border-0 bg-[#111318] text-white inline-flex items-center justify-center cursor-pointer ${kit.ring('phone.send')}`}
-          >
-            <SendPlaneIcon size={11} />
-            {kit.callout('phone.send', 'top', 'end')}
-          </button>
-        </div>
+        {/* 切换电脑面板 */}
+        {shell.phoneDeviceSheetOpen && (
+          <div className="absolute inset-0 bg-black/25 flex items-end">
+            <div className="sim-pop-up w-full rounded-t-[18px] bg-white p-3 flex flex-col gap-2">
+              <div className="text-center font-semibold text-[13px] text-[#111318]">
+                切换电脑 <span className="font-normal text-[10.5px] text-[#9ea3ad]">（模拟）</span>
+              </div>
+              {PHONE_DEVICES.map((d) => {
+                const on = d.id === shell.phoneMode;
+                const isTarget = d.id === 'computer';
+                return (
+                  <button
+                    key={d.id}
+                    type="button"
+                    data-guided-target={isTarget ? 'phone.modeComputer' : undefined}
+                    onClick={
+                      isTarget
+                        ? kit.click('phone.modeComputer', d.name, '切到本地电脑，活就在你自己那台电脑上跑。')
+                        : kit.aside(d.name, '现在就是云电脑。它处理不了你电脑里没上传的资料，这次要切到本地电脑。')
+                    }
+                    className={`relative text-left rounded-[12px] border px-3 py-2 cursor-pointer ${on ? 'border-accent-300 bg-accent-50' : 'border-[#ececea] bg-white'} ${
+                      isTarget ? kit.ring('phone.modeComputer') : ''
+                    }`}
+                  >
+                    <div className="font-semibold text-[12.5px] text-[#111318]">
+                      {d.icon} {d.name} {on && <span className="text-accent-700">✓</span>}
+                    </div>
+                    <div className="text-[10.5px] text-[#6b7079] leading-[1.5]">{d.desc}</div>
+                    {isTarget && kit.callout('phone.modeComputer', 'top', 'center')}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

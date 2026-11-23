@@ -145,8 +145,11 @@ export type GuidedTargetId =
   | 'schedule.fastForward'
   | 'schedule.viewRecords'
   | 'schedule.recordDetail'
+  | 'schedule.checkSource'
+  | 'schedule.closeDetail'
   // 助理（手机遥控）
   | 'mobile.toggle'
+  | 'phone.deviceSwitch'
   | 'phone.modeComputer'
   | 'phone.send';
 
@@ -349,7 +352,10 @@ export interface GuidedShellState {
   // ===== 4.2 助理 =====
   mobileLinkOn: boolean;
   phonePanelOpen: boolean;
+  /** 手机标题下「云电脑 ▾」：cloud = 云电脑，computer = 本地电脑 */
   phoneMode: 'cloud' | 'computer';
+  /** 手机上「切换电脑」面板 */
+  phoneDeviceSheetOpen: boolean;
   phoneMessages: PhoneMessage[];
 }
 

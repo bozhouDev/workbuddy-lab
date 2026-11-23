@@ -5,7 +5,7 @@ import { freeChat } from './freeChat';
 /** 手机上要派的活：要用到电脑里的文件 */
 const PHONE_PROMPT = '把我电脑上「WorkBuddy-练习」分组里的读书会筹备纪要发我看看。';
 
-/** 连接电脑后，桌面端「最近」里多出来的那条来自手机的任务 */
+/** 切到本地电脑后，桌面端「最近」里多出来的那条来自手机的任务 */
 const FROM_PHONE_CHAT: ChatRunSpec = freeChat({
   id: 'assistant-from-phone',
   prompt: PHONE_PROMPT,
@@ -67,37 +67,50 @@ export const assistantLesson: GuidedLessonDef = {
         popover: null,
         phonePanelOpen: true,
         phoneMode: 'cloud',
+        phoneDeviceSheetOpen: false,
         phoneMessages: [],
         followupText: PHONE_PROMPT,
       }),
       say: [
-        '右边是手机。顶上有两种干活方式：<b>云端工作</b>（在腾讯的云端电脑上跑，你电脑关着也行）和<b>连接电脑</b>（遥控你家里那台电脑跑）。',
-        '现在是云端工作。我填了一句要用电脑文件的活，点手机上的发送。',
+        '右边是手机上的 WorkBuddy（照小程序画的）。看标题下面那行小字「<b>☁ 云电脑</b>」：它说的是<b>这个活在哪台电脑上跑</b>。',
+        '<b>云电脑</b>是腾讯云上的一台电脑，你家里电脑关着也能跑；<b>本地电脑</b>就是你自己那台。现在是云电脑。我填了一句要用电脑里文件的活，点手机上的发送。',
       ],
-      wait: { target: 'phone.send', callout: '在手机上发', label: '手机发送（云端工作）' },
+      wait: { target: 'phone.send', callout: '在手机上发', label: '手机发送（云电脑）' },
       onAction: (s) => ({
         followupText: '',
         phoneMessages: [
           ...s.phoneMessages,
           { from: 'me', text: PHONE_PROMPT },
-          { from: 'bot', text: '云端沙箱访问不到本机文件，请勿在指令中引用本地文件路径。', tone: 'warn' },
+          {
+            from: 'bot',
+            text: '我现在在云电脑上运行，访问不到你电脑里的文件。可以先把文件上传再发，或者切换到本地电脑。',
+            tone: 'warn',
+          },
         ],
       }),
     },
     {
-      id: 'switch-computer',
+      id: 'switch-device',
       phase: 2,
       say: [
-        '碰壁了：<b>云端访问不到你电脑上的文件</b>。云端工作适合查资料、写东西这种不碰本机文件的活；要用电脑里的东西，就得切到「连接电脑」。',
+        '碰壁了：<b>云电脑处理不了你电脑里没上传的资料</b>。云电脑适合查资料、写东西这种不碰本机文件的活；要用电脑里的东西，就得切到本地电脑。点标题下面的「云电脑」。',
       ],
-      wait: { target: 'phone.modeComputer', callout: '切到连接电脑', label: '连接电脑' },
-      onAction: () => ({ phoneMode: 'computer', followupText: PHONE_PROMPT }),
+      wait: { target: 'phone.deviceSwitch', callout: '点这里切换', label: '切换电脑' },
+      onAction: () => ({ phoneDeviceSheetOpen: true }),
+    },
+    {
+      id: 'switch-computer',
+      phase: 2,
+      navLabel: '本地电脑',
+      say: [],
+      wait: { target: 'phone.modeComputer', callout: '选本地电脑', label: '本地电脑' },
+      onAction: () => ({ phoneMode: 'computer', phoneDeviceSheetOpen: false, followupText: PHONE_PROMPT }),
     },
     {
       id: 'phone-computer',
       phase: 2,
       say: ['同一句话，再发一次。'],
-      wait: { target: 'phone.send', callout: '再发一次', label: '手机发送（连接电脑）' },
+      wait: { target: 'phone.send', callout: '再发一次', label: '手机发送（本地电脑）' },
       onAction: (s) => ({
         followupText: '',
         chatHistory: [FROM_PHONE_CHAT, ...s.chatHistory.filter((c) => c.id !== FROM_PHONE_CHAT.id)],
@@ -120,17 +133,17 @@ export const assistantLesson: GuidedLessonDef = {
       ],
       card: {
         kind: 'table',
-        title: '云端工作 vs 连接电脑',
-        headers: ['', '云端工作', '连接电脑'],
+        title: '云电脑 vs 本地电脑',
+        headers: ['', '云电脑', '本地电脑'],
         rows: [
-          ['在哪跑', '云端的电脑', '你自己的电脑'],
-          ['电脑要开着吗', '不用', '要开着、不能睡（锁屏运行选「熄屏后保持唤醒」）'],
-          ['能用本机文件吗', '不能', '能'],
+          ['在哪跑', '腾讯云上的电脑', '你自己的电脑'],
+          ['电脑要开着吗', '不用，关机不中断', '要开着、不能睡（锁屏运行选「熄屏后保持唤醒」）'],
+          ['能用电脑里的文件吗', '不能（没上传的处理不了）', '能'],
           ['适合', '查资料、写稿、做表', '处理电脑里的文件、跑本地技能和连接器'],
         ],
       },
       after: [
-        '手机派活记住 3 条：<b>① 用连接电脑前，1.1 节的锁屏运行和防休眠要开好</b>；<b>② 手机上只做只读和生成</b>，删除、发送这类动作回到电脑前再做；<b>③ 不用了就关掉「允许移动设备远程连接」</b>。',
+        '手机派活记住 3 条：<b>① 切到本地电脑前，1.1 节的锁屏运行和防休眠要开好</b>；<b>② 手机上只做只读和生成</b>，删除、发送这类动作回到电脑前再做；<b>③ 不用了就关掉「允许移动设备远程连接」</b>。',
         '除了扫码连 App 或微信小程序，左边侧栏的<b>「助理」</b>里还能绑微信助理、企业微信、QQ、飞书、钉钉这些聊天通道，像跟好友聊天一样派活，图文教程里有详细说明。',
         '到这里，基础功能篇全部学完了。下一步去实战篇，把这些串起来做几个完整的活。',
       ],

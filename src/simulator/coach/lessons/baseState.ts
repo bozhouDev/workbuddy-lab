@@ -80,6 +80,7 @@ export function createBaseGuidedState(
     mobileLinkOn: false,
     phonePanelOpen: false,
     phoneMode: 'cloud',
+    phoneDeviceSheetOpen: false,
     phoneMessages: [],
     ...overrides,
   };
