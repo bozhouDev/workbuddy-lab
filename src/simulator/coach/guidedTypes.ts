@@ -83,6 +83,10 @@ export type GuidedTargetId =
   | 'plusMenu.togglePlan'
   | 'plusMenu.toggleAsk'
   // + → 连接器 二级菜单与飞书开关
+  | 'plusMenu.experts'
+  | 'plusMenu.pickExpert'
+  | 'plusMenu.skills'
+  | 'plusMenu.pickSkill'
   | 'plusMenu.connectors'
   | 'plusMenu.toggleFeishu'
   | 'composer.mention'
@@ -334,6 +338,10 @@ export interface GuidedShellState {
   extTab: ExtTab;
   /** 输入框里挂着的胶囊 */
   composerChips: ComposerChip[];
+  /** / 菜单、+ → 专家、+ → 技能 里这一步要点的那一项（名字）；为空时 / 菜单默认第一项 */
+  pickLabel: string | null;
+  /** 判断练习：为 true 时 + 菜单里的专家 / 技能 / 连接器可以随手挂上、取下 */
+  freeMount: boolean;
   /** 输入框的 / 技能菜单 */
   slashMenuOpen: boolean;
   /** 顶部轻提示（如「已成功召唤专家」） */

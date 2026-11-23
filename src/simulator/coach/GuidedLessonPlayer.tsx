@@ -107,6 +107,8 @@ function isAlreadySatisfiedByState(target: GuidedTargetId | undefined, s: Guided
   if (target === 'composer.model' && s.popover === 'model') return true;
   if (target === 'composer.plus' && s.popover === 'plus') return true;
   if (target === 'plusMenu.connectors' && s.popover === 'plus' && s.plusSubmenu === 'connectors') return true;
+  if (target === 'plusMenu.experts' && s.popover === 'plus' && s.plusSubmenu === 'experts') return true;
+  if (target === 'plusMenu.skills' && s.popover === 'plus' && s.plusSubmenu === 'skills') return true;
   if (target === 'composer.permission' && s.popover === 'permission') return true;
   if (target === 'composer.mention' && s.mentionMenuOpen) return true;
   if (target === 'composer.slash' && s.slashMenuOpen) return true;
@@ -679,6 +681,20 @@ export default function GuidedLessonPlayer({
     [lesson, clearAllTimers, coachMode, enterStep]
   );
 
+  /** 不推进课程、只改左边界面状态（自由逛菜单、判断练习里随手挂东西），同步更新 shellRef 供点击推进时读取 */
+  const patchShell = useCallback(
+    (fn: (s: GuidedShellState) => Partial<GuidedShellState>) => {
+      if (isRunningChat) return;
+      setShell((prev) => {
+        if (!prev) return prev;
+        const next = { ...prev, ...fn(prev) };
+        shellRef.current = next;
+        return next;
+      });
+    },
+    [isRunningChat]
+  );
+
   // 点到非目标控件时的友好虚线解释（连点同一状态不刷屏，切换选项/开关后给出新反馈）
   const handleAsideClick = useCallback(
     (label: string, explain: string) => {
@@ -786,13 +802,22 @@ export default function GuidedLessonPlayer({
         onNewTask={handleNewTask}
         onBackToView={handleBackToView}
         onAsideClick={handleAsideClick}
-        onSelectPlusSubmenu={(sub) =>
-          setShell((p) => {
-            if (!p) return p;
-            const next = { ...p, plusSubmenu: sub };
-            shellRef.current = next;
-            return next;
+        onSelectPlusSubmenu={(sub) => patchShell((p) => ({ plusSubmenu: sub }))}
+        onFreeMount={(chip) =>
+          patchShell((p) => {
+            const has = p.composerChips.some((c) => c.kind === chip.kind && c.label === chip.label);
+            if (has) return { composerChips: p.composerChips.filter((c) => !(c.kind === chip.kind && c.label === chip.label)) };
+            // 专家一次只召唤一位：挂新的就换掉旧的；技能可以挂多个
+            const rest = chip.kind === 'expert' ? p.composerChips.filter((c) => c.kind !== 'expert') : p.composerChips;
+            return { composerChips: [...rest, chip] };
           })
+        }
+        onFreeToggleConnector={(id) =>
+          patchShell((p) => ({
+            enabledConnectorIds: p.enabledConnectorIds.includes(id)
+              ? p.enabledConnectorIds.filter((x) => x !== id)
+              : [...p.enabledConnectorIds, id],
+          }))
         }
       />
 

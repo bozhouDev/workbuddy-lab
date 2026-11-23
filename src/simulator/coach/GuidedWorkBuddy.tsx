@@ -35,7 +35,7 @@ import { SettingsViews5113 } from './SettingsViews5113';
 import { ExtensionsViews5113 } from './ExtensionsViews5113';
 import { ScheduleView5113 } from './ScheduleView5113';
 import { LibraryPickerModal, LibraryView5113, MobileLinkPopover, PhonePanel } from './LibraryPhoneViews';
-import { CONNECTORS, SLASH_SKILLS_BASE } from './extensionsData';
+import { CONNECTORS, PLUS_EXPERTS, installedSkillList } from './extensionsData';
 import { FIVE_PARTS_ITEMS, type FivePartsItem } from './fivePartsBrief';
 import { FakeQr, LetterIcon } from './targetKit';
 
@@ -55,6 +55,10 @@ interface GuidedWorkBuddyProps {
   onAsideClick: (label: string, explain: string) => void;
   /** 自由切换 + 菜单右侧的二级菜单（非课程目标时也能逛） */
   onSelectPlusSubmenu: (sub: PlusSubmenu) => void;
+  /** 判断练习：随手挂上 / 取下专家或技能 */
+  onFreeMount: (chip: ComposerChip) => void;
+  /** 判断练习：随手开关连接器 */
+  onFreeToggleConnector: (id: string) => void;
 }
 
 /**
@@ -121,6 +125,8 @@ export function GuidedWorkBuddy({
   onBackToView,
   onAsideClick,
   onSelectPlusSubmenu,
+  onFreeMount,
+  onFreeToggleConnector,
 }: GuidedWorkBuddyProps) {
   // 不在首页、但下一步要点首页输入框的按钮时，提示学员先点「新建任务」回首页
   const isNeedBackToHome =
@@ -182,6 +188,16 @@ export function GuidedWorkBuddy({
   const filesSub = shell.plusSubmenu === 'files';
   /** + 菜单右侧当前展开的是「连接器」二级菜单 */
   const connectorsSub = shell.plusSubmenu === 'connectors';
+  /** 已安装的技能（/ 菜单和 + → 技能 共用） */
+  const skillList = installedSkillList(shell.customSkills, shell.installedSkillIds);
+  /** + 一级菜单（照真机：添加文件 ─ 模式 / 专家 / 技能 / 连接器） */
+  const plusRows: Array<{ key: PlusSubmenu; label: string; target?: GuidedTargetId; divider?: boolean }> = [
+    { key: 'files', label: '添加文件', target: 'plusMenu.addFile' },
+    { key: 'mode', label: '模式', divider: true },
+    { key: 'experts', label: '专家', target: 'plusMenu.experts' },
+    { key: 'skills', label: '技能', target: 'plusMenu.skills' },
+    { key: 'connectors', label: '连接器', target: 'plusMenu.connectors' },
+  ];
   /** 底栏要显示的连接器：全局开着的（按连接器 id）+ 课程直接挂上的（如自定义 MCP） */
   const enabledConnectorNames = [
     ...shell.enabledConnectorIds.map((id) => CONNECTORS.find((c) => c.id === id)?.name ?? id),
@@ -919,30 +935,28 @@ export function GuidedWorkBuddy({
             {shell.slashMenuOpen && (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="sim-pop-up absolute left-2 bottom-[96px] z-30 w-[320px] rounded-[14px] bg-white border border-[#e6e6e3] shadow-[0_14px_36px_rgba(17,19,24,0.16)] p-1.5 flex flex-col text-[13px]"
+                className="sim-pop-up absolute left-2 bottom-[96px] z-30 w-[320px] max-h-[320px] overflow-y-auto rounded-[14px] bg-white border border-[#e6e6e3] shadow-[0_14px_36px_rgba(17,19,24,0.16)] p-1.5 flex flex-col text-[13px]"
               >
                 <div className="px-2.5 pt-1 pb-1.5 text-[11.5px] text-[#8c9099]">
                   技能 ({27 + shell.installedSkillIds.length + shell.customSkills.length})
                 </div>
-                {[
-                  ...shell.customSkills.map((n) => ({ name: n, desc: '用户自定义 · 群聊整理成五栏筹备纪要' })),
-                  ...(shell.installedSkillIds.length ? [{ name: 'WPS Office 全家桶', desc: '用自然语言操作 WPS 文字 / 表格 / 演示' }] : []),
-                  ...SLASH_SKILLS_BASE,
-                ].map((sk, idx) => {
-                  const isTarget = idx === 0 && waitTarget === 'slashMenu.pick';
+                {skillList.map((sk, idx) => {
+                  // 这一步要选的那项：按 pickLabel 找，没设就是第一项
+                  const isPick = shell.pickLabel ? sk.name === shell.pickLabel : idx === 0;
+                  const isTarget = isPick && waitTarget === 'slashMenu.pick';
                   return (
                     <button
                       key={sk.name}
                       type="button"
-                      data-guided-target={idx === 0 ? 'slashMenu.pick' : undefined}
+                      data-guided-target={isPick ? 'slashMenu.pick' : undefined}
                       onClick={() =>
-                        idx === 0
+                        isPick
                           ? handleOrAside('slashMenu.pick', sk.name, '选中这个技能。')
-                          : onAsideClick(sk.name, `内置技能 <b>${sk.name}</b>：${sk.desc}。这节课要选的是蓝圈那个。`)
+                          : onAsideClick(sk.name, `<b>${sk.name}</b>：${sk.desc}。这节课要选的是蓝圈那个。`)
                       }
                       className={`relative w-full text-left border-0 bg-transparent hover:bg-[#f4f4f5] rounded-lg px-2.5 py-1.5 flex items-center gap-2.5 cursor-pointer ${isTarget ? ring('slashMenu.pick') : ''}`}
                     >
-                      <LetterIcon name={sk.name} color={idx === 0 ? '#3355e0' : '#9ea3ad'} size={24} />
+                      <LetterIcon name={sk.name} color={isPick ? '#3355e0' : '#9ea3ad'} size={24} />
                       <span className="min-w-0">
                         <span className="block font-medium text-[#111318] truncate">{sk.name}</span>
                         <span className="block text-[11.5px] text-[#8c9099] truncate">{sk.desc}</span>
@@ -957,73 +971,141 @@ export function GuidedWorkBuddy({
             {/* + 号两级菜单（模式：Plan / Ask + 添加文件 / 专家 / 技能 / 连接器） */}
             {shell.popover === 'plus' && (
               <div className="sim-pop-up absolute left-2 bottom-[96px] z-30 flex items-end gap-1.5 text-[13px]">
-                <div className="w-[168px] rounded-[14px] bg-white border border-[#e6e6e3] shadow-[0_14px_36px_rgba(17,19,24,0.16)] p-1.5 flex flex-col gap-0.5">
-                  <button
-                    type="button"
-                    data-guided-target="plusMenu.addFile"
-                    onClick={() =>
-                      handleOrAside(
-                        'plusMenu.addFile',
-                        '添加文件',
-                        '点 <b>+ → 添加文件</b> 除了能传本地文件，还能直接选资料库、腾讯文档、ima 和乐享知识库里的云端资料。'
-                      )
-                    }
-                    className={`relative w-full border-0 rounded-lg px-2.5 py-2 flex items-center justify-between cursor-pointer ${
-                      filesSub ? 'bg-[#f4f4f5] font-semibold text-[#111318]' : 'bg-transparent hover:bg-[#f4f4f5] text-[#2b2f36]'
-                    } ${ring('plusMenu.addFile')}`}
-                  >
-                    <span>添加文件</span>
-                    <ChevronRightIcon size={12} className="text-[#8c9099]" />
-                    {waitTarget === 'plusMenu.addFile' && waitCallout && <GuidanceCallout text={waitCallout} placement="left" />}
-                  </button>
-                  <div
-                    className={`w-full rounded-lg px-2.5 py-2 flex items-center justify-between ${
-                      filesSub || connectorsSub ? 'text-[#2b2f36]' : 'bg-[#f4f4f5] font-semibold text-[#111318]'
-                    }`}
-                  >
-                    <span>模式</span>
-                    <ChevronRightIcon size={12} className="text-[#5c5f66]" />
-                  </div>
-                  <div className="h-px bg-[#eeeeeb] my-1 mx-1" />
-                  {['专家', '技能'].map((label) => (
-                    <button
-                      key={label}
-                      type="button"
-                      onClick={() =>
-                        onAsideClick(
-                          label,
-                          label === '专家'
-                            ? '从这里也能召唤专家：专家就是一段角色提示词加上几个技能，3.4 节专门讲。'
-                            : '从这里也能选技能，和在输入框里打 <b>/</b> 弹出的是同一份列表，3.2 节专门讲。'
-                        )
-                      }
-                      className="w-full border-0 bg-transparent hover:bg-[#f4f4f5] rounded-lg px-2.5 py-2 flex items-center justify-between text-left text-[#2b2f36] cursor-pointer"
-                    >
-                      <span>{label}</span>
-                      <ChevronRightIcon size={12} className="text-[#8c9099]" />
-                    </button>
+                <div
+                  className="w-[168px] rounded-[14px] bg-white border border-[#e6e6e3] shadow-[0_14px_36px_rgba(17,19,24,0.16)] p-1.5 flex flex-col gap-0.5"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {plusRows.map((row) => (
+                    <div key={row.key}>
+                      {row.divider && <div className="h-px bg-[#eeeeeb] my-1 mx-1" />}
+                      <button
+                        type="button"
+                        data-guided-target={row.target}
+                        onClick={() => {
+                          // 是这一步要点的就推进课程；否则照常展开对应的二级菜单
+                          if (row.target && waitTarget === row.target) {
+                            onTargetClick(row.target);
+                            return;
+                          }
+                          onSelectPlusSubmenu(row.key);
+                        }}
+                        className={`relative w-full border-0 rounded-lg px-2.5 py-2 flex items-center justify-between text-left cursor-pointer ${
+                          shell.plusSubmenu === row.key
+                            ? 'bg-[#f4f4f5] font-semibold text-[#111318]'
+                            : 'bg-transparent hover:bg-[#f4f4f5] text-[#2b2f36]'
+                        } ${row.target ? ring(row.target) : ''}`}
+                      >
+                        <span>{row.label}</span>
+                        <ChevronRightIcon size={12} className="text-[#8c9099]" />
+                        {row.target && waitTarget === row.target && waitCallout && (
+                          <GuidanceCallout text={waitCallout} placement="left" />
+                        )}
+                      </button>
+                    </div>
                   ))}
-                  {/* 连接器：展开右侧二级菜单（对照真机 5.11.3 + → 连接器） */}
-                  <button
-                    type="button"
-                    data-guided-target="plusMenu.connectors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (waitTarget === 'plusMenu.connectors') {
-                        onTargetClick('plusMenu.connectors');
-                        return;
-                      }
-                      onSelectPlusSubmenu('connectors');
-                    }}
-                    className={`relative w-full border-0 rounded-lg px-2.5 py-2 flex items-center justify-between text-left cursor-pointer ${
-                      connectorsSub ? 'bg-[#f4f4f5] font-semibold text-[#111318]' : 'bg-transparent hover:bg-[#f4f4f5] text-[#2b2f36]'
-                    } ${ring('plusMenu.connectors')}`}
-                  >
-                    <span>连接器</span>
-                    <ChevronRightIcon size={12} className="text-[#8c9099]" />
-                    {waitTarget === 'plusMenu.connectors' && waitCallout && <GuidanceCallout text={waitCallout} placement="left" />}
-                  </button>
                 </div>
+
+                {/* 右侧二级：专家（搜索 + 常用专家 + 召唤更多专家） */}
+                {shell.plusSubmenu === 'experts' && (
+                  <div
+                    className="w-[236px] rounded-[14px] bg-white border border-[#e6e6e3] shadow-[0_14px_36px_rgba(17,19,24,0.16)] p-1.5 flex flex-col"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="mx-1 mt-0.5 mb-1 h-8 rounded-lg bg-[#f4f4f5] px-2.5 flex items-center gap-1.5 text-[12.5px] text-[#9ea3ad]">
+                      <SearchIcon size={13} />
+                      搜索专家
+                    </div>
+                    {PLUS_EXPERTS.map((ex) => {
+                      const isTarget = waitTarget === 'plusMenu.pickExpert' && shell.pickLabel === ex.name;
+                      const mounted = shell.composerChips.some((c) => c.kind === 'expert' && c.label === ex.name);
+                      return (
+                        <button
+                          key={ex.name}
+                          type="button"
+                          data-guided-target={isTarget ? 'plusMenu.pickExpert' : undefined}
+                          onClick={() => {
+                            if (isTarget) return onTargetClick('plusMenu.pickExpert');
+                            if (shell.freeMount) return onFreeMount({ kind: 'expert', label: ex.name });
+                            onAsideClick(ex.name, `点它就召唤 <b>${ex.name}</b>，输入框底栏会出现它的头像。这一步先不换专家。`);
+                          }}
+                          className={`relative w-full border-0 rounded-lg px-2 py-1.5 flex items-center gap-2.5 text-left cursor-pointer ${
+                            mounted ? 'bg-[#f3f5fe]' : 'bg-transparent hover:bg-[#f4f4f5]'
+                          } ${isTarget ? ring('plusMenu.pickExpert') : ''}`}
+                        >
+                          <ExpertAvatar label={ex.name} />
+                          <span className="flex-1 min-w-0 truncate text-[13px] text-[#111318]">{ex.name}</span>
+                          {mounted && <span className="text-[12px] text-accent-600">✓</span>}
+                          {isTarget && waitCallout && <GuidanceCallout text={waitCallout} placement="right" />}
+                        </button>
+                      );
+                    })}
+                    <div className="h-px bg-[#eeeeeb] my-1 mx-1" />
+                    <button
+                      type="button"
+                      onClick={() => onAsideClick('召唤更多专家', '跳到「专家·技能·连接器 → 专家」页，按行业找、搜索、看详情再召唤。')}
+                      className="w-full border-0 bg-transparent hover:bg-[#f4f4f5] rounded-lg px-2.5 py-2 text-left text-[13px] text-[#2b2f36] cursor-pointer"
+                    >
+                      ↗ 召唤更多专家
+                    </button>
+                  </div>
+                )}
+
+                {/* 右侧二级：技能（搜索 + 已安装技能 + 从本地添加 / 管理技能） */}
+                {shell.plusSubmenu === 'skills' && (
+                  <div
+                    className="w-[276px] rounded-[14px] bg-white border border-[#e6e6e3] shadow-[0_14px_36px_rgba(17,19,24,0.16)] p-1.5 flex flex-col"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="mx-1 mt-0.5 mb-1 h-8 rounded-lg bg-[#f4f4f5] px-2.5 flex items-center gap-1.5 text-[12.5px] text-[#9ea3ad]">
+                      <SearchIcon size={13} />
+                      搜索技能
+                    </div>
+                    <div className="max-h-[236px] overflow-y-auto flex flex-col gap-0.5">
+                      {skillList.map((sk) => {
+                        const isTarget = waitTarget === 'plusMenu.pickSkill' && shell.pickLabel === sk.name;
+                        const mounted = shell.composerChips.some((c) => c.kind === 'skill' && c.label === sk.name);
+                        return (
+                          <button
+                            key={sk.name}
+                            type="button"
+                            data-guided-target={isTarget ? 'plusMenu.pickSkill' : undefined}
+                            onClick={() => {
+                              if (isTarget) return onTargetClick('plusMenu.pickSkill');
+                              if (shell.freeMount) return onFreeMount({ kind: 'skill', label: sk.name });
+                              onAsideClick(sk.name, `${sk.desc}。点它会把技能胶囊嵌到输入框正文开头。这一步先不选它。`);
+                            }}
+                            className={`relative w-full border-0 rounded-lg px-2 py-1.5 flex items-start gap-2.5 text-left cursor-pointer ${
+                              mounted ? 'bg-[#f3f5fe]' : 'bg-transparent hover:bg-[#f4f4f5]'
+                            } ${isTarget ? ring('plusMenu.pickSkill') : ''}`}
+                          >
+                            <LetterIcon name={sk.name} color="#3355e0" size={22} />
+                            <span className="flex-1 min-w-0">
+                              <span className="block text-[13px] font-medium text-[#111318] truncate">{sk.name}</span>
+                              <span className="block text-[11.5px] text-[#8c9099] truncate">{sk.desc}</span>
+                            </span>
+                            {mounted && <span className="text-[12px] text-accent-600 pt-0.5">✓</span>}
+                            {isTarget && waitCallout && <GuidanceCallout text={waitCallout} placement="right" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="h-px bg-[#eeeeeb] my-1 mx-1" />
+                    <button
+                      type="button"
+                      onClick={() => onAsideClick('从本地添加技能', '把别人给你的技能文件夹或 zip 导进来，里面必须有 SKILL.md。')}
+                      className="w-full border-0 bg-transparent hover:bg-[#f4f4f5] rounded-lg px-2.5 py-2 text-left text-[13px] text-[#2b2f36] cursor-pointer"
+                    >
+                      ⤒ 从本地添加技能
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onAsideClick('管理技能', '跳到「专家·技能·连接器 → 技能」页，在「已安装」里查看和卸载。')}
+                      className="w-full border-0 bg-transparent hover:bg-[#f4f4f5] rounded-lg px-2.5 py-2 text-left text-[13px] text-[#2b2f36] cursor-pointer"
+                    >
+                      ⚙ 管理技能
+                    </button>
+                  </div>
+                )}
 
                 {/* 右侧二级：连接器列表。已连接的显示开关（全局生效），没连接的显示「连接」，底部「管理连接器」 */}
                 {connectorsSub && (
@@ -1054,14 +1136,14 @@ export function GuidedWorkBuddy({
                                 aria-checked={on}
                                 aria-label={`${c.name} 开关`}
                                 data-guided-target={c.id === 'feishu' ? 'plusMenu.toggleFeishu' : undefined}
-                                onClick={() =>
-                                  isTarget
-                                    ? onTargetClick('plusMenu.toggleFeishu')
-                                    : onAsideClick(
-                                        `${c.name} 开关`,
-                                        `这个开关是<b>全局</b>的：打开后所有对话都能用 ${c.name}，直到你回来关掉。这一步先不动它。`
-                                      )
-                                }
+                                onClick={() => {
+                                  if (isTarget) return onTargetClick('plusMenu.toggleFeishu');
+                                  if (shell.freeMount) return onFreeToggleConnector(c.id);
+                                  onAsideClick(
+                                    `${c.name} 开关`,
+                                    `这个开关是<b>全局</b>的：打开后所有对话都能用 ${c.name}，直到你回来关掉。这一步先不动它。`
+                                  );
+                                }}
                                 className={`relative w-[34px] h-[19px] rounded-full border-0 p-0 shrink-0 cursor-pointer transition-colors ${
                                   on ? 'bg-[#10b981]' : 'bg-[#dcdcd8]'
                                 } ${c.id === 'feishu' ? ring('plusMenu.toggleFeishu') : ''}`}
@@ -1141,7 +1223,7 @@ export function GuidedWorkBuddy({
                 )}
 
                 {/* 右侧二级：模式开关（Plan / Ask） */}
-                {!filesSub && !connectorsSub && (
+                {shell.plusSubmenu === 'mode' && (
                 <div className="w-[244px] rounded-[14px] bg-white border border-[#e6e6e3] shadow-[0_14px_36px_rgba(17,19,24,0.16)] p-2 flex flex-col gap-1.5">
                   <div className="px-2 pt-1 text-[11px] text-[#8c9099]">
                     {shell.planOn

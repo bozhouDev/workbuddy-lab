@@ -138,6 +138,9 @@ export const WPS_RESULTS: SkillCard[] = [
 
 /** 输入框 / 菜单里的技能（内置 + 已安装，真机「技能 (27)」，这里只列前几个） */
 export const SLASH_SKILLS_BASE: Array<{ name: string; desc: string }> = [
+  { name: '网页 PPT（演讲版）', desc: '把主题、文章或大纲做成一整套可全屏演讲的网页' },
+  { name: '会议纪要整理', desc: '录音 / 文字稿 → 决议、待办、负责人' },
+  { name: 'skill-creator', desc: '创建、编辑技能：把一套做法写成 SKILL.md' },
   { name: 'docx', desc: '创建、编辑 Word 文档' },
   { name: 'pdf', desc: '读取、合并、拆分 PDF' },
   { name: 'xlsx', desc: '读写 Excel 表格' },
@@ -169,4 +172,25 @@ export const FEISHU_CAPABILITIES: Array<{ name: string; risk?: boolean }> = [
   { name: '创建文档' },
   { name: '录入多维表格' },
   { name: '发送消息', risk: true },
+];
+
+/**
+ * 已安装的技能列表（/ 菜单和 + → 技能 共用，保证两处看到的一样）
+ * 顺序：自己做的 → 从市场装的 → 内置
+ */
+export function installedSkillList(customSkills: string[], installedSkillIds: string[]): Array<{ name: string; desc: string }> {
+  return [
+    ...customSkills.map((name) => ({ name, desc: '用户自定义技能' })),
+    ...(installedSkillIds.includes('wps-b') ? [{ name: 'WPS Office 全家桶', desc: '用自然语言操作 WPS 文字 / 表格 / 演示' }] : []),
+    ...SLASH_SKILLS_BASE,
+  ];
+}
+
+/** + → 专家 二级菜单里列出的专家（真机显示最近用过 / 常用的几位，底部「召唤更多专家」） */
+export const PLUS_EXPERTS: Array<{ name: string; color: string }> = [
+  { name: 'PPT制作专家', color: '#c2410c' },
+  { name: '合同审查顾问', color: '#7c3aed' },
+  { name: '数据分析专家', color: '#0891b2' },
+  { name: '小红书运营专家', color: '#ef4444' },
+  { name: '微信小程序开发专家', color: '#16a34a' },
 ];

@@ -46,6 +46,8 @@ export function createBaseGuidedState(
     // 第 3 章：专家·技能·连接器（真机截图里「已安装(15)」，这里从 15 个起算）
     extTab: 'skills',
     composerChips: [],
+    pickLabel: null,
+    freeMount: false,
     slashMenuOpen: false,
     toast: null,
     expertSearch: '',
