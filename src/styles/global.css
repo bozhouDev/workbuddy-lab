@@ -319,6 +319,177 @@ header.header {
   pointer-events: none;
 }
 
+/* =========================================================
+ * 全站克制动效（首页 / 文章页）：仅做位移与透明度，零额外依赖
+ * ========================================================= */
+
+/* #4 按行显现 (Line reveal) + #5 交错出现 (Stagger) */
+.wbl-line-mask {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+@keyframes wbl-line-up {
+  from { opacity: 0; transform: translateY(105%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.wbl-line-reveal {
+  display: block;
+  animation: wbl-line-up 580ms cubic-bezier(0.16, 1, 0.3, 1) var(--d, 0ms) both;
+}
+
+@keyframes wbl-fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.wbl-hero-stagger {
+  animation: wbl-fade-up 520ms cubic-bezier(0.16, 1, 0.3, 1) var(--d, 0ms) both;
+}
+
+@keyframes wbl-frame-in {
+  from { opacity: 0; transform: translateY(18px) scale(0.986); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.wbl-hero-frame {
+  animation: wbl-frame-in 680ms cubic-bezier(0.16, 1, 0.3, 1) 240ms both;
+}
+
+/* #12 打字机光标 (Typewriter) */
+@keyframes wbl-caret-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.wbl-caret {
+  display: inline-block;
+  width: 1.5px;
+  height: 1.05em;
+  background: #3355e0;
+  vertical-align: -0.16em;
+  margin-left: 1.5px;
+  border-radius: 1px;
+  animation: wbl-caret-blink 1s step-end infinite;
+}
+
+/* #14 滚动触发 (Scroll-triggered) — 仅在脚本激活 html.wbl-js-anim 时隐藏，无 JS 时默认可见 */
+html.wbl-js-anim [data-reveal] {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 460ms cubic-bezier(0.16, 1, 0.3, 1) var(--rd, 0ms),
+    transform 460ms cubic-bezier(0.16, 1, 0.3, 1) var(--rd, 0ms);
+  will-change: opacity, transform;
+}
+html.wbl-js-anim [data-reveal].is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* #22 悬停下划线 (Hover): 从左长出、移开从右收走 */
+.wbl-nav-underline {
+  position: relative;
+  transition: color 180ms ease;
+}
+.wbl-nav-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 1.5px;
+  border-radius: 1px;
+  background: #111318;
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.wbl-nav-underline:hover::after,
+.wbl-nav-underline:focus-visible::after {
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+
+/* #1 缓动 + #2 弹簧按压手感 (Easing + Spring) */
+.wbl-btn-spring {
+  transition:
+    transform 240ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 200ms ease;
+}
+.wbl-btn-spring:hover {
+  transform: translateY(-1px);
+}
+.wbl-btn-spring:active {
+  transform: scale(0.97);
+  transition-duration: 90ms;
+}
+
+/* 行悬停与箭头轻推 */
+.wbl-arrow {
+  display: inline-flex;
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.group:hover .wbl-arrow,
+.wbl-row-hover:hover .wbl-arrow {
+  transform: translateX(3px);
+}
+.wbl-row-hover {
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+/* #31 提示气泡 (Tooltip) — 用于教程高频术语解释 */
+.wbl-tip {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  border-bottom: 1.5px dashed #a3b3f1;
+  color: #1f3aa8;
+  cursor: help;
+  outline: none;
+}
+.wbl-tip-bubble {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 9px);
+  transform: translate(-50%, 4px) scale(0.97);
+  width: max-content;
+  max-width: min(260px, 78vw);
+  padding: 8px 11px;
+  border-radius: 10px;
+  background: #111318;
+  color: #f4f4f2;
+  font-size: 12.5px;
+  line-height: 1.55;
+  font-weight: 400;
+  text-align: left;
+  box-shadow: 0 12px 28px rgb(17 19 24 / 0.22);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 40;
+  transition:
+    opacity 160ms ease,
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 160ms ease;
+}
+.wbl-tip-bubble::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #111318;
+}
+.wbl-tip:hover .wbl-tip-bubble,
+.wbl-tip:focus-visible .wbl-tip-bubble,
+.wbl-tip:focus .wbl-tip-bubble {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0) scale(1);
+}
+
 /* #35 模拟器 4 段进度滑动指示条 */
 .sim-phase-thumb {
   transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -421,7 +592,15 @@ header.header {
   .sim-warn-reveal,
   .sim-digit-roll,
   .sim-collapse-out,
-  .sim-phase-thumb {
+  .sim-phase-thumb,
+  .wbl-line-reveal,
+  .wbl-hero-stagger,
+  .wbl-hero-frame,
+  .wbl-caret,
+  .wbl-nav-underline::after,
+  .wbl-btn-spring,
+  .wbl-arrow,
+  .wbl-tip-bubble {
     animation: none !important;
     transition: none !important;
   }
@@ -429,5 +608,11 @@ header.header {
   /* 减少动态效果时轻提示不位移，但仍要按时淡出，否则会一直挡在界面上 */
   .sim-toast {
     animation: sim-toast-fade 3s linear both !important;
+  }
+
+  html.wbl-js-anim [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
 }

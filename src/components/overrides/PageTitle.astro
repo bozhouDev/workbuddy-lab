@@ -129,12 +129,27 @@ const simLesson = data.simRoute ? LESSON_CATALOG.find((l) => l.id === data.simRo
     border-radius: 14px;
     color: #111318;
     text-decoration: none;
-    transition: border-color 140ms ease, background-color 140ms ease;
+    transition:
+      transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 160ms ease,
+      background-color 160ms ease,
+      box-shadow 220ms ease;
   }
 
   .wbl-sim-card:hover {
+    transform: translateY(-2px);
     border-color: #3355e0;
     background: #edf1fe;
+    box-shadow: 0 10px 24px -16px rgba(51, 85, 224, 0.28);
+  }
+
+  .wbl-sim-card:active {
+    transform: scale(0.99);
+    transition-duration: 90ms;
+  }
+
+  .wbl-sim-card:hover .wbl-sim-cta {
+    transform: translateX(3px);
   }
 
   .wbl-coach-avatar {
@@ -210,5 +225,6 @@ const simLesson = data.simRoute ? LESSON_CATALOG.find((l) => l.id === data.simRo
     font-weight: 600;
     color: #3355e0;
     white-space: nowrap;
+    transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 </style>

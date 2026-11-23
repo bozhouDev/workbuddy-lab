@@ -29,20 +29,69 @@ import { SITE } from '../../site.config.mjs';
     </div>
 
     <div class="wbl-nav-right hidden md:flex print:hidden">
-      <a href="/features/basics/what-is/" class="wbl-nav-link">功能教程</a>
-      <a href="/#cases" class="wbl-nav-link">实战</a>
-      <a href="/#mistakes" class="wbl-nav-link">用错了会怎样</a>
-      <a href="/simulator/?route=interface" class="wbl-sim-btn">打开泊舟陪练</a>
+      <a href="/features/basics/what-is/" class="wbl-nav-link wbl-nav-underline">功能教程</a>
+      <a href="/#cases" class="wbl-nav-link wbl-nav-underline">实战</a>
+      <a href="/#mistakes" class="wbl-nav-link wbl-nav-underline">用错了会怎样</a>
+      <a href="/simulator/?route=interface" class="wbl-sim-btn wbl-btn-spring">打开泊舟陪练</a>
     </div>
+  </div>
+
+  <!-- #14 跟着滚动走：文章页 2px 顶部阅读进度条 -->
+  <div class="wbl-read-track print:hidden" aria-hidden="true">
+    <div id="wbl-read-progress" class="wbl-read-fill"></div>
   </div>
 </div>
 
+<script is:inline>
+  (() => {
+    const bar = document.getElementById('wbl-read-progress');
+    if (!bar) return;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - window.innerHeight;
+      const p = max > 20 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+      bar.style.transform = `scaleX(${p})`;
+      bar.style.opacity = p > 0.005 ? '1' : '0';
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+  })();
+</script>
+
 <style>
   .wbl-header-wrap {
+    position: relative;
     display: flex;
     flex-direction: column;
     width: 100%;
     height: 100%;
+  }
+
+  .wbl-read-track {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .wbl-read-fill {
+    width: 100%;
+    height: 100%;
+    background: #3355e0;
+    transform-origin: left center;
+    transform: scaleX(0);
+    opacity: 0;
+    transition: opacity 180ms ease;
+    will-change: transform;
   }
 
   .wbl-disclaimer {
