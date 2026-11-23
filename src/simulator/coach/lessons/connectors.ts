@@ -30,7 +30,7 @@ export const connectorsLesson: GuidedLessonDef = {
       phase: 0,
       say: [
         '连接器是<b>一个授权通道</b>，让它读得到飞书、QQ邮箱、腾讯文档里的东西。它只管<b>拿得到什么</b>，不管怎么做。',
-        '这节用飞书走一整圈：<b>安装 → 授权 → 看清给了它什么权限 → 在对话里打开开关 → 小范围试读 → 说清范围再用 → 用完关掉</b>。先去装。',
+        '这一段用飞书走一整圈：<b>安装 → 授权 → 看清给了它什么权限 → 在对话里打开开关 → 小范围试读 → 说清范围再用 → 用完关掉</b>。先去装。',
       ],
       buttons: [{ label: '去装飞书', primary: true }],
     },
@@ -242,7 +242,7 @@ export const connectorsLesson: GuidedLessonDef = {
       onEnter: () => ({ view: 'home', composerText: '', popover: null }),
       say: [
         '同一个飞书，说清范围之后：<b>只读 2 份、28 秒、结果干净</b>。',
-        '最后一件事：开关是全局的，<b>这节练完就把它关掉</b>，免得以后做别的任务时它也去翻你的飞书。点 <b>+</b>。',
+        '最后一件事：开关是全局的，<b>练完就把它关掉</b>，免得以后做别的任务时它也去翻你的飞书。点 <b>+</b>。',
       ],
       wait: { target: 'composer.plus', callout: '点 +', label: '+' },
       onAction: () => ({ popover: 'plus', plusSubmenu: 'mode' }),

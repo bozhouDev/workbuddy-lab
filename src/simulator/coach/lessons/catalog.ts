@@ -86,13 +86,15 @@ export function composeLesson(id: Exclude<LessonId, 'interface'>, parts: Array<{
         };
       }
 
-      // 小段结尾：重写按钮
+      // 小段结尾：重写按钮，并带上这一段自己的图文（图文和陪练粒度不同，一节课可能对应几篇）
       if (i === last) {
+        const guide = { label: multi ? '读这一段的图文教程' : '读本节图文教程', href: part.def.guideUrl };
         if (k < parts.length - 1) {
-          step.buttons = [{ label: `接着学：${parts[k + 1].title}`, primary: true }];
+          step.buttons = [{ label: `接着学：${parts[k + 1].title}`, primary: true }, guide];
         } else {
           step.buttons = [
             ...(next ? [{ label: `下一节：${next.code} ${next.title} →`, primary: true, nextLesson: next.id }] : []),
+            guide,
             { label: '重来一遍', restart: true, primary: !next },
           ];
         }
