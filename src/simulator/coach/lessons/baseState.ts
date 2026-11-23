@@ -74,10 +74,11 @@ export function createBaseGuidedState(
     scheduledTasks: [],
     scheduleTemplatesOpen: false,
     scheduleCreateTemplateId: null,
+    scheduleSettingsOpen: false,
     scheduleModalTaskId: null,
     scheduleCheckedSource: null,
     scheduleRecords: [],
-    scheduleRecordDetailId: null,
+    scheduleTaskPageId: null,
     // 4.2 助理
     mobileLinkOn: false,
     phonePanelOpen: false,

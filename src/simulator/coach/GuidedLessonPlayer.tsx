@@ -11,7 +11,7 @@ import { GuidedWorkBuddy } from './GuidedWorkBuddy';
 import type { FeedItem, FeedItemInput, NavTrailStep, PhaseIndex, PopoverId } from './types';
 
 const AUTO_COLLAPSE_WIDTH = 1140;
-const STORAGE_PREFIX = 'wblab:guided:v7:';
+const STORAGE_PREFIX = 'wblab:guided:v8:';
 
 let msgSeq = 0;
 const nextId = () => `gd-${++msgSeq}`;

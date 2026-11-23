@@ -146,7 +146,8 @@ export type GuidedTargetId =
   | 'schedule.run'
   | 'schedule.fastForward'
   | 'schedule.viewRecords'
-  | 'schedule.recordDetail'
+  | 'schedule.taskSettings'
+  | 'schedule.editTask'
   | 'schedule.checkSource'
   // 助理（手机遥控）
   | 'mobile.toggle'
@@ -369,12 +370,15 @@ export interface GuidedShellState {
   scheduleTemplatesOpen: boolean;
   /** 「新建定时任务」表单正在用的模板 id */
   scheduleCreateTemplateId: string | null;
-  /** 「编辑定时任务」弹窗正在编辑的任务 id */
+  /** 任务页右上角时钟打开的「定时任务」弹窗 */
+  scheduleSettingsOpen: boolean;
+  /** 「定时任务」弹窗里正在编辑的任务 id（有值时显示「编辑定时任务」，‹ 返回列表） */
   scheduleModalTaskId: string | null;
   /** 制品里点开核对过的来源（条目标题） */
   scheduleCheckedSource: string | null;
   scheduleRecords: ScheduleRecord[];
-  scheduleRecordDetailId: string | null;
+  /** 打开的任务页（点任务卡片或运行记录进入），值为任务 id */
+  scheduleTaskPageId: string | null;
   // ===== 4.2 助理 =====
   mobileLinkOn: boolean;
   phonePanelOpen: boolean;

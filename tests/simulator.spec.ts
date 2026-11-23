@@ -414,7 +414,7 @@ test.describe('第 03、04 章泊舟陪练模拟器', () => {
     await expect(page.getByText('资料库建库 4 条')).toBeVisible({ timeout: 8000 });
   });
 
-  test('4.1 从模板 + 从对话各建一个定时任务，试跑后核对制品 → 4.2 手机切到本地电脑', async ({ page }) => {
+  test('4.1 从模板 + 从对话各建一个定时任务，进任务页编辑试跑并核对产物 → 4.2 手机切到自己的电脑', async ({ page }) => {
     await page.setViewportSize({ width: WALK_WIDTH, height: 900 });
     await page.goto('/simulator/?route=schedule');
     await walkLesson(page, [
@@ -429,16 +429,23 @@ test.describe('第 03、04 章泊舟陪练模拟器', () => {
     // 从对话新建：输入框预填真机文案
     await expect(page.getByText(/帮我创建一个定时任务：每天 08:30 执行/).first()).toBeVisible();
     await walkLesson(page, [
-      'composer.send', 'nav.schedule', 'schedule.openTask', 'schedule.run', 'schedule.viewRecords',
+      'composer.send', 'nav.schedule', 'schedule.openTask',
     ]);
+    // 点卡片进任务页：还没跑过，正文是空的
+    await expect(page.getByText('该任务暂无运行对话')).toBeVisible();
+    await walkLesson(page, ['schedule.taskSettings', 'schedule.editTask']);
+    // 编辑页按真机：有效期下面是连接器，没有执行权限
+    await expect(page.getByText('还没有选择连接器')).toBeVisible();
+    await expect(page.locator('[data-view="schedule"]').getByText('执行权限')).toHaveCount(0);
+    await walkLesson(page, ['schedule.run', 'schedule.checkSource']);
+    await expect(page.getByText(/距试跑约 14 小时/)).toBeVisible();
+    // 任务页右侧有「下一次运行」
+    await expect(page.locator('[data-view="schedule"]').getByText(/下一次运行 明天/)).toBeVisible();
+    await walkLesson(page, ['schedule.permFull', 'nav.schedule', 'schedule.viewRecords']);
     await expect(page.getByText('测试运行成功').first()).toBeVisible();
     // 运行记录表的列名对照真机
     await expect(page.getByText('耗时', { exact: true })).toBeVisible();
-    await walkLesson(page, ['schedule.recordDetail', 'schedule.checkSource']);
-    await expect(page.getByText(/距试跑约 14 小时/)).toBeVisible();
-    // 任务页右侧有「下一次运行」
-    await expect(page.getByText(/下一次运行 明天/)).toBeVisible();
-    await walkLesson(page, ['schedule.permFull', 'nav.schedule', 'schedule.fastForward']);
+    await walkLesson(page, ['schedule.fastForward']);
     await expect(page.getByText('已错过计划时间，将补跑一次')).toBeVisible();
     // 手快连点时，陪练消息仍按步骤顺序出现（旧消息不会晚到插到后面）
     const order = await page.evaluate(() => {

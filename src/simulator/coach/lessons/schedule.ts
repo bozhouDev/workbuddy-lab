@@ -249,6 +249,25 @@ export const scheduleLesson: GuidedLessonDef = {
       navLabel: '打开任务',
       say: ['两张卡片了。早报这张<b>建好就已经启用</b>，别急着走，<b>点开检查一遍</b>。'],
       wait: { target: 'schedule.openTask', callout: '点开检查', label: '每日 AI 资讯早报' },
+      onAction: () => ({ scheduleTaskPageId: TASK.id }),
+    },
+    {
+      id: 'task-settings',
+      phase: 1,
+      navLabel: '定时任务',
+      say: [
+        '点卡片进来的是<b>这个任务自己的页面</b>：中间以后放每次运行的结果，右边是它的运行记录和「下一次运行 明天 08:30」。还没跑过，所以现在是空的。',
+        '要看设置，点右上角的时钟「<b>定时任务</b>」。',
+      ],
+      wait: { target: 'schedule.taskSettings', callout: '打开设置', label: '定时任务' },
+      onAction: () => ({ scheduleSettingsOpen: true }),
+    },
+    {
+      id: 'edit-task',
+      phase: 1,
+      navLabel: '编辑',
+      say: ['弹出「定时任务」，列着这个对话里建的定时任务。点早报，进去编辑。'],
+      wait: { target: 'schedule.editTask', callout: '点进去编辑', label: '每日 AI 资讯早报' },
       onAction: () => ({ scheduleModalTaskId: TASK.id }),
     },
     {
@@ -256,42 +275,25 @@ export const scheduleLesson: GuidedLessonDef = {
       phase: 1,
       navLabel: '运行',
       say: [
-        '「编辑定时任务」左边是<b>名称、提示词</b>，提示词下面能挑模型、技能、专家；右边是<b>执行频率</b>（周期 / 按间隔 / 单次）、每天、08:30，有效期留空表示一直有效。核对一下，和你说的一样。',
+        '「编辑定时任务」左边是<b>名称、提示词</b>，提示词下面能挑模型、技能、专家；右边是<b>执行频率</b>（周期 / 按间隔 / 单次）、每天、08:30，<b>有效期</b>留空表示一直有效。核对一下，和你说的一样。',
+        '最下面的<b>连接器</b>要留意：勾上哪个，就等于授权它在任务里<b>免确认使用</b>。早报只要联网搜索，一个都不用勾。',
         '别等明早才知道它跑成什么样。点底部的「<b>运行</b>」，马上试跑一次。',
       ],
       wait: { target: 'schedule.run', callout: '先试跑一次', label: '运行' },
       onAction: () => ({
         scheduleModalTaskId: null,
-        // 真机这里会弹一条提示；模拟器里由陪练转述，不弹 toast，免得挡住标题旁的「运行记录」
+        scheduleSettingsOpen: false,
+        // 真机这里会弹一条提示；模拟器里由陪练转述
         scheduleRecords: [TEST_RECORD],
       }),
-    },
-    {
-      id: 'view-records',
-      phase: 2,
-      navLabel: '运行记录',
-      say: [
-        '真机这时会弹出提示：「已触发测试运行。<b>测试运行不会影响正式调度时间。</b>」试跑在后台跑，大概一两分钟。',
-        '有了第一条运行记录，标题「定时任务」旁边就多出「<b>运行记录</b>」。点它。',
-      ],
-      wait: { target: 'schedule.viewRecords', callout: '看试跑结果', label: '运行记录' },
-      onAction: () => ({ scheduleTab: 'records' }),
-    },
-    {
-      id: 'test-detail',
-      phase: 2,
-      navLabel: '打开记录',
-      say: ['一行一次运行：状态、运行时间、耗时（这次 1 分 20 秒）、任务类型（本地）。状态是「<b>测试运行成功</b>」，但成功只说明跑完了，<b>不说明内容对</b>。点开这条看它写了什么。'],
-      wait: { target: 'schedule.recordDetail', callout: '点开看产出', label: '测试运行记录' },
-      onAction: () => ({ scheduleRecordDetailId: TEST_RECORD.id }),
     },
     {
       id: 'check-source',
       phase: 2,
       navLabel: '核对来源',
       say: [
-        '这就是任务自己的页面：中间是这次的完整输出，右边是它的<b>运行记录</b>和下一次运行时间。',
-        '先看第二行的<b>覆盖时段</b>，是不是你要的「过去 24 小时」。再抽一条核对：点第一条的来源「<b>某科技媒体</b>」，看标题和发布时间对不对得上。',
+        '真机这时会提示「已触发测试运行。<b>测试运行不会影响正式调度时间。</b>」大概一两分钟后，结果就出在这个任务页：中间是完整输出，右边多了一条运行记录。',
+        '跑完了，但<b>成功只说明跑完了，不说明内容对</b>。先看第二行的<b>覆盖时段</b>，是不是你要的「过去 24 小时」。再抽一条核对：点第一条的来源「<b>某科技媒体</b>」，看标题和发布时间对不对得上。',
       ],
       wait: { target: 'schedule.checkSource', callout: '点开原文核对', label: '来源链接' },
       onAction: () => ({ scheduleCheckedSource: TEST_RECORD.artifactItems?.[0]?.title ?? null }),
@@ -315,15 +317,25 @@ export const scheduleLesson: GuidedLessonDef = {
         '要是内容不满意：回到卡片<b>关掉开关暂停</b>，改好提示词再「运行」试跑。这次满意，点左边「定时任务」回列表。',
       ],
       wait: { target: 'nav.schedule', callout: '回定时任务', label: '定时任务' },
-      onAction: () => ({ view: 'schedule', scheduleRecordDetailId: null, scheduleTab: 'tasks' }),
+      onAction: () => ({ view: 'schedule', scheduleTaskPageId: null, scheduleTab: 'tasks' }),
+    },
+    {
+      id: 'view-records',
+      phase: 2,
+      navLabel: '运行记录',
+      say: ['有了第一条运行记录，标题「定时任务」旁边多出了「<b>运行记录</b>」。所有任务的每一次运行都在这里，点它。'],
+      wait: { target: 'schedule.viewRecords', callout: '看全部运行记录', label: '运行记录' },
+      onAction: () => ({ scheduleTab: 'records' }),
     },
     {
       id: 'fast-forward',
       phase: 2,
-      say: ['接下来要等 3 天才能看到正式运行的结果，模拟器帮你快进。点下面的「快进 3 天」（真机没有这个按钮）。'],
+      say: [
+        '一行一次运行：状态、运行时间、耗时（这次 1 分 20 秒）、任务类型（本地）。点任意一行，会回到那个任务的任务页。',
+        '接下来要等 3 天才能看到正式运行的结果，模拟器帮你快进。点下面的「快进 3 天」（真机没有这个按钮）。',
+      ],
       wait: { target: 'schedule.fastForward', callout: '快进 3 天', label: '快进 3 天（模拟）' },
       onAction: (s) => ({
-        scheduleTab: 'records',
         scheduleRecords: [
           ...RECORDS,
           ...s.scheduleRecords.filter((r) => r.status === 'test').map((r) => ({ ...r, time: '11-23 21:42' })),
@@ -344,8 +356,8 @@ export const scheduleLesson: GuidedLessonDef = {
         rows: [
           ['① 选建法', '提醒类用模板；干活类用自己手动跑满意 2–3 次的提示词「从对话新建」'],
           ['② 说清三样', '提示词 + 频率时间 + 安全边界（只读 / 只生成）'],
-          ['③ 建完点开检查，点「运行」试跑', '测试运行不影响正式调度'],
-          ['④ 到「运行记录」点开核对', '看覆盖时段，抽查两三条来源；不满意就先暂停'],
+          ['③ 点卡片进任务页，右上角时钟里编辑、点「运行」试跑', '测试运行不影响正式调度；连接器用不到别勾'],
+          ['④ 在任务页核对试跑结果', '看覆盖时段，抽查两三条来源；不满意就先暂停'],
           ['⑤ 记住默认是完全访问', '没人把关，边界必须写在提示词里'],
           ['⑥ 电脑别睡', '合盖或退出客户端会错过，只能补跑'],
           ['⑦ 不要了就暂停或删除', '每次运行都会消耗额度'],
