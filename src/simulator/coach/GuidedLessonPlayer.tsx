@@ -42,6 +42,8 @@ async function loadLessonDef(id: Exclude<LessonId, 'interface'>): Promise<Guided
       return (await import('./lessons/review')).reviewLesson;
     case 'revise':
       return (await import('./lessons/revise')).reviseLesson;
+    case 'anatomy':
+      return (await import('./lessons/anatomy')).anatomyLesson;
     case 'choose':
       return (await import('./lessons/choose')).chooseLesson;
     case 'experts':

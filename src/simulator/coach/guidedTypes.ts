@@ -14,6 +14,7 @@ export type LessonId =
   | 'execution'
   | 'review'
   | 'revise'
+  | 'anatomy'
   | 'choose'
   | 'experts'
   | 'skills'
@@ -46,13 +47,14 @@ export const LESSON_CATALOG: readonly LessonNavMeta[] = [
   { id: 'execution', code: '2.5', chapter: '02 发任务', title: '看执行过程', guideUrl: '/features/send-task/execution/' },
   { id: 'review', code: '2.6', chapter: '02 发任务', title: '检查结果', guideUrl: '/features/send-task/review/' },
   { id: 'revise', code: '2.7', chapter: '02 发任务', title: '二次修改', guideUrl: '/features/send-task/revise/' },
-  { id: 'choose', code: '3.1', chapter: '03 能力扩展', title: '怎么选：专家 / 技能 / 连接器', guideUrl: '/features/extend/choose/' },
-  { id: 'experts', code: '3.2', chapter: '03 能力扩展', title: '专家', guideUrl: '/features/extend/experts/' },
-  { id: 'skills', code: '3.3', chapter: '03 能力扩展', title: '技能：找、看懂、装、用', guideUrl: '/features/extend/skills/' },
-  { id: 'make-skill', code: '3.4', chapter: '03 能力扩展', title: '做一个自己的技能', guideUrl: '/features/extend/make-skill/' },
+  { id: 'anatomy', code: '3.1', chapter: '03 能力扩展', title: '拆开看：专家、技能、连接器', guideUrl: '/features/extend/choose/' },
+  { id: 'skills', code: '3.2', chapter: '03 能力扩展', title: '技能：挑、装、用', guideUrl: '/features/extend/skills/' },
+  { id: 'make-skill', code: '3.3', chapter: '03 能力扩展', title: '做一个自己的技能', guideUrl: '/features/extend/make-skill/' },
+  { id: 'experts', code: '3.4', chapter: '03 能力扩展', title: '专家：召唤、用对、移除', guideUrl: '/features/extend/experts/' },
   { id: 'connectors', code: '3.5', chapter: '03 能力扩展', title: '连接器：接飞书', guideUrl: '/features/extend/connectors/' },
   { id: 'custom-connector', code: '3.6', chapter: '03 能力扩展', title: '自定义连接器：做一个自己的 MCP', guideUrl: '/features/extend/custom-connector/' },
-  { id: 'library', code: '3.7', chapter: '03 能力扩展', title: '资料库', guideUrl: '/features/extend/library/' },
+  { id: 'choose', code: '3.7', chapter: '03 能力扩展', title: '怎么选：判断练习', guideUrl: '/features/extend/choose/' },
+  { id: 'library', code: '3.8', chapter: '03 能力扩展', title: '资料库', guideUrl: '/features/extend/library/' },
   { id: 'schedule', code: '4.1', chapter: '04 自动化', title: '定时任务：建一个，看结果', guideUrl: '/features/automation/schedule/' },
   { id: 'assistant', code: '4.2', chapter: '04 自动化', title: '助理：手机遥控电脑', guideUrl: '/features/automation/assistant/' },
 ];

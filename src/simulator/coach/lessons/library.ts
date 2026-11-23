@@ -10,7 +10,7 @@ const POLICY_FILE = '差旅管理办法_2026版.pdf';
 
 export const libraryLesson: GuidedLessonDef = {
   id: 'library',
-  code: '3.7',
+  code: '3.8',
   title: '资料库',
   guideUrl: '/features/extend/library/',
   initialState: () =>

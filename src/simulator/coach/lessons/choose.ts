@@ -1,153 +1,290 @@
-import type { ComposerChip, GuidedLessonDef } from '../guidedTypes';
+import type { ChatRunSpec, GuidedLessonDef, GuidedShellState, GuidedStep } from '../guidedTypes';
 import { createBaseGuidedState } from './baseState';
 import { freeChat } from './freeChat';
 
-/** 贯穿本节的任务：飞书里的 5 份周报 → 给老板的本周项目进展汇报 PPT */
-const PPT_PROMPT = '把飞书里这周 5 份项目周报，做成给老板看的本周项目进展汇报 PPT。';
+/**
+ * 3.7 怎么选：判断练习
+ * 不做选择题：每个场景把任务放进输入框，学员自己用 + 挂上觉得合适的专家 / 技能 / 连接器（或什么都不挂），
+ * 发出去后泊舟按他实际挂了什么点评。至少一个场景的正确答案是「什么都不挂」。
+ * 专家、技能每个场景清空重挂；连接器开关是全局的，跨场景保留（和真机一致）。
+ */
 
-/** 配齐后的三枚胶囊：数据线 + 岗位脑子 + 操作手册 */
-const FULL_CHIPS: ComposerChip[] = [
-  { kind: 'connector', label: '飞书' },
-  { kind: 'expert', label: 'PPT制作专家' },
-  { kind: 'skill', label: 'WPS Office 全家桶' },
+/** 当前挂着的专家名 */
+const expertsOf = (s: GuidedShellState) => s.composerChips.filter((c) => c.kind === 'expert').map((c) => c.label);
+/** 当前挂着的技能名 */
+const skillsOf = (s: GuidedShellState) => s.composerChips.filter((c) => c.kind === 'skill').map((c) => c.label);
+/** 飞书开关是否开着 */
+const feishuOn = (s: GuidedShellState) => s.enabledConnectorIds.includes('feishu');
+/** 名字列表拼成「A、B」 */
+const names = (list: string[]) => list.map((n) => `<b>${n}</b>`).join('、');
+/** 当前挂着的专家 + 技能，用作对话里用户消息上方的胶囊 */
+const chipsOf = (s: GuidedShellState) => s.composerChips.filter((c) => c.kind === 'expert' || c.kind === 'skill');
+
+/** 一个练习场景 */
+interface Scenario {
+  key: string;
+  title: string;
+  prompt: string;
+  /** 按挂了什么生成对话结果 */
+  chat: (s: GuidedShellState) => Omit<ChatRunSpec, 'id' | 'prompt' | 'model' | 'estimateText' | 'consumedText' | 'consumedDelta' | 'promptChips'>;
+  /** 按挂了什么生成点评 */
+  judge: (s: GuidedShellState) => string[];
+}
+
+const SCENARIOS: Scenario[] = [
+  {
+    key: 'translate',
+    title: '把一句会议通知翻成英文',
+    prompt: '把这句话翻成英文：「本周五下午三点在 3 楼会议室开季度复盘会，请大家提前准备各自的数据。」',
+    chat: () => ({
+      chatTitle: '练习 1 · 翻译',
+      footerTip: '判断练习',
+      elapsed: '4s',
+      steps: [{ running: '翻译中…', done: '已完成' }],
+      replyHtml:
+        'The quarterly review meeting will be held at 3 p.m. this Friday in the 3rd-floor meeting room. Please prepare your data in advance.',
+    }),
+    judge: (s) => {
+      const mounted = [...expertsOf(s), ...skillsOf(s)];
+      const lines = mounted.length
+        ? [
+            `你挂了 ${names(mounted)}。翻一句话用不上它：结果和直接说差不多，挂着的东西还可能把它往别的方向带。`,
+            '<b>这件活什么都不用挂</b>，直接说就行。',
+          ]
+        : ['你什么都没挂，<b>这就对了</b>。翻一句话是它本来就会的事，直接说就行。'];
+      if (feishuOn(s)) lines.push('飞书开关也开着：不碍事，但这件活用不上。');
+      return lines;
+    },
+  },
+  {
+    key: 'minutes',
+    title: '每周一都要把周会录音整理成格式一样的纪要',
+    prompt: '@周会录音转写.txt 整理成会议纪要。（这件事每周一都要做，格式要和上周一样）',
+    chat: (s) => {
+      const good = skillsOf(s).includes('会议纪要整理');
+      return {
+        chatTitle: '练习 2 · 周会纪要',
+        footerTip: '判断练习',
+        elapsed: '15s',
+        steps: [{ running: '读取 周会录音转写.txt…', done: '已整理' }],
+        replyHtml: good
+          ? '| 决议 | 待办 | 负责人 | 截止 |\n| --- | --- | --- | --- |\n| 12 月活动预算定 3 万 | 出活动方案 | 小周 | 周三 |\n| 报名页周四提测 | 测试报名流程 | 阿林 | 周四 |'
+          : '本次周会主要讨论了 12 月活动预算和报名页进度，预算定为 3 万，报名页计划周四提测，小周负责活动方案，阿林负责测试。',
+      };
+    },
+    judge: (s) => {
+      const sk = skillsOf(s);
+      const ex = expertsOf(s);
+      if (sk.includes('会议纪要整理')) {
+        const lines = ['<b>挑对了</b>。每周都做、格式要一样，正是技能的活：格式写在技能里，每周都照着来。想更贴合你们团队的格式，可以照 3.3 的做法自己做一个。'];
+        if (ex.length) lines.push(`另外挂的 ${names(ex)} 可以去掉：格式一致靠技能，用不上专家视角。`);
+        return lines;
+      }
+      if (sk.length) return [`你挂了 ${names(sk)} 技能，它干的活和整理纪要对不上。这件活该挂 <b>会议纪要整理</b>（+ → 技能 里有），或自己做一个。`];
+      if (ex.length)
+        return [`你只挂了专家 ${names(ex)}。专家管视角，管不了「每周格式都一样」，这要靠技能把格式写死。该挂的是 <b>会议纪要整理</b> 技能。`];
+      return [
+        '什么都不挂也能整理，你看它交了一段话。要每周格式一样，就得每周重新交代一遍，这正是 3.3 说的「说到第二遍」。',
+        '这件活该用技能：+ → 技能 里的 <b>会议纪要整理</b>，或自己做一个。',
+      ];
+    },
+  },
+  {
+    key: 'contract',
+    title: '看看一份外包合同有没有对你不利的条款',
+    prompt: '@外包服务合同.pdf 帮我看看这份合同有没有对我们不利的条款。',
+    chat: (s) => {
+      const good = expertsOf(s).includes('合同审查顾问');
+      return {
+        chatTitle: '练习 3 · 审合同',
+        footerTip: '判断练习',
+        elapsed: '22s',
+        steps: [{ running: '读取 外包服务合同.pdf…', done: '已读取 12 页' }],
+        replyHtml: good
+          ? '逐条看完，有 3 处建议改：\n\n1. 第 5.2 条：验收标准只写「甲方满意」，没有可量化的标准\n2. 第 8 条：违约金只约束乙方，甲方延迟付款没有对应条款\n3. 缺少知识产权归属条款\n\n以上仅供参考，金额较大的合同建议请律师复核。'
+          : '这份合同整体比较规范，有几处可以留意：付款节点、验收方式和违约责任，建议和对方再确认一下细节。',
+      };
+    },
+    judge: (s) => {
+      const ex = expertsOf(s);
+      if (ex.includes('合同审查顾问'))
+        return [
+          '<b>挑对了</b>。它的能力介绍就是逐条标出不利条款和缺失条款，和这件活对得上。',
+          '但要记住：<b>结果只做参考</b>，金额大的合同还是要请律师过一遍。',
+        ];
+      if (ex.length) return [`你挂的是 ${names(ex)}，视角和审合同对不上。+ → 专家 里有 <b>合同审查顾问</b>，这件活该挂它。`];
+      return [
+        '没挂专家也能看，你看它也提到了付款、验收、违约。',
+        '这件活 + → 专家 里有 <b>合同审查顾问</b>，能力介绍就是逐条审合同，视角正好对得上，挂上它更合适。不管挂不挂，结果都只做参考。',
+      ];
+    },
+  },
+  {
+    key: 'feishu-weekly',
+    title: '汇总飞书「周报」文件夹里本周 5 个人的周报',
+    prompt: '把飞书「周报」文件夹里本周 5 个人的周报汇总成一份，列出每人完成了什么。',
+    chat: (s) =>
+      feishuOn(s)
+        ? {
+            chatTitle: '练习 4 · 飞书周报汇总',
+            footerTip: '判断练习',
+            elapsed: '19s',
+            steps: [
+              { running: '飞书：搜索「周报」文件夹…', done: '找到本周 5 份周报' },
+              { running: '读取并汇总…', done: '已汇总' },
+            ],
+            replyHtml:
+              '| 成员 | 本周完成 |\n| --- | --- |\n| 小周 | 活动方案初稿 |\n| 阿林 | 报名页提测 |\n| 老陈 | 茶歇供应商确认 |\n| 小米 | 用户反馈归类 48 条 |\n| 大卫 | 海报定稿 |',
+          }
+        : {
+            chatTitle: '练习 4 · 飞书周报汇总',
+            footerTip: '判断练习',
+            elapsed: '3s',
+            steps: [{ running: '查找可用的飞书工具…', done: '没有可用的飞书连接' }],
+            replyHtml: '{{wrong:我现在访问不了你的飞书。}}可以把 5 份周报的内容粘贴过来，或者先打开飞书连接器。',
+          },
+    judge: (s) => {
+      const sk = skillsOf(s);
+      if (feishuOn(s)) {
+        const lines = ['<b>对了</b>。打开飞书，它才拿得到你飞书里的周报。话里也说清了范围：「周报」文件夹、本周、5 个人，它不用满飞书乱翻。'];
+        if (sk.length || expertsOf(s).length) lines.push(`另外挂的 ${names([...expertsOf(s), ...sk])} 这次用不上，可以不挂。`);
+        return lines;
+      }
+      const lines = ['飞书没打开，它<b>读不到</b>你飞书里的东西，只能让你自己复制粘贴。去 <b>+ → 连接器</b> 把飞书打开，再发一次。'];
+      if (sk.length) lines.push('挂技能解决不了「读不到」：<b>技能管怎么做，连接器管拿得到</b>。');
+      return lines;
+    },
+  },
+  {
+    key: 'feishu-ppt',
+    title: '用飞书里本周的周报，做一份能在 WPS 里改的汇报 PPT',
+    prompt: '用飞书「周报」文件夹里本周的周报，做一份能在 WPS 里改的汇报 PPT。',
+    chat: (s) => {
+      const sk = skillsOf(s);
+      if (!feishuOn(s))
+        return {
+          chatTitle: '练习 5 · 周报做 PPT',
+          footerTip: '判断练习',
+          elapsed: '3s',
+          steps: [{ running: '查找可用的飞书工具…', done: '没有可用的飞书连接' }],
+          replyHtml: '{{wrong:我现在访问不了你的飞书。}}可以把周报内容粘贴过来，或者先打开飞书连接器。',
+        };
+      const web = sk.includes('网页 PPT（演讲版）') && !sk.includes('WPS Office 全家桶') && !sk.includes('pptx');
+      return {
+        chatTitle: '练习 5 · 周报做 PPT',
+        footerTip: '判断练习',
+        elapsed: '52s',
+        steps: [
+          { running: '飞书：读取本周 5 份周报…', done: '已读取' },
+          { running: web ? '生成演讲网页…' : '写入演示文稿…', done: web ? '已写入 本周汇报_演讲版.html' : '已写入 本周汇报.pptx' },
+        ],
+        replyHtml: web
+          ? '已完成，共 6 页。{{wrong:交付文件是 本周汇报_演讲版.html，用浏览器打开演示}}。'
+          : '已完成，共 6 页：本周完成、各人进展、风险、下周计划。交付文件是 本周汇报.pptx，用 WPS 打开就能改。',
+        fileCard: web
+          ? { name: '本周汇报_演讲版.html', meta: '6 页 · 网页', warn: true }
+          : { name: '本周汇报.pptx', meta: '6 页 · 可用 WPS 修改' },
+      };
+    },
+    judge: (s) => {
+      const sk = skillsOf(s);
+      const ex = expertsOf(s);
+      const lines: string[] = [];
+      if (!feishuOn(s)) lines.push('飞书没开，周报都读不到。这件活<b>先得拿到资料</b>：+ → 连接器 打开飞书。');
+      if (sk.includes('WPS Office 全家桶') || sk.includes('pptx')) {
+        lines.push(`技能挑对了：${names(sk.filter((n) => n === 'WPS Office 全家桶' || n === 'pptx'))} 交出能改的 .pptx。`);
+      } else if (sk.includes('网页 PPT（演讲版）')) {
+        lines.push('<b>网页 PPT（演讲版）</b> 交出的是网页，WPS 里改不了，3.2 节踩过这个坑。要能改，挂 <b>WPS Office 全家桶</b>。');
+      } else if (feishuOn(s)) {
+        lines.push('这次没挂技能，它也交出了 .pptx。但没点名时用哪个技能是它自己挑的；交付格式要紧，<b>自己选上</b> WPS Office 全家桶，或直接说「用 X 技能」，更稳。');
+      }
+      if (ex.includes('PPT制作专家')) lines.push('<b>PPT制作专家</b> 可挂可不挂：想让它顺便把关页面结构就挂上。');
+      else if (ex.length) lines.push(`挂的 ${names(ex)} 和做汇报 PPT 关系不大，可以去掉。`);
+      if (feishuOn(s) && (sk.includes('WPS Office 全家桶') || sk.includes('pptx')))
+        lines.unshift('<b>这件活要两样一起用</b>：连接器拿资料，技能定交付格式。你两样都挂对了。');
+      return lines;
+    },
+  },
 ];
+
+/** 把一个场景展开成「挂东西 + 发送」和「看点评」两步 */
+function scenarioSteps(sc: Scenario, idx: number): GuidedStep[] {
+  const isLast = idx === SCENARIOS.length - 1;
+  return [
+    {
+      id: `${sc.key}-send`,
+      phase: idx === 0 ? 1 : 2,
+      onEnter: () => ({ view: 'home', composerText: sc.prompt, composerChips: [], popover: null, freeMount: true }),
+      say: [
+        `<b>场景 ${idx + 1} / ${SCENARIOS.length}</b>：${sc.title}。`,
+        idx === 0
+          ? '任务已经放进输入框。点左下角 <b>+</b>，在 专家 / 技能 / 连接器 里挂上你觉得合适的（点一下挂上，再点一下取下），<b>也可以什么都不挂</b>。想好了就发送。'
+          : '专家和技能我清空了，连接器开关是全局的，保持你上次的状态。挂好再发送。',
+      ],
+      wait: { target: 'composer.send', callout: '挂好了就发送', label: `发送（场景 ${idx + 1}）` },
+      runChat: (s) => freeChat({ id: `choose-${sc.key}`, prompt: sc.prompt, promptChips: chipsOf(s), ...sc.chat(s) }),
+    },
+    {
+      id: `${sc.key}-judge`,
+      phase: 2,
+      sayFrom: (s) => [
+        ...sc.judge(s),
+        // 最后一个场景练完，提醒关掉全局的飞书开关
+        ...(isLast && feishuOn(s) ? ['练完了。飞书开关还开着，它是<b>全局</b>的，不用了记得在 <b>+ → 连接器</b> 里关掉。'] : []),
+      ],
+      say: [],
+      buttons: [{ label: isLast ? '看总结' : '下一个场景', primary: true }],
+    },
+  ];
+}
 
 export const chooseLesson: GuidedLessonDef = {
   id: 'choose',
-  code: '3.1',
-  title: '怎么选：专家 / 技能 / 连接器',
+  code: '3.7',
+  title: '怎么选：判断练习',
   guideUrl: '/features/extend/choose/',
   initialState: () =>
     createBaseGuidedState({
       selectedGroup: 'WorkBuddy-练习',
       selectedModel: 'Hy4 flash',
-      composerText: PPT_PROMPT,
+      freeMount: true,
+      // 接着前几节：飞书已接好（开关关着）、WPS 已装、日报技能已做好
+      connectedIds: ['feishu'],
+      installedSkillIds: ['wps-b'],
+      customSkills: ['每日工作日报'],
     }),
   steps: [
     {
       id: 'intro',
       phase: 0,
       say: [
-        '第 3 章讲「给它加能力」。WorkBuddy 能装三样东西，先用一句话分清：',
-        '<b>专家</b> = 给它换一套<b>岗位脑子</b>（像资深 PPT 设计师那样想问题）；<b>技能</b> = 给它一本<b>操作手册</b>（固定步骤做固定的活）；<b>连接器</b> = 给它一根<b>外部数据线</b>（读得到飞书、邮箱里的东西）。',
-        '三样东西都在左边侧栏的同一个入口里，先去认认门。',
+        '专家、技能、连接器都学完了。最后练<b>怎么选</b>：5 个场景，每个我把任务放进输入框，<b>你自己决定挂什么</b>，发出去以后我按你挂的点评。',
+        '没有「挂得越多越好」，有的场景正确答案就是<b>什么都不挂</b>。',
       ],
-      buttons: [{ label: '去看看入口在哪', primary: true }],
+      buttons: [{ label: '开始练习', primary: true }],
     },
-    {
-      id: 'open-ext',
-      phase: 1,
-      navLabel: '专家·技能·连接器',
-      say: [],
-      wait: { target: 'nav.extensions', callout: '点这里进入', label: '专家·技能·连接器' },
-      onAction: () => ({ view: 'extensions', extTab: 'skills', popover: null }),
-    },
-    {
-      id: 'tab-experts',
-      phase: 1,
-      navLabel: '专家',
-      say: [
-        '进来默认是「技能」。顶上三个标签，鼠标悬停时真机会冒一句提示，正好就是它们的分工。先点「专家」。',
-      ],
-      wait: { target: 'ext.tab.experts', callout: '点「专家」', label: '专家' },
-      onAction: () => ({ extTab: 'experts' }),
-    },
-    {
-      id: 'tab-connectors',
-      phase: 1,
-      navLabel: '连接器',
-      say: [
-        '专家的提示是「<b>以专家视角完成你的任务</b>」：管的是<b>怎么想</b>。技能的提示是「<b>适合高效完成特定的任务</b>」：管的是<b>怎么做</b>。再点「连接器」。',
-      ],
-      wait: { target: 'ext.tab.connectors', callout: '点「连接器」', label: '连接器' },
-      onAction: () => ({ extTab: 'connectors' }),
-    },
-    {
-      id: 'run-bare',
-      phase: 1,
-      onEnter: () => ({ view: 'home', composerChips: [], composerText: PPT_PROMPT, popover: null }),
-      say: [
-        '连接器的提示是「<b>帮你连接外部应用数据</b>」：管的是<b>拿得到什么</b>。',
-        '认完门，回到首页。输入框里是一个真实的活：<code>把飞书里这周 5 份项目周报，做成给老板看的本周项目进展汇报 PPT</code>。先<b>什么都不配</b>，直接发。',
-      ],
-      wait: { target: 'composer.send', callout: '什么都不配，直接发', label: '发送（裸跑）' },
-      runChat: () =>
-        freeChat({
-          id: 'choose-bare',
-          prompt: PPT_PROMPT,
-          chatTitle: '① 什么都不配 · 项目汇报 PPT',
-          footerTip: '没有连接器、专家、技能时的输出，可在左侧 最近 里回看',
-          elapsed: '41s',
-          hideMarksInitially: true,
-          steps: [
-            { running: '查找可用的飞书数据来源…', done: '未找到飞书连接器，改用通用汇报模板' },
-            { running: '生成大纲…', done: '已生成 8 页大纲（Markdown）' },
-          ],
-          replyHtml:
-            '已为你生成项目汇报大纲：\n\n1. 项目背景\n2. 本周工作过程\n3. 各项目进展：{{wrong:A 项目完成率 85%、B 项目完成率 92%}}\n4. 遇到的问题\n5. {{wrong:最终成果与结论}}\n6. 下周计划\n\n如需生成 PPT 文件，请告诉我。',
-        }),
-    },
-    {
-      id: 'ask-bare',
-      phase: 2,
-      say: ['看着挺完整。<b>停一秒：这份大纲哪里不能交给老板？</b>'],
-      buttons: [{ label: '标出问题', primary: true }],
-    },
-    {
-      id: 'reveal-bare',
-      phase: 2,
-      revealMarksOnEnter: true,
-      say: [
-        '看左边橙色标出的两处：<b>① 完成率是编的</b>，它根本读不到飞书（缺数据线）；<b>② 结论放在第 5 页</b>，老板最关心的东西翻到最后才看到（缺岗位脑子）。而且最后只给了文字大纲，没有能改的 PPT 文件（缺操作手册）。',
-      ],
-      buttons: [{ label: '好，配齐三样再试一次', primary: true }],
-    },
-    {
-      id: 'run-full',
-      phase: 2,
-      onEnter: () => ({ view: 'home', composerText: PPT_PROMPT, composerChips: FULL_CHIPS, popover: null }),
-      say: [
-        '我已经帮你配齐三样：输入框正文开头嵌上了技能 <b>WPS Office 全家桶</b>，底栏挂上了专家 <b>PPT制作专家</b> 和 <b>飞书</b> 连接器图标（后面三节会一个个教你怎么挂上）。同一句话，再发一次。',
-      ],
-      wait: { target: 'composer.send', callout: '配齐三样再发', label: '发送（配齐三样）' },
-      onAction: () => ({ composerChips: [] }),
-      runChat: () =>
-        freeChat({
-          id: 'choose-full',
-          prompt: PPT_PROMPT,
-          promptChips: FULL_CHIPS,
-          chatTitle: '② 配齐三样 · 项目汇报 PPT',
-          footerTip: '在左侧 最近 里点 ① 和 ② 对比',
-          elapsed: '2m 06s',
-          steps: [
-            { running: '调用 飞书 · 搜索文档「项目周报」…', done: '已通过飞书读取 5 篇周报（11-17 ~ 11-21）' },
-            { running: '以 PPT制作专家 视角梳理结构…', done: '采用「结论先行」结构，共 8 页' },
-            { running: '调用技能 WPS Office 全家桶…', done: '已生成 本周项目汇报.pptx' },
-          ],
-          replyHtml:
-            '已完成，第 1 页就是结论：\n\n- {{ok:第 1 页 · 一句话结论：5 个项目 4 个按期，C 项目延期 2 周，需要追加 1 名测试}}\n- 第 2–6 页：5 个项目每个一页，数字均来自周报原文，{{ok:页脚标注出处（哪份周报、哪天）}}\n- 第 7 页：风险与需要老板拍板的事\n- 第 8 页：下周计划',
-          fileCard: { name: '本周项目汇报.pptx', meta: '8 页 · 可直接用 WPS 打开修改' },
-        }),
-    },
+    ...SCENARIOS.flatMap((sc, i) => scenarioSteps(sc, i)),
     {
       id: 'summary',
       phase: 3,
-      say: [
-        '同一句话，配齐三样东西之后：<b>数字有出处、结论在第一页、交付的是能改的 .pptx</b>。以后遇到干不好的活，先问自己缺的是哪一样：',
-      ],
+      onEnter: () => ({ freeMount: false, composerChips: [], composerText: '' }),
+      say: ['挂之前先问一句：<b>它这次缺的是什么？</b>'],
       card: {
         kind: 'table',
-        title: '你缺什么 → 用什么',
-        headers: ['它的问题', '缺的是', '用什么', '例子'],
+        title: '缺什么，挂什么',
+        headers: ['它缺的', '挂什么', '例子'],
         rows: [
-          ['回答空泛、不像内行', '岗位脑子', '专家', 'PPT制作专家、财报分析师'],
-          ['每次格式都不一样、步骤总漏', '操作手册', '技能', 'WPS 全家桶、你自己写的纪要技能'],
-          ['读不到你的资料，只能编', '外部数据线', '连接器', '飞书、QQ邮箱、自己做的天气 MCP'],
+          ['什么都不缺', '什么都不挂，直接说', '翻译、改一句话、问个概念'],
+          ['固定的做法（反复做）', '技能', '每周纪要、日报、固定格式的 PPT'],
+          ['内行的视角', '专家', '审合同、改汇报大纲'],
+          ['拿不到资料', '连接器', '读飞书文档、多维表格'],
         ],
       },
-      after: ['三样可以一起用，但<b>别全开</b>：任务需要哪样就挂哪样，挂多了它反而容易分心。'],
+      after: [
+        '缺几样就挂几样，比如飞书周报做 PPT 就是连接器 + 技能。挂完第一次<b>拿小样本试</b>，不合适就移除。',
+      ],
       buttons: [
-        { label: '下一节：3.2 专家 →', primary: true, nextLesson: 'experts' },
+        { label: '下一节：3.8 资料库 →', primary: true, nextLesson: 'library' },
         { label: '读本节图文教程', href: '/features/extend/choose/' },
         { label: '重来一遍', restart: true },
       ],

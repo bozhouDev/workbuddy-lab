@@ -2,68 +2,39 @@ import type { GuidedLessonDef } from '../guidedTypes';
 import { createBaseGuidedState } from './baseState';
 import { freeChat } from './freeChat';
 
-/** 本节任务：按门店汇总销售表 */
-const SALES_PROMPT = '@上月销售数据.xlsx 按门店汇总销售额和订单数，做成一张新表。';
+/** 本节任务：把销售分析做成能改的 PPT（用 / 选技能时的说法） */
+const PPT_PROMPT = '把 @上月销售分析.md 做成 PPT，发给老板看。';
+/** 第二种手动用法：不选胶囊，直接在话里点名技能 */
+const DIRECT_PROMPT = '用 WPS Office 全家桶 技能，把 @上月销售分析.md 做成能在 WPS 里修改的 PPT，发给老板看。';
+/** 先选上的那个技能（交出的是网页，不是 .pptx） */
+const WEB_PPT = '网页 PPT（演讲版）';
 
 export const skillsLesson: GuidedLessonDef = {
   id: 'skills',
-  code: '3.3',
-  title: '技能：找、看懂、装、用',
+  code: '3.2',
+  title: '技能：挑、装、用',
   guideUrl: '/features/extend/skills/',
   initialState: () =>
     createBaseGuidedState({
       selectedGroup: 'WorkBuddy-练习',
       selectedModel: 'Hy4 flash',
-      composerText: SALES_PROMPT,
+      composerText: '',
     }),
   steps: [
     {
       id: 'intro',
       phase: 0,
       say: [
-        '技能就是一份<b>打包好的操作手册（SOP）</b>，核心是一个叫 <code>SKILL.md</code> 的文件，写着「这类活按什么步骤、用什么工具做」。装上以后，它干这类活就不再凭感觉。',
-        '这节走完整一圈：<b>看懂技能页 → 挑一个 → 装上 → 用起来</b>。先看不用技能时做表格会怎样。',
+        '3.1 拆开看过：技能就是<b>一份说明书</b>，把一类活的做法写下来，用来<b>减少重复</b>。',
+        '这节走完整一圈：<b>挑 → 装 → 用</b>，最后看看<b>挑错了会怎样</b>。手上的活：把上月销售分析做成 PPT 发给老板。先去技能页挑一个能做 PPT 的。',
       ],
-      buttons: [{ label: '先看不用技能', primary: true }],
-    },
-    {
-      id: 'run-plain',
-      phase: 1,
-      onEnter: () => ({ view: 'home', composerText: SALES_PROMPT, composerChips: [] }),
-      say: ['输入框里已经 @ 好了销售表，直接发。'],
-      wait: { target: 'composer.send', callout: '不用技能，直接发', label: '发送（不用技能）' },
-      runChat: () =>
-        freeChat({
-          id: 'skills-plain',
-          prompt: SALES_PROMPT,
-          chatTitle: '① 不用技能 · 门店汇总',
-          footerTip: '不用技能时交出的表，可在左侧 最近 里回看',
-          elapsed: '18s',
-          hideMarksInitially: true,
-          steps: [
-            { running: '读取 上月销售数据.xlsx…', done: '已读取 1,286 行订单' },
-            { running: '用 Python 计算汇总…', done: '已写入 门店汇总.xlsx' },
-          ],
-          replyHtml:
-            '已按门店汇总：\n\n| 门店 | 销售额 | 订单数 |\n| --- | --- | --- |\n| 静安店 | 186,420 | 412 |\n| 徐汇店 | {{wrong:152,300}} | 355 |\n| 浦东店 | 201,775 | 519 |\n\n{{wrong:表里的数字是算好后直接填进去的}}，如需调整请告诉我。',
-          fileCard: { name: '门店汇总.xlsx', meta: '3 行 · 无公式', warn: true },
-        }),
-    },
-    {
-      id: 'ask-plain',
-      phase: 2,
-      say: ['表是有了。<b>如果你下个月要往里加数据，或者老板问「这个数怎么来的」，会出什么事？</b>'],
-      buttons: [{ label: '标出问题', primary: true }],
+      buttons: [{ label: '去技能页', primary: true }],
     },
     {
       id: 'open-ext',
       phase: 1,
-      revealMarksOnEnter: true,
       navLabel: '专家·技能·连接器',
-      say: [
-        '橙色两处：<b>① 数字是写死的</b>，没有公式，原表一改它不会跟着变，别人也查不了来路；<b>② 徐汇店少算了一天的退款冲正</b>，和原表对不上。',
-        '做表格这种活有固定章法，正好交给技能。进技能页。',
-      ],
+      say: [],
       wait: { target: 'nav.extensions', callout: '点这里进入', label: '专家·技能·连接器' },
       onAction: () => ({ view: 'extensions', extTab: 'skills', skillTab: 'recommend', statTip: null }),
     },
@@ -113,7 +84,7 @@ export const skillsLesson: GuidedLessonDef = {
       say: [
         '在 SkillHub，<b>⬇ = 下载量</b>，<b>☆ = 收藏量</b>。同一个图标在不同标签里意思略有不同，<b>拿不准就悬停看提示</b>。排序也跟着变：推荐里是「使用量 / 安装量」，SkillHub 里是「下载量 / 收藏」。',
         '还有两个标记要留意：带<b>「付费」</b>角标的要花钱，带<b>「需 APIKey」</b>的要你去别家申请密钥。新手先挑两样都没有的。',
-        '现在去找能做表格的技能。点右上角搜索，搜 wps。',
+        '现在去找能出 PPT 文件、WPS 能打开的技能。点右上角搜索，搜 wps。',
       ],
       wait: { target: 'skills.search', callout: '搜 wps', label: '搜索技能' },
       onAction: () => ({ skillSearch: 'wps', statTip: null, skillTab: 'recommend' }),
@@ -156,9 +127,10 @@ export const skillsLesson: GuidedLessonDef = {
       id: 'slash',
       phase: 1,
       navLabel: '/ 调用',
-      onEnter: () => ({ view: 'home', composerText: SALES_PROMPT, skillSearch: '', composerChips: [] }),
+      onEnter: () => ({ view: 'home', composerText: PPT_PROMPT, skillSearch: '', composerChips: [], pickLabel: WEB_PPT }),
       say: [
-        '装好了，右上角变成「已安装(16)」。回到首页用它：直接在蓝圈输入框里按键盘输入 <b>/</b>，就会弹出技能列表。',
+        '装好了，右上角变成「已安装(16)」。回首页做 PPT。',
+        '手动调用技能有两种，先学第一种：在蓝圈输入框里按键盘输入 <b>/</b>，弹出技能列表。点输入框左下角 <b>+ → 技能</b> 也是同一份列表。',
       ],
       wait: { target: 'composer.slash', callout: '在输入框里输入 /', label: '输入 /' },
       onAction: () => ({ slashMenuOpen: true }),
@@ -168,54 +140,98 @@ export const skillsLesson: GuidedLessonDef = {
       phase: 1,
       navLabel: '选技能',
       say: [
-        '列表标题是「技能 (28)」，比「已安装(16)」多，因为<b>内置技能（docx、pdf、xlsx 这些）也在里面</b>，两个数对不上是正常的。选刚装的 WPS Office 全家桶。',
+        '列表标题是「技能 (28)」，比「已安装(16)」多，因为<b>内置技能也在里面</b>，两个数对不上是正常的。',
+        '跟 PPT 有关的有两个：刚装的 WPS Office 全家桶，和本来就有的 <b>网页 PPT（演讲版）</b>。很多人看到「PPT」三个字就选了，我们也先选它试试。',
       ],
-      wait: { target: 'slashMenu.pick', callout: '选它', label: 'WPS Office 全家桶' },
-      onAction: () => ({ slashMenuOpen: false, composerChips: [{ kind: 'skill', label: 'WPS Office 全家桶' }] }),
+      wait: { target: 'slashMenu.pick', callout: '先选它试试', label: WEB_PPT },
+      onAction: () => ({ slashMenuOpen: false, composerChips: [{ kind: 'skill', label: WEB_PPT }] }),
     },
     {
-      id: 'run-skill',
+      id: 'run-web',
       phase: 2,
-      say: ['输入框正文开头嵌上了技能胶囊。同一句话，再发一次。'],
-      wait: { target: 'composer.send', callout: '带着技能再发', label: '发送（用技能）' },
-      onAction: () => ({ composerChips: [] }),
+      say: ['输入框正文开头嵌上了技能胶囊。发送。'],
+      wait: { target: 'composer.send', callout: '带着这个技能发', label: '发送（网页 PPT）' },
+      onAction: () => ({ composerChips: [], pickLabel: null }),
+      runChat: () =>
+        freeChat({
+          id: 'skills-web',
+          prompt: PPT_PROMPT,
+          promptChips: [{ kind: 'skill', label: WEB_PPT }],
+          chatTitle: '① 网页 PPT（演讲版）· 销售分析',
+          footerTip: '挑了网页 PPT 技能的结果，可在左侧 最近 里回看',
+          elapsed: '1m 12s',
+          hideMarksInitially: true,
+          steps: [
+            { running: '加载技能 网页 PPT（演讲版）…', done: '按技能步骤：先拆大纲，再逐页做成网页' },
+            { running: '读取 上月销售分析.md…', done: '已拆成 10 页' },
+            { running: '生成演讲网页…', done: '已写入 上月销售分析_演讲版.html' },
+          ],
+          replyHtml:
+            '已完成，共 10 页，按方向键翻页、F 键全屏：\n\n- 第 1 页：上月销售额 53.7 万，环比 +8%\n- 第 2–8 页：三家门店各自的趋势和亮点\n- 第 9–10 页：问题与下月计划\n\n{{wrong:交付文件是 上月销售分析_演讲版.html，用浏览器打开演示}}。{{wrong:如需在 WPS 里编辑，需要另行转换}}。',
+          fileCard: { name: '上月销售分析_演讲版.html', meta: '10 页 · 网页 · 浏览器全屏演示', warn: true },
+        }),
+    },
+    {
+      id: 'ask-web',
+      phase: 2,
+      say: ['做得挺漂亮，还能全屏翻页。<b>停一秒：这是你要的东西吗？</b>'],
+      buttons: [{ label: '标出问题', primary: true }],
+    },
+    {
+      id: 'reveal-web',
+      phase: 2,
+      revealMarksOnEnter: true,
+      say: [
+        '看橙色两处：交出来的是<b>网页文件</b>，WPS 里改不了，老板想动一个数字都得找你。',
+        '但<b>技能没做错</b>：它的简介写得清清楚楚，「把主题、文章或大纲做成一整套<b>可全屏演讲的网页</b>」。是<b>我们挑错了</b>：你要的是能改、能转发的 .pptx。挑技能，先看简介里<b>它交出的是什么</b>。',
+      ],
+      buttons: [{ label: '换个技能，学第二种用法', primary: true }],
+    },
+    {
+      id: 'run-direct',
+      phase: 2,
+      onEnter: () => ({ view: 'home', composerChips: [], composerText: DIRECT_PROMPT, pickLabel: null }),
+      say: [
+        '第二种手动调用：<b>不选胶囊，直接在话里点名</b>「用 X 技能做 Y」。适合你记得技能名字的时候，比翻列表快。',
+        '我已经写好了，注意开头的「用 WPS Office 全家桶 技能」。发送。',
+      ],
+      wait: { target: 'composer.send', callout: '直接点名技能再发', label: '发送（点名 WPS 技能）' },
       runChat: () =>
         freeChat({
           id: 'skills-wps',
-          prompt: SALES_PROMPT,
-          promptChips: [{ kind: 'skill', label: 'WPS Office 全家桶' }],
-          chatTitle: '② 用技能 · 门店汇总',
+          prompt: DIRECT_PROMPT,
+          chatTitle: '② 点名 WPS Office 全家桶 · 销售分析',
           footerTip: '在左侧 最近 里点 ① 和 ② 对比',
-          elapsed: '31s',
+          elapsed: '58s',
           steps: [
-            { running: '加载技能 WPS Office 全家桶…', done: '按技能步骤：先核对原表，再建公式' },
-            { running: '核对原表…', done: '发现 11-14 徐汇店 1 笔退款冲正（-3,180）' },
-            { running: '写入汇总表…', done: '已写入 门店汇总.xlsx（SUMIFS 公式）' },
+            { running: '加载技能 WPS Office 全家桶…', done: '按技能步骤：先定页数和版式，再逐页写入' },
+            { running: '读取 上月销售分析.md…', done: '已拆成 10 页' },
+            { running: '写入演示文稿…', done: '已写入 上月销售分析.pptx' },
           ],
           replyHtml:
-            '已完成，表里保留了公式：\n\n| 门店 | 销售额 | 订单数 |\n| --- | --- | --- |\n| 静安店 | 186,420 | 412 |\n| 徐汇店 | {{ok:149,120}} | 355 |\n| 浦东店 | 201,775 | 519 |\n\n- {{ok:每格都是 SUMIFS 公式，点开能看到引用原表哪一列}}\n- 徐汇店已扣掉 11-14 的退款冲正，合计和原表一致',
-          fileCard: { name: '门店汇总.xlsx', meta: '3 行 · SUMIFS 公式 · 与原表核对一致' },
+            '已完成，共 10 页：\n\n- 第 1 页：上月销售额 53.7 万，环比 +8%\n- 第 2–8 页：三家门店各自的趋势和亮点，图表可直接编辑数据\n- 第 9–10 页：问题与下月计划\n\n{{ok:交付文件是 上月销售分析.pptx，用 WPS 打开就能逐页修改}}。',
+          fileCard: { name: '上月销售分析.pptx', meta: '10 页 · 可直接用 WPS 打开修改' },
         }),
     },
     {
       id: 'summary',
       phase: 3,
-      say: ['同一句话，用了技能以后：<b>先核对原表、再建公式</b>，数对得上，下月加数据也会自动更新。'],
+      say: ['同一个任务，两个技能都认真干了活，差别只在<b>交出来的东西对不对得上你要的</b>。'],
       card: {
         kind: 'compare',
-        title: '同一张表，两次结果',
-        leftLabel: '① 不用技能',
+        title: '同一个任务，挑了两个技能',
+        leftLabel: '① 网页 PPT（演讲版）',
         leftTone: 'warn',
-        leftHtml: '数字写死、没有公式；徐汇店漏扣退款，多出 3,180。',
-        rightLabel: '② 用 WPS Office 全家桶',
+        leftHtml: '交出 .html 网页，适合全屏演讲，WPS 里改不了。技能没错，是和任务对不上。',
+        rightLabel: '② WPS Office 全家桶',
         rightTone: 'ok',
-        rightHtml: '<b>SUMIFS 公式保留</b>，先核对原表，合计和原表一致。',
+        rightHtml: '交出 <b>.pptx</b>，用 WPS 打开就能逐页改，能直接发给老板。',
       },
       after: [
-        '用技能记住 5 条：<b>① 挑技能看三个数（⚡ 使用量 / ⬇ 安装或下载量 / ☆ 收藏）加来源</b>；<b>② 用到再装，别囤</b>；<b>③ 调用两种方式：打 / 选，或者直接说「用 X 技能」</b>；<b>④ 技能自动更新 1.1 节讲过，保持开启</b>；<b>⑤ 不用了在「已安装」里卸载</b>。',
+        '用技能记住 5 条：<b>① 挑技能看 ⚡ 使用量 / ⬇ 安装或下载量 / ☆ 收藏和来源，再看简介里它交出的是什么</b>；<b>② 手动调用两种：打 / 或 + → 技能 选上，或者直接说「用 X 技能做 Y」</b>；<b>③ 第一次用拿小样本试，不对就换</b>；<b>④ 用到再装、别囤，不用的在「已安装」里卸载</b>；<b>⑤ 技能自动更新 1.1 节讲过，保持开启</b>。',
       ],
       buttons: [
-        { label: '下一节：3.4 做一个自己的技能 →', primary: true, nextLesson: 'make-skill' },
+        { label: '下一节：3.3 做一个自己的技能 →', primary: true, nextLesson: 'make-skill' },
         { label: '读本节图文教程', href: '/features/extend/skills/' },
         { label: '重来一遍', restart: true },
       ],

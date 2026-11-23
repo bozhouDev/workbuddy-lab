@@ -395,28 +395,24 @@ test.describe('第 02 章「发任务」全部 7 节泊舟陪练模拟器', () =
 });
 
 test.describe('第 03、04 章泊舟陪练模拟器', () => {
-  test('3.1–3.4：怎么选 → 专家 → 装技能看懂 ⚡⬇ → 做自己的技能', async ({ page }) => {
+  test('3.1–3.4：拆开看 → 技能挑装用 → 做日报技能 → 专家用对与移除', async ({ page }) => {
     await page.setViewportSize({ width: WALK_WIDTH, height: 900 });
-    await page.goto('/simulator/?route=choose');
+    await page.goto('/simulator/?route=anatomy');
     await walkLesson(page, [
-      'btn:去看看入口在哪', 'nav.extensions', 'ext.tab.experts', 'ext.tab.connectors',
-      'composer.send', 'btn:标出问题', 'btn:好，配齐三样再试一次', 'composer.send',
+      'btn:去拆开看看', 'nav.extensions', 'ext.tab.experts', 'experts.search', 'experts.card',
     ]);
-    await expect(page.getByText('你缺什么 → 用什么')).toBeVisible({ timeout: 8000 });
+    await expect(page.getByText('使用技能').first()).toBeVisible();
+    await walkLesson(page, [
+      'btn:接着拆技能', 'ext.tab.skills', 'skills.search', 'skills.pickCard', 'btn:最后拆连接器',
+      'ext.tab.connectors', 'connectors.card',
+    ]);
+    await expect(page.getByText('可用功能').first()).toBeVisible();
+    await walkLesson(page, ['btn:总结一下']);
+    await expect(page.getByText('三样东西各管什么')).toBeVisible({ timeout: 8000 });
 
-    await page.getByRole('button', { name: /下一节：3.2 专家/ }).click();
-    await walkLesson(page, [
-      'btn:先看不召唤专家', 'composer.send', 'btn:标出问题', 'nav.extensions', 'ext.tab.experts',
-      'experts.search', 'experts.card', 'experts.summon',
-    ]);
-    await expect(page.getByText('已成功召唤专家「PPT制作专家」')).toBeVisible();
-    await walkLesson(page, ['composer.send']);
-    await expect(page.getByText('同一个问题，两次回答')).toBeVisible({ timeout: 8000 });
-
-    await page.getByRole('button', { name: /下一节：3.3 技能/ }).click();
-    await walkLesson(page, [
-      'btn:先看不用技能', 'composer.send', 'btn:标出问题', 'nav.extensions', 'skills.statUse',
-    ]);
+    // 3.2 技能：看卡片 → 装 WPS → / 选网页 PPT（不合适）→ 直接点名 WPS（合适）
+    await page.getByRole('button', { name: /下一节：3.2 技能/ }).click();
+    await walkLesson(page, ['btn:去技能页', 'nav.extensions', 'skills.statUse']);
     await expect(page.getByText(/使用量 40\.65w/)).toBeVisible();
     await walkLesson(page, ['skills.statInstall']);
     await expect(page.getByText(/安装量 75\.29w/)).toBeVisible();
@@ -424,20 +420,40 @@ test.describe('第 03、04 章泊舟陪练模拟器', () => {
     await expect(page.getByText(/下载量 1212\.32w/)).toBeVisible();
     await walkLesson(page, ['skills.search', 'skills.pickCard', 'skills.install', 'skills.installConfirm']);
     await expect(page.getByText('已安装(16)')).toBeVisible();
-    await walkLesson(page, ['composer.slash', 'slashMenu.pick', 'composer.send']);
-    await expect(page.getByText('同一张表，两次结果')).toBeVisible({ timeout: 8000 });
+    await walkLesson(page, ['composer.slash']);
+    await expect(page.locator('[data-guided-target="slashMenu.pick"]')).toContainText('网页 PPT（演讲版）');
+    await walkLesson(page, ['slashMenu.pick', 'composer.send', 'btn:标出问题', 'btn:换个技能，学第二种用法', 'composer.send']);
+    await expect(page.getByText('同一个任务，挑了两个技能')).toBeVisible({ timeout: 8000 });
 
-    await page.getByRole('button', { name: /下一节：3.4 做一个自己的技能/ }).click();
+    // 3.3 做技能：做一遍日报 → 补要求 → 点名 skill-creator 沉淀 → 第二天 / 调用 → 从零创建
+    await page.getByRole('button', { name: /下一节：3.3 做一个自己的技能/ }).click();
     await walkLesson(page, [
-      'btn:先看偷懒只说一句', 'composer.send', 'btn:标出问题', 'nav.extensions', 'skills.addMenu',
-      'skills.addMenu.create', 'composer.send', 'nav.extensions', 'skills.installed',
+      'btn:先写今天的日报', 'composer.send', 'btn:标出不满意的地方', 'chat.followupSend', 'chat.followupSend',
     ]);
-    await expect(page.getByText('用户自定义').first()).toBeVisible();
-    await walkLesson(page, ['home', 'composer.slash', 'slashMenu.pick', 'composer.send']);
-    await expect(page.getByText('做一个技能的 4 步')).toBeVisible({ timeout: 8000 });
+    await expect(page.getByText('SKILL.md').first()).toBeVisible({ timeout: 8000 });
+    await walkLesson(page, ['btn:第二天，用它写日报', 'composer.slash']);
+    await expect(page.locator('[data-guided-target="slashMenu.pick"]')).toContainText('每日工作日报');
+    await walkLesson(page, [
+      'slashMenu.pick', 'composer.send', 'btn:去技能页创建', 'nav.extensions', 'skills.addMenu', 'skills.addMenu.create',
+    ]);
+    await expect(page.getByText('请帮我创建一个可以实现「……」的skill')).toBeVisible();
+    await expect(page.getByText('skill-creator').first()).toBeVisible();
+    await walkLesson(page, ['btn:看我怎么填', 'composer.send']);
+    await expect(page.getByText('做技能的两种做法')).toBeVisible({ timeout: 8000 });
+
+    // 3.4 专家：召唤 → 合适的活 → 挂着去写邮件（不合适）→ × 移除再发
+    await page.getByRole('button', { name: /下一节：3.4 专家/ }).click();
+    await walkLesson(page, [
+      'btn:去召唤一位专家', 'nav.extensions', 'ext.tab.experts', 'experts.search', 'experts.card', 'experts.summon',
+    ]);
+    await expect(page.getByText('已成功召唤专家「PPT制作专家」')).toBeVisible();
+    await walkLesson(page, ['composer.send', 'btn:下一件活：写道歉邮件', 'composer.send', 'btn:标出问题', 'composer.expertRemove']);
+    await expect(page.getByRole('button', { name: '移除 PPT制作专家' })).toHaveCount(0);
+    await walkLesson(page, ['composer.send']);
+    await expect(page.getByText('专家对得上活 vs 对不上活')).toBeVisible({ timeout: 8000 });
   });
 
-  test('3.5–3.7：连接飞书（对话内扫码）→ 自己做天气 MCP 并信任 → 资料库', async ({ page }) => {
+  test('3.5–3.8：连接飞书（对话内扫码）→ 自己做天气 MCP 并信任 → 判断练习 → 资料库', async ({ page }) => {
     await page.setViewportSize({ width: WALK_WIDTH, height: 900 });
     await page.goto('/simulator/?route=connectors');
     await walkLesson(page, [
@@ -468,7 +484,39 @@ test.describe('第 03、04 章泊舟陪练模拟器', () => {
     await expect(page.getByText('调用 my-weather · get_forecast：返回 3 天预报')).toBeVisible({ timeout: 8000 });
     await expect(page.getByText('同一个问题，两次回答')).toBeVisible({ timeout: 8000 });
 
-    await page.getByRole('button', { name: /下一节：3.7 资料库/ }).click();
+    // 3.7 判断练习：学员自己用 + 挂东西，泊舟按挂了什么点评
+    await page.getByRole('button', { name: /下一节：3.7 怎么选/ }).click();
+    const plus = page.locator('[data-guided-target="composer.plus"]');
+    await walkLesson(page, ['btn:开始练习', 'composer.send']);
+    await expect(page.getByText('这就对了')).toBeVisible({ timeout: 8000 });
+    // 场景 2：挂「会议纪要整理」技能
+    await walkLesson(page, ['btn:下一个场景']);
+    await plus.click();
+    await page.locator('[data-guided-target="plusMenu.skills"]').click();
+    await page.locator('button', { hasText: '会议纪要整理' }).first().click();
+    await walkLesson(page, ['composer.send']);
+    await expect(page.getByText('挑对了').first()).toBeVisible({ timeout: 8000 });
+    // 场景 3：什么都不挂，提示合同审查顾问更合适
+    await walkLesson(page, ['btn:下一个场景', 'composer.send']);
+    await expect(page.getByText('没挂专家也能看')).toBeVisible({ timeout: 8000 });
+    // 场景 4：没开飞书先发，读不到
+    await walkLesson(page, ['btn:下一个场景', 'composer.send']);
+    await expect(page.getByText('飞书没打开')).toBeVisible({ timeout: 8000 });
+    // 场景 5：打开飞书 + 挂 WPS 技能
+    await walkLesson(page, ['btn:下一个场景']);
+    await plus.click();
+    await page.locator('[data-guided-target="plusMenu.connectors"]').click();
+    await page.getByRole('switch', { name: '飞书 开关' }).click();
+    await expect(page.getByRole('switch', { name: '飞书 开关' })).toHaveAttribute('aria-checked', 'true');
+    await page.locator('[data-guided-target="plusMenu.skills"]').click();
+    await page.locator('button', { hasText: 'WPS Office 全家桶' }).first().click();
+    await walkLesson(page, ['composer.send']);
+    await expect(page.getByText('这件活要两样一起用')).toBeVisible({ timeout: 8000 });
+    await expect(page.getByText('飞书开关还开着')).toBeVisible();
+    await walkLesson(page, ['btn:看总结']);
+    await expect(page.getByText('缺什么，挂什么')).toBeVisible({ timeout: 8000 });
+
+    await page.getByRole('button', { name: /下一节：3.8 资料库/ }).click();
     await walkLesson(page, [
       'btn:看看堆满了会怎样', 'composer.send', 'btn:标出问题', 'nav.library', 'library.newCategory',
       'library.upload', 'composer.plus', 'plusMenu.addFile',
@@ -547,8 +595,8 @@ test.describe('第 03、04 章泊舟陪练模拟器', () => {
     await expect(page.getByText('移动端 App')).toBeVisible();
 
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto('/simulator/?route=choose');
-    await walkLesson(page, ['btn:去看看入口在哪', 'nav.extensions']);
+    await page.goto('/simulator/?route=anatomy');
+    await walkLesson(page, ['btn:去拆开看看', 'nav.extensions']);
     // 正等着点「专家」标签时，学员跑回了首页
     await page.getByRole('button', { name: '新建任务' }).first().click();
     const back = page.locator('[data-guided-target="nav.extensions"]');

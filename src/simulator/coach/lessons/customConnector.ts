@@ -211,7 +211,7 @@ export const customConnectorLesson: GuidedLessonDef = {
         '想自己真做一遍，图文教程里有完整代码和每一步截图位置。同样的套路还能接：公司内部的查询接口、快递单号查询、汇率换算……',
       ],
       buttons: [
-        { label: '下一节：3.7 资料库 →', primary: true, nextLesson: 'library' },
+        { label: '下一节：3.7 怎么选：判断练习 →', primary: true, nextLesson: 'choose' },
         { label: '读本节图文教程（含完整代码）', href: '/features/extend/custom-connector/' },
         { label: '重来一遍', restart: true },
       ],
