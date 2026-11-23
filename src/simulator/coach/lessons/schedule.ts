@@ -249,7 +249,7 @@ export const scheduleLesson: GuidedLessonDef = {
       navLabel: '编辑',
       say: [
         '两张卡片了。早报这张<b>建好就已经启用</b>，别急着走，先检查一遍设置。',
-        '鼠标移到卡片上，右上角会出现三个按钮：▷ 立即运行、✎ 编辑、··· 更多。点 <b>✎ 编辑</b>。',
+        '鼠标移到卡片上，右上角会出现三个按钮：▷ 立即运行、✎ 编辑、··· 更多操作。点 <b>✎ 编辑</b>。',
       ],
       wait: { target: 'schedule.editTask', callout: '点编辑', label: '编辑' },
       onAction: () => ({ scheduleModalTaskId: TASK.id }),

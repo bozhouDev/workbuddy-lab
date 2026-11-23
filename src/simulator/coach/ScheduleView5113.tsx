@@ -169,7 +169,7 @@ export function ScheduleView5113(props: Props) {
 }
 
 /**
- * 任务卡片悬停时右上角出现的 ▷ 立即运行 / ✎ 编辑 / ··· 更多（对照泊舟真机截图）
+ * 任务卡片悬停时右上角出现的 ▷ 立即运行 / ✎ 编辑 / ··· 更多操作（对照泊舟真机截图；名称取自语言包 automation.card.run / automation.action.more）
  * 课程等着点「编辑」时，早报卡片上的按钮常显，方便找到
  */
 function TaskCardActions(props: Props & { taskId: string }) {
@@ -196,7 +196,7 @@ function TaskCardActions(props: Props & { taskId: string }) {
         <PencilIcon size={15} />
         {isLesson && kit.callout('schedule.editTask', 'bottom', 'center')}
       </button>
-      <button type="button" aria-label="更多" onClick={kit.aside('更多', '更多操作，比如删除、归档。')} className="border-0 bg-transparent p-0 text-[#4a4f57] inline-flex cursor-pointer">
+      <button type="button" aria-label="更多操作" onClick={kit.aside('更多操作', '其他操作收在这里。这节课用不到，先点 ✎ 编辑。')} className="border-0 bg-transparent p-0 text-[#4a4f57] inline-flex cursor-pointer">
         <MoreCircleIcon size={15} />
       </button>
     </span>
