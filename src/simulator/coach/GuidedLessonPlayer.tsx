@@ -477,6 +477,8 @@ export default function GuidedLessonPlayer({
     ];
     const settledShell: GuidedShellState = {
       ...prev,
+      composerText: '',
+      followupText: '',
       activeChat: runSpec,
       chatHistory: dedupedHistory,
       chatPhase: 'done',
@@ -502,6 +504,7 @@ export default function GuidedLessonPlayer({
               view: 'chat',
               popover: null,
               composerText: '',
+              followupText: '',
               activeChat: runSpec,
               marksRevealed: !runSpec.hideMarksInitially,
               chatPhase: 'steps',

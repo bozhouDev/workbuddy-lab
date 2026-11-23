@@ -390,6 +390,7 @@ test.describe('第 02 章「发任务」全部 7 节泊舟陪练模拟器', () =
     await page.getByRole('button', { name: '标出被改乱的地方' }).click();
     await page.locator('[data-guided-target="chat.followupSend"]').click();
     await expect(page.getByText('模糊催改 vs 精准局部修改对比')).toBeVisible({ timeout: 6000 });
+    await expect(page.getByText('继续说点什么…')).toBeVisible();
   });
 });
 
