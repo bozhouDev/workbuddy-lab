@@ -459,10 +459,10 @@ function RecordsTable(props: Props) {
             <span className="text-[#6b7079]">{r.duration}</span>
             <span className="text-[#6b7079]">本地</span>
             <span className="flex items-center gap-3">
-              <button type="button" aria-label="归档" onClick={kit.aside('归档', '归档后可在「系统设置 - 数据管理」中查看。')} className="border-0 bg-transparent p-0 text-[#6b7079] cursor-pointer">
+              <button type="button" aria-label="归档" onClick={kit.aside('归档', '归档后，可在「系统设置-数据管理-归档的任务」中查看。')} className="border-0 bg-transparent p-0 text-[#6b7079] cursor-pointer">
                 <ArchiveIcon size={15} />
               </button>
-              <button type="button" aria-label="删除" onClick={kit.aside('删除', '删除这条运行记录和它的会话，删了找不回来。')} className="border-0 bg-transparent p-0 text-[#6b7079] cursor-pointer">
+              <button type="button" aria-label="删除" onClick={kit.aside('删除', '只删这条运行记录，定时任务不受影响。删除后无法恢复。')} className="border-0 bg-transparent p-0 text-[#6b7079] cursor-pointer">
                 <TrashIcon size={15} />
               </button>
             </span>
