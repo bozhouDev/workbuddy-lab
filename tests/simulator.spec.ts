@@ -447,7 +447,7 @@ test.describe('第 03、04 章泊舟陪练模拟器', () => {
       'btn:去召唤一位专家', 'nav.extensions', 'ext.tab.experts', 'experts.search', 'experts.card', 'experts.summon',
     ]);
     await expect(page.getByText('已成功召唤专家「PPT制作专家」')).toBeVisible();
-    await walkLesson(page, ['composer.send', 'btn:下一件活：写道歉邮件', 'composer.send', 'btn:标出问题', 'composer.expertRemove']);
+    await walkLesson(page, ['composer.send', 'btn:下一件活：写道歉邮件', 'composer.send', 'btn:标出问题', 'btn:去移除专家', 'composer.expertRemove']);
     await expect(page.getByRole('button', { name: '移除 PPT制作专家' })).toHaveCount(0);
     await walkLesson(page, ['composer.send']);
     await expect(page.getByText('专家对得上活 vs 对不上活')).toBeVisible({ timeout: 8000 });

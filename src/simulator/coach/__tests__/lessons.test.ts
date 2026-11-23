@@ -21,6 +21,7 @@ import { reviewLesson } from '../lessons/review';
 import { reviseLesson } from '../lessons/revise';
 import { settingsLesson } from '../lessons/settings';
 import { taskBriefLesson } from '../lessons/taskBrief';
+import { anatomyLesson } from '../lessons/anatomy';
 import { chooseLesson } from '../lessons/choose';
 import { expertsLesson } from '../lessons/experts';
 import { skillsLesson } from '../lessons/skills';
@@ -45,6 +46,7 @@ const LESSONS: GuidedLessonDef[] = [
   executionLesson,
   reviewLesson,
   reviseLesson,
+  anatomyLesson,
   chooseLesson,
   expertsLesson,
   skillsLesson,
