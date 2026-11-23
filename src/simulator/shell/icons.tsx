@@ -44,6 +44,15 @@ export function SearchIcon({ size = 15, ...rest }: IconProps) {
   );
 }
 
+/** 细线加号（新建定时任务表单提示词框左下角） */
+export function PlusIcon({ size = 15, ...rest }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true" {...rest}>
+      <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function FilterIcon({ size = 15, ...rest }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true" {...rest}>

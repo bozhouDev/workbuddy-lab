@@ -414,24 +414,32 @@ test.describe('第 03、04 章泊舟陪练模拟器', () => {
     await expect(page.getByText('资料库建库 4 条')).toBeVisible({ timeout: 8000 });
   });
 
-  test('4.1 定时任务建好并看运行记录 → 4.2 手机遥控电脑', async ({ page }) => {
+  test('4.1 从模板 + 从对话各建一个定时任务，试跑后核对制品 → 4.2 手机切到本地电脑', async ({ page }) => {
     await page.setViewportSize({ width: WALK_WIDTH, height: 900 });
     await page.goto('/simulator/?route=schedule');
     await walkLesson(page, [
-      'btn:看看直接设自动会怎样', 'nav.schedule', 'schedule.newMenu', 'schedule.fromChat',
+      'btn:看看直接设自动会怎样', 'nav.schedule', 'schedule.newMenu', 'schedule.fromTemplate', 'schedule.pickTemplate',
     ]);
+    // 新建定时任务表单按真机截图：重复 / 时间 / 有效期 / 推送到企业微信
+    await expect(page.getByText('消息推送到企业微信').first()).toBeVisible();
+    await expect(page.getByText('每周 周日').first()).toBeVisible();
+    await walkLesson(page, ['schedule.createConfirm']);
+    await expect(page.getByText('⏰ 每周日 10:00')).toBeVisible();
+    await walkLesson(page, ['schedule.newMenu', 'schedule.fromChat']);
     // 从对话新建：输入框预填真机文案
     await expect(page.getByText(/帮我创建一个定时任务：每天 08:30 执行/).first()).toBeVisible();
-    await walkLesson(page, ['composer.send', 'nav.schedule', 'schedule.openTask', 'schedule.permFull', 'schedule.run', 'schedule.save']);
-    await expect(page.getByText('每天 08:30 · 下一次运行 明天 08:30')).toBeVisible();
-    await walkLesson(page, ['schedule.fastForward', 'schedule.viewRecords']);
+    await walkLesson(page, [
+      'composer.send', 'nav.schedule', 'schedule.openTask', 'schedule.permFull', 'schedule.run', 'schedule.save', 'schedule.viewRecords',
+    ]);
+    await expect(page.getByText('测试运行成功').first()).toBeVisible();
+    await walkLesson(page, ['schedule.recordDetail', 'schedule.checkSource']);
+    await expect(page.getByText(/距试跑约 14 小时/)).toBeVisible();
+    await walkLesson(page, ['schedule.closeDetail', 'schedule.fastForward']);
     await expect(page.getByText('已错过计划时间，将补跑一次')).toBeVisible();
-    await walkLesson(page, ['schedule.recordDetail']);
-    await expect(page.getByText('第 1 次运行成功')).toBeVisible();
     // 手快连点时，陪练消息仍按步骤顺序出现（旧消息不会晚到插到后面）
     const order = await page.evaluate(() => {
       const text = document.body.innerText;
-      return [text.indexOf('保存前先点'), text.indexOf('要等 3 天'), text.indexOf('三条记录')];
+      return [text.indexOf('现在点「运行」'), text.indexOf('把刚改的执行权限存下来'), text.indexOf('成功只说明跑完了'), text.indexOf('要等 3 天')];
     });
     expect(order.every((v) => v >= 0)).toBe(true);
     expect(order).toEqual([...order].sort((x, y) => x - y));

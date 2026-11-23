@@ -138,6 +138,9 @@ export type GuidedTargetId =
   // 定时任务
   | 'schedule.newMenu'
   | 'schedule.fromChat'
+  | 'schedule.fromTemplate'
+  | 'schedule.pickTemplate'
+  | 'schedule.createConfirm'
   | 'schedule.openTask'
   | 'schedule.permFull'
   | 'schedule.run'
@@ -237,12 +240,22 @@ export interface ScheduledTask {
   nextRun: string;
 }
 
+/** 制品里的一条资讯：带发布时间和可点开对照的来源 */
+export interface ScheduleNewsItem {
+  title: string;
+  point: string;
+  /** 原文发布时间，如「11-23 07:15」 */
+  published: string;
+  source: string;
+}
+
 /** 一条运行记录（对照「运行记录」表：任务名称 / 状态 / 运行时间 / 操作） */
 export interface ScheduleRecord {
   id: string;
   nth: number;
   taskName: string;
-  status: 'success' | 'catchup' | 'failed';
+  /** test = 点「运行」触发的测试运行 */
+  status: 'success' | 'catchup' | 'failed' | 'test';
   /** 状态列显示的文字 */
   statusText: string;
   time: string;
@@ -251,6 +264,10 @@ export interface ScheduleRecord {
   artifactFile?: string;
   summary?: string;
   artifactLines?: string[];
+  /** 有值时制品按资讯条目渲染，每条的来源可点开核对 */
+  artifactItems?: ScheduleNewsItem[];
+  /** 运行明细的几行 */
+  runLog?: string[];
 }
 
 /** 手机模拟面板里的一条消息 */
@@ -345,8 +362,15 @@ export interface GuidedShellState {
   scheduleTab: 'tasks' | 'records';
   scheduleNewMenuOpen: boolean;
   scheduledTasks: ScheduledTask[];
-  scheduleModalOpen: boolean;
+  /** 「从模板添加」页 */
+  scheduleTemplatesOpen: boolean;
+  /** 「新建定时任务」表单正在用的模板 id */
+  scheduleCreateTemplateId: string | null;
+  /** 「编辑定时任务」弹窗正在编辑的任务 id */
+  scheduleModalTaskId: string | null;
   scheduleTestRan: boolean;
+  /** 制品里点开核对过的来源（条目标题） */
+  scheduleCheckedSource: string | null;
   scheduleRecords: ScheduleRecord[];
   scheduleRecordDetailId: string | null;
   // ===== 4.2 助理 =====

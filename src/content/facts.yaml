@@ -50,9 +50,14 @@
   status: pending
   source: 标题下「云电脑」来自泊舟手机小程序截图（2026-11-23）；选项说明来自 5.11.3 语言包 home.taskTarget.* / remoteDevice.switcher.*；切换面板待截图
 - id: schedule-default-permission
-  text: 从对话新建的定时任务，执行权限默认是「需逐次确认」还是「免确认执行」待核对；模拟器按需逐次确认演示，让学员自己改成免确认。
+  text: 「从模板新建」打开的新建定时任务表单里，权限显示为红色「允许完全访问」（下拉里有「完全访问权限（推荐）」和「默认权限」）；「从对话新建」建出的任务在编辑弹窗里执行权限默认选哪个待核对，模拟器按需逐次确认演示。
   status: pending
-  source: 待在 5.11.3 真机从对话新建一次后查看编辑弹窗
+  source: 新建表单来自泊舟真机截图（2026-11-23），截图时全局是否开着完全访问待确认；下拉选项文案来自 5.11.3 语言包 automation.permission.*
+- id: schedule-templates
+  text: 定时任务「新建 ▾」只有「从对话新建」「从模板新建」两项；模板页「从模板添加」有 12 个模板（每日 AI 新闻推送、每周工作周报、父母联系提醒等）。
+  status: verified
+  verifiedAt: 2026-11-23
+  source: 泊舟真机截图与 5.11.3 语言包 automation.templates.*
 - id: schedule-run-cost
   text: 定时任务每次运行都按普通任务消耗额度（用限时免费模型时不扣积分）；具体计费口径以客户端为准。
   status: pending

@@ -72,8 +72,11 @@ export function createBaseGuidedState(
     scheduleTab: 'tasks',
     scheduleNewMenuOpen: false,
     scheduledTasks: [],
-    scheduleModalOpen: false,
+    scheduleTemplatesOpen: false,
+    scheduleCreateTemplateId: null,
+    scheduleModalTaskId: null,
     scheduleTestRan: false,
+    scheduleCheckedSource: null,
     scheduleRecords: [],
     scheduleRecordDetailId: null,
     // 4.2 助理
