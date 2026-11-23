@@ -1,0 +1,62 @@
+# 推送到 main 后自动构建并部署到服务器（也可以在 Actions 页面手动触发）
+# 服务器地址、登录用户、私钥、主机指纹都放在仓库 Secrets 里，不写进这个公开文件
+name: 部署
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# 只需要读代码
+permissions:
+  contents: read
+
+# 连续推送时只保留最新一次部署，避免两次 rsync 同时写
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Astro 要求 Node >= 22.23.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      # 单元测试不过就不部署（e2e 太慢，留在本地跑）
+      - name: 单元测试
+        run: npm run test:unit
+
+      # 内容校验 + 静态构建，产物在 dist/
+      - name: 构建
+        run: npm run build
+
+      # 写入私钥和固定的主机指纹（不信任首次连接时拿到的指纹）
+      - name: 配置 SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      # 同步到服务器：服务器端用 rrsync 把这个密钥锁死在网站目录里，目标写「.」就是网站根目录
+      # --delay-updates 先传完再统一替换，访客不会看到一半新一半旧的页面
+      - name: 上传到服务器
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          rsync -rlz --checksum --delete --delay-updates \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes" \
+            dist/ "$DEPLOY_USER@$DEPLOY_HOST:."
