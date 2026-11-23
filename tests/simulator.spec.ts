@@ -55,7 +55,7 @@ test.describe('M1 首页与文章页验证', () => {
   });
 });
 
-test.describe('泊舟陪练模拟器：第 1 课 0.4 认识界面', () => {
+test.describe('泊舟陪练模拟器：0.1 认识界面', () => {
   test('单步手把手走通 7 项 + 上一步回看 + 无跳过按钮 + 快捷标签联动 + 悬浮小窗切换', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/simulator/?route=interface');
@@ -156,7 +156,7 @@ test.describe('泊舟陪练模拟器：第 1 课 0.4 认识界面', () => {
   });
 });
 
-test.describe('第 03/04 章图文 + 第 01 章 5 节陪练模拟器', () => {
+test.describe('第 03/04 章图文 + 第 01 章陪练模拟器', () => {
   test('第 03 章技能与第 04 章助理图文页正常渲染且无横向溢出', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     for (const url of ['/features/extend/skills/', '/features/automation/assistant/']) {
@@ -169,9 +169,9 @@ test.describe('第 03/04 章图文 + 第 01 章 5 节陪练模拟器', () => {
     }
   });
 
-  test('1.1 系统设置：1280 宽展开侧栏 + 完整通用设置可点解释 + 挪出 C 盘 + 开通知', async ({ page }) => {
+  test('1.1 设置（1280 宽展开侧栏 + 通用设置可点解释 + 挪出 C 盘 + 开通知）→ 接着学模型与积分（每句积分 + 历史回看）', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
-    await page.goto('/simulator/?route=settings');
+    await page.goto('/simulator/?route=setup');
     await expect(page.getByText('新建任务')).toBeVisible();
 
     await page.getByRole('button', { name: '好，跟我去调设置' }).click();
@@ -188,11 +188,31 @@ test.describe('第 03/04 章图文 + 第 01 章 5 节陪练模拟器', () => {
     await page.locator('[data-guided-target="settings.enableNotify"]').click();
     await expect(page.getByText('已授权开启')).toBeVisible();
     await expect(page.getByText('通用设置 5 项速查')).toBeVisible({ timeout: 5000 });
+
+    // 同一节课里接着学第 2 段：模型与积分
+    await page.getByRole('button', { name: '接着学：模型与积分' }).click();
+    await expect(page.getByText('第 2 / 2 段 · 模型与积分')).toBeVisible();
+    await page.getByRole('button', { name: '用极致档跑一次看扣多少' }).click();
+    await page.locator('[data-guided-target="composer.send"]').click();
+    await expect(page.getByText('预计消耗 ✧ 0.8 ~ 12.50').first()).toBeVisible({ timeout: 6000 });
+    await expect(page.getByText('已消耗 ✧ 8.64').first()).toBeVisible({ timeout: 6000 });
+    await expect(page.getByText('✧ 1191.36')).toBeVisible();
+
+    await page.getByRole('button', { name: '回首页换免费模型对比' }).click();
+    await page.locator('[data-guided-target="composer.model"]').click();
+    await page.locator('[data-guided-target="modelMenu.pickFree"]').click();
+    await page.locator('[data-guided-target="composer.send"]').click();
+    await expect(page.getByText('已消耗 ✧ 0.00').first()).toBeVisible({ timeout: 6000 });
+    await expect(page.getByText('同一个 300 字任务 · 刚才实测消耗对比')).toBeVisible({ timeout: 6000 });
+
+    await page.getByRole('button', { name: '① 极致 1.00x · 碰头会整理' }).click();
+    await expect(page.getByText('已消耗 ✧ 8.64').first()).toBeVisible();
   });
 
-  test('1.2 分组与文件夹：先看隐患再标红 -> 选择本地文件夹绑定目录 -> 最近列表可回看对比', async ({ page }) => {
+  test('1.2 分组（标隐患 + 绑本地文件夹）→ 记忆（关开关已暂停 + 刷新保留进度 + 删歪纠偏）→ 个性化指令', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto('/simulator/?route=groups');
+    await page.goto('/simulator/?route=know-you');
+    await expect(page.getByText('第 1 / 3 段 · 分组与文件夹')).toBeVisible();
 
     await page.getByRole('button', { name: '先看 不选分组 会怎样' }).click();
     await page.locator('[data-guided-target="composer.send"]').click();
@@ -209,12 +229,9 @@ test.describe('第 03/04 章图文 + 第 01 章 5 节陪练模拟器', () => {
 
     await page.getByRole('button', { name: '① 未选分组 · 周报整理' }).click();
     await expect(page.getByText('临时目录', { exact: true })).toBeVisible();
-  });
 
-  test('1.3 记忆与进化：点开昨天记录不卡死 + 关开关标已暂停 + 真表格渲染 + 刷新保留进度 + 删歪纠偏', async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto('/simulator/?route=memory');
-
+    await page.getByRole('button', { name: '接着学：记忆与进化' }).click();
+    await expect(page.getByText('第 2 / 3 段 · 记忆与进化')).toBeVisible();
     // 先点开左侧「昨天 · 约定周报格式」，再点推进按钮应自动回到新对话，不卡死
     await page.getByRole('button', { name: '昨天 · 约定周报格式' }).click();
     await expect(page.getByText(/记住我的周报习惯/)).toBeVisible();
@@ -255,12 +272,9 @@ test.describe('第 03/04 章图文 + 第 01 章 5 节陪练模拟器', () => {
     await page.locator('[data-guided-target="avatarMenu.memory"]').click();
     await page.locator('[data-guided-target="settings.deleteBadMemory"]').click();
     await expect(page.getByText('刚才亲眼看到的真实输出对比')).toBeVisible({ timeout: 6000 });
-  });
 
-  test('1.4 个性化：指令（先看原样后标红）& 1.5 模型与积分（每句积分 + 历史回看）', async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto('/simulator/?route=personalization');
-
+    await page.getByRole('button', { name: '接着学：个性化指令' }).click();
+    await expect(page.getByText('第 3 / 3 段 · 个性化指令')).toBeVisible();
     await page.getByRole('button', { name: '先不设指令发一次看看' }).click();
     await page.locator('[data-guided-target="composer.send"]').click();
     await expect(page.getByRole('button', { name: '标出瞎编的地方' })).toBeVisible({ timeout: 6000 });
@@ -278,28 +292,11 @@ test.describe('第 03/04 章图文 + 第 01 章 5 节陪练模拟器', () => {
     await page.locator('[data-guided-target="composer.send"]').click();
     await expect(page.getByText('刚才两次真实输出对比')).toBeVisible({ timeout: 6000 });
 
-    // 模型与积分在 1.1 里，旧 ID 直达那一段
-    await page.goto('/simulator/?route=models-credits');
-    await page.getByRole('button', { name: '用极致档跑一次看扣多少' }).click();
-    await page.locator('[data-guided-target="composer.send"]').click();
-    await expect(page.getByText('预计消耗 ✧ 0.8 ~ 12.50').first()).toBeVisible({ timeout: 6000 });
-    await expect(page.getByText('已消耗 ✧ 8.64').first()).toBeVisible({ timeout: 6000 });
-    await expect(page.getByText('✧ 1191.36')).toBeVisible();
-
-    await page.getByRole('button', { name: '回首页换免费模型对比' }).click();
-    await page.locator('[data-guided-target="composer.model"]').click();
-    await page.locator('[data-guided-target="modelMenu.pickFree"]').click();
-    await page.locator('[data-guided-target="composer.send"]').click();
-    await expect(page.getByText('已消耗 ✧ 0.00').first()).toBeVisible({ timeout: 6000 });
-    await expect(page.getByText('同一个 300 字任务 · 刚才实测消耗对比')).toBeVisible({ timeout: 6000 });
-
-    await page.getByRole('button', { name: '① 极致 1.00x · 碰头会整理' }).click();
-    await expect(page.getByText('已消耗 ✧ 8.64').first()).toBeVisible();
   });
 });
 
-test.describe('第 02 章「发任务」全部 7 节泊舟陪练模拟器', () => {
-  test('2.1 添加资料（键盘输入 @ 点名 + 标出问题停留）与 2.2 模式（默认覆盖 vs Plan 改第 3 步）', async ({ page }) => {
+test.describe('第 02 章「发任务」泊舟陪练模拟器', () => {
+  test('2.1 给资料：@ 点名（标出问题停留）→ 接着学资料库（建分类、上传、+ 里选用）', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/simulator/?route=attach');
 
@@ -319,8 +316,28 @@ test.describe('第 02 章「发任务」全部 7 节泊舟陪练模拟器', () =
     await page.locator('[data-guided-target="composer.send"]').click();
     await expect(page.getByText('静安寺青松咖啡二楼包间').first()).toBeVisible({ timeout: 6000 });
 
-    // 模式是 2.2 的第一段（2.1 后面接的是资料库）
-    await page.goto('/simulator/?route=mode');
+    // 同一节课里接着学第 2 段：资料库
+    await page.getByRole('button', { name: '接着学：资料库' }).click();
+    await expect(page.getByText('第 2 / 2 段 · 资料库')).toBeVisible();
+    await walkLesson(page, [
+      'btn:看看堆满了会怎样', 'composer.send', 'btn:标出问题', 'nav.library', 'library.newCategory',
+      'library.upload', 'composer.plus', 'plusMenu.addFile',
+    ]);
+    // 点菜单外面把 + 菜单关掉后，+ 号亮圈，点它能重新打开（展开的子菜单会盖住问候语，所以直接派发点击事件）
+    await page.getByText('WorkBuddy，我帮你').dispatchEvent('click');
+    await expect(page.locator('[data-guided-target="plusMenu.library"]')).toHaveCount(0);
+    await expect(page.locator('[data-guided-target="composer.plus"]')).toHaveClass(/sim-ring/);
+    await page.locator('[data-guided-target="composer.plus"]').click();
+    await walkLesson(page, ['plusMenu.library', 'libraryPicker.pick']);
+    await expect(page.getByText('已选择 1 项')).toBeVisible();
+    await walkLesson(page, ['libraryPicker.confirm', 'composer.send']);
+    await expect(page.getByText('资料库建库 4 条')).toBeVisible({ timeout: 8000 });
+  });
+
+  test('2.2 发任务：模式 → 权限与审批 → 写清任务 → 看执行过程，段段接着学 → 2.3 检查和修改', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/simulator/?route=send');
+    await expect(page.getByText('第 1 / 4 段 · 模式')).toBeVisible();
     await page.getByRole('button', { name: '先看 默认模式 直接跑会怎样' }).click();
     await page.locator('[data-guided-target="composer.send"]').click();
     await expect(page.getByRole('button', { name: '标出问题在哪' })).toBeVisible({ timeout: 6000 });
@@ -334,12 +351,9 @@ test.describe('第 02 章「发任务」全部 7 节泊舟陪练模拟器', () =
     await expect(page.locator('[data-guided-target="chat.confirmPlan"]')).toBeVisible({ timeout: 6000 });
     await page.locator('[data-guided-target="chat.confirmPlan"]').click();
     await expect(page.getByText('三种模式一眼分清')).toBeVisible({ timeout: 6000 });
-  });
 
-  test('2.3 权限（默认权限审批卡片拦截）与 2.4 写清任务（5 要素）', async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto('/simulator/?route=permission');
-
+    await page.getByRole('button', { name: '接着学：权限与审批' }).click();
+    await expect(page.getByText('第 2 / 4 段 · 权限与审批')).toBeVisible();
     await page.getByRole('button', { name: '先看 开完全访问 的翻车现场' }).click();
     await page.locator('[data-guided-target="composer.send"]').click();
     await expect(page.getByRole('button', { name: '标出误删的地方' })).toBeVisible({ timeout: 6000 });
@@ -354,8 +368,8 @@ test.describe('第 02 章「发任务」全部 7 节泊舟陪练模拟器', () =
     await page.locator('[data-guided-target="approval.askPlain"]').click();
     await expect(page.getByText('刚才两次权限对比')).toBeVisible({ timeout: 6000 });
 
-    // 同一节课里接着学：写清任务
     await page.getByRole('button', { name: '接着学：写清任务' }).click();
+    await expect(page.getByText('第 3 / 4 段 · 写清任务')).toBeVisible();
     await page.getByRole('button', { name: '先看 一句话模糊发 会怎样' }).click();
     await page.locator('[data-guided-target="composer.send"]').click();
     await expect(page.getByRole('button', { name: '标出 3 处问题' })).toBeVisible({ timeout: 6000 });
@@ -366,12 +380,9 @@ test.describe('第 02 章「发任务」全部 7 节泊舟陪练模拟器', () =
     await page.getByRole('button', { name: '装进输入框 →' }).click();
     await page.locator('[data-guided-target="composer.send"]').click();
     await expect(page.getByText('什么时候用 5 要素 vs 什么时候让 AI 采访你')).toBeVisible({ timeout: 6000 });
-  });
 
-  test('2.5 看执行过程 -> 2.6 检查结果 -> 2.7 二次修改全闭环', async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto('/simulator/?route=execution');
-
+    await page.getByRole('button', { name: '接着学：看执行过程' }).click();
+    await expect(page.getByText('第 4 / 4 段 · 看执行过程')).toBeVisible();
     await page.getByRole('button', { name: '发出去看看执行过程' }).click();
     await page.locator('[data-guided-target="composer.send"]').click();
     await expect(page.locator('[data-guided-target="approval.cancel"]')).toBeVisible({ timeout: 6000 });
@@ -446,7 +457,7 @@ test.describe('第 03、04 章泊舟陪练模拟器', () => {
     await expect(page.getByText('专家对得上活 vs 对不上活')).toBeVisible({ timeout: 8000 });
   });
 
-  test('3.3 连接器（接飞书 + 自己做天气 MCP）→ 3.4 判断练习 → 资料库', async ({ page }) => {
+  test('3.3 连接器（接飞书 + 自己做天气 MCP）→ 3.4 判断练习 → 旧链接直达某段', async ({ page }) => {
     await page.setViewportSize({ width: WALK_WIDTH, height: 900 });
     await page.goto('/simulator/?route=connectors');
     await walkLesson(page, [
@@ -509,22 +520,10 @@ test.describe('第 03、04 章泊舟陪练模拟器', () => {
     await walkLesson(page, ['btn:看总结']);
     await expect(page.getByText('缺什么，挂什么')).toBeVisible({ timeout: 8000 });
 
-    // 资料库现在是 2.1 的第二段，旧 ID 直达
-    await page.goto('/simulator/?route=library');
-    await expect(page).toHaveURL(/route=attach/);
-    await walkLesson(page, [
-      'btn:看看堆满了会怎样', 'composer.send', 'btn:标出问题', 'nav.library', 'library.newCategory',
-      'library.upload', 'composer.plus', 'plusMenu.addFile',
-    ]);
-    // 点菜单外面把 + 菜单关掉后，+ 号亮圈，点它能重新打开（展开的子菜单会盖住问候语，所以直接派发点击事件）
-    await page.getByText('WorkBuddy，我帮你').dispatchEvent('click');
-    await expect(page.locator('[data-guided-target="plusMenu.library"]')).toHaveCount(0);
-    await expect(page.locator('[data-guided-target="composer.plus"]')).toHaveClass(/sim-ring/);
-    await page.locator('[data-guided-target="composer.plus"]').click();
-    await walkLesson(page, ['plusMenu.library', 'libraryPicker.pick']);
-    await expect(page.getByText('已选择 1 项')).toBeVisible();
-    await walkLesson(page, ['libraryPicker.confirm', 'composer.send']);
-    await expect(page.getByText('资料库建库 4 条')).toBeVisible({ timeout: 8000 });
+    // 旧链接（合并前的课程 ID）直达合并课里对应的那一段，地址换成新 ID
+    await page.goto('/simulator/?route=memory');
+    await expect(page).toHaveURL(/route=know-you/);
+    await expect(page.getByText('第 2 / 3 段 · 记忆与进化')).toBeVisible();
   });
 
   test('4.1 从模板 + 从对话各建一个定时任务，卡片上编辑试跑、进任务页核对产物 → 4.2 手机切到自己的电脑', async ({ page }) => {
