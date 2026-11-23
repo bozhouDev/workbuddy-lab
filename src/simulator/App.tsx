@@ -194,8 +194,9 @@ export default function App() {
               className="h-8 px-3 rounded-[9px] border border-gray-200 bg-gray-50 hover:bg-gray-100 text-[13px] font-semibold text-gray-900 inline-flex items-center gap-2 cursor-pointer transition-colors"
             >
               <span className="font-mono text-[11.5px] text-accent-600">{currentMeta.code}</span>
-              <span>{currentMeta.title}</span>
-              <span className="text-[11px] font-normal text-gray-500 hidden sm:inline">
+              {/* 合并后标题变长，窄屏（1024～1280）不换行，超出用省略号 */}
+              <span className="whitespace-nowrap truncate max-w-[180px] xl:max-w-none">{currentMeta.title}</span>
+              <span className="text-[11px] font-normal text-gray-500 hidden xl:inline whitespace-nowrap">
                 （{LESSON_CATALOG.length} 节可练）
               </span>
               <ChevronDownIcon size={12} className="text-gray-500" />
