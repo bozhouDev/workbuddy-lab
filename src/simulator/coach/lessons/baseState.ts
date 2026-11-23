@@ -66,6 +66,8 @@ export function createBaseGuidedState(
     // 3.7 资料库
     libraryCategories: [],
     libraryFiles: [],
+    libraryPickerOpen: false,
+    libraryPickerSelected: [],
     // 4.1 定时任务
     scheduleTab: 'tasks',
     scheduleNewMenuOpen: false,

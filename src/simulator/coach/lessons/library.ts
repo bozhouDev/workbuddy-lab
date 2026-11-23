@@ -3,8 +3,10 @@ import { createBaseGuidedState } from './baseState';
 import { freeChat } from './freeChat';
 
 const ASK_PROMPT = '我们公司出差住宿的报销标准是多少？';
-/** 做对：点名资料库里的分类，要求注明出处和版本 */
-const GOOD_PROMPT = '@资料库/制度规范 我们公司出差住宿的报销标准是多少？请注明出自哪份文件、哪个版本。';
+/** 做对：问的同时要求注明出处和版本（文件从 + → 添加文件 → 资料库 里选） */
+const GOOD_PROMPT = '我们公司出差住宿的报销标准是多少？请注明出自哪份文件、哪个版本。';
+/** 资料库里那份现行版制度 */
+const POLICY_FILE = '差旅管理办法_2026版.pdf';
 
 export const libraryLesson: GuidedLessonDef = {
   id: 'library',
@@ -93,21 +95,69 @@ export const libraryLesson: GuidedLessonDef = {
       }),
     },
     {
+      id: 'good-plus',
+      phase: 2,
+      onEnter: () => ({
+        view: 'home',
+        composerText: GOOD_PROMPT,
+        composerChips: [],
+        popover: null,
+        plusSubmenu: 'mode',
+      }),
+      say: [
+        '每个分类只放<b>现在要用的、现行有效的</b>，作废的旧版直接删。',
+        '这次不让它自己在资料库里翻，<b>亲手把那份制度交给这次任务</b>：点输入框左下角的 +。',
+      ],
+      wait: { target: 'composer.plus', callout: '点 +', label: '+' },
+      onAction: () => ({ popover: 'plus', plusSubmenu: 'mode' }),
+    },
+    {
+      id: 'good-add-file',
+      phase: 2,
+      navLabel: '添加文件',
+      say: [],
+      wait: { target: 'plusMenu.addFile', callout: '点添加文件', label: '添加文件' },
+      onAction: () => ({ plusSubmenu: 'files' }),
+    },
+    {
+      id: 'good-library',
+      phase: 2,
+      navLabel: '资料库',
+      say: ['右边能选的地方不少：本地文件、资料库，还有腾讯文档、ima、乐享知识库这些云端资料。选<b>资料库</b>。'],
+      wait: { target: 'plusMenu.library', callout: '选资料库', label: '资料库' },
+      onAction: () => ({ popover: null, plusSubmenu: 'mode', libraryPickerOpen: true, libraryPickerSelected: [] }),
+    },
+    {
+      id: 'good-pick',
+      phase: 2,
+      navLabel: '勾选 2026 版',
+      say: ['「从资料库中选择」：位置一栏写着在哪个分类。勾上<b>制度规范</b>里的 2026 版，文件名带着版本，选的是哪份你自己看得见。'],
+      wait: { target: 'libraryPicker.pick', callout: '勾选 2026 版', label: POLICY_FILE },
+      onAction: () => ({ libraryPickerSelected: [POLICY_FILE] }),
+    },
+    {
+      id: 'good-confirm',
+      phase: 2,
+      navLabel: '确定',
+      say: [],
+      wait: { target: 'libraryPicker.confirm', callout: '点确定', label: '确定' },
+      onAction: () => ({ libraryPickerOpen: false, composerChips: [{ kind: 'file', label: POLICY_FILE }] }),
+    },
+    {
       id: 'run-good',
       phase: 2,
-      onEnter: () => ({ view: 'home', composerText: GOOD_PROMPT }),
-      say: [
-        '每个分类只放<b>现在要用的、现行有效的</b>，作废的旧版直接删。发任务时在 + 号里选「添加文件 → 资料库」，或者像输入框里这样点名分类。再问一次。',
-      ],
-      wait: { target: 'composer.send', callout: '点名分类再问', label: '发送（点名分类）' },
+      say: ['文件挂到输入框上了。问题里我还加了一句「<b>注明出自哪份文件、哪个版本</b>」，有出处你才能核对。发送。'],
+      wait: { target: 'composer.send', callout: '带着文件再问', label: '发送（选了 2026 版）' },
+      onAction: () => ({ composerChips: [] }),
       runChat: () =>
         freeChat({
           id: 'library-good',
           prompt: GOOD_PROMPT,
-          chatTitle: '② 点名分类 · 报销标准',
+          promptChips: [{ kind: 'file', label: POLICY_FILE }],
+          chatTitle: '② 选了现行版 · 报销标准',
           footerTip: '在左侧 最近 里点 ① 和 ② 对比',
           elapsed: '6s',
-          steps: [{ running: '检索 资料库/制度规范（1 份）…', done: '已读取 差旅管理办法_2026版.pdf' }],
+          steps: [{ running: `读取 ${POLICY_FILE}…`, done: `已读取 ${POLICY_FILE}` }],
           replyHtml:
             '出自《{{ok:差旅管理办法_2026版.pdf}}》第 4 条（2026-03-01 起执行）：一线城市住宿{{ok:每晚不超过 600 元}}，其他城市每晚不超过 450 元。',
         }),
@@ -124,7 +174,7 @@ export const libraryLesson: GuidedLessonDef = {
           ['按用途建分类，不按日期', '找资料时你想的是「这是干嘛用的」'],
           ['只放现行版，旧版直接删', '新旧混放它分不清，会引用作废的'],
           ['文件名带版本或日期', '差旅管理办法_2026版 比 新建文档(3) 好认'],
-          ['问的时候点名分类，并要求注明出处', '范围小了答得准，有出处你才能核对'],
+          ['用 + → 添加文件 → 资料库 选文件，并要求注明出处', '选的是哪份自己看得见，有出处你才能核对'],
         ],
       },
       after: ['资料多了以后，可以让它「给资料库生成一份索引清单：标题、一句话摘要、适用场景」，自己隔段时间翻一遍删旧的。'],

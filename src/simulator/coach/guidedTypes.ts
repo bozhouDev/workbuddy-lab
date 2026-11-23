@@ -76,6 +76,10 @@ export type GuidedTargetId =
   | 'settings.fillRules'
   | 'settings.saveRules'
   | 'composer.plus'
+  | 'plusMenu.addFile'
+  | 'plusMenu.library'
+  | 'libraryPicker.pick'
+  | 'libraryPicker.confirm'
   | 'plusMenu.togglePlan'
   | 'plusMenu.toggleAsk'
   | 'composer.mention'
@@ -202,10 +206,16 @@ export interface ChatRunSpec {
   };
 }
 
-/** 输入框里挂着的胶囊（召唤的专家 / 选中的技能 / 指定的连接器） */
+/** 输入框里挂着的胶囊（召唤的专家 / 选中的技能 / 指定的连接器 / 从资料库选的文件） */
 export interface ComposerChip {
-  kind: 'expert' | 'skill' | 'connector';
+  kind: 'expert' | 'skill' | 'connector' | 'file';
   label: string;
+}
+
+/** 胶囊左边的小字类别 */
+export function chipKindLabel(kind: ComposerChip['kind']): string {
+  const map: Record<ComposerChip['kind'], string> = { expert: '专家', skill: '技能', connector: '连接器', file: '文件' };
+  return map[kind];
 }
 
 /** 专家·技能·连接器页顶部的三个标签 */
@@ -324,6 +334,10 @@ export interface GuidedShellState {
   // ===== 3.7 资料库 =====
   libraryCategories: string[];
   libraryFiles: Array<{ name: string; category: string }>;
+  /** 「从资料库中选择」弹窗 */
+  libraryPickerOpen: boolean;
+  /** 弹窗里勾选的文件名 */
+  libraryPickerSelected: string[];
   // ===== 4.1 定时任务 =====
   scheduleTab: 'tasks' | 'records';
   scheduleNewMenuOpen: boolean;

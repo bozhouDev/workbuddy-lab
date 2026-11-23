@@ -26,12 +26,12 @@ import {
 } from '../shell/icons';
 import { RichText } from '../shell/RichText';
 import { GuidanceCallout } from './GuidanceCue';
-import type { GuidedShellState, GuidedTargetId } from './guidedTypes';
+import { chipKindLabel, type GuidedShellState, type GuidedTargetId } from './guidedTypes';
 import type { PopoverId } from './types';
 import { SettingsViews5113 } from './SettingsViews5113';
 import { ExtensionsViews5113 } from './ExtensionsViews5113';
 import { ScheduleView5113 } from './ScheduleView5113';
-import { LibraryView5113, MobileLinkPopover, PhonePanel } from './LibraryPhoneViews';
+import { LibraryPickerModal, LibraryView5113, MobileLinkPopover, PhonePanel } from './LibraryPhoneViews';
 import { SLASH_SKILLS_BASE } from './extensionsData';
 import { FakeQr, LetterIcon } from './targetKit';
 
@@ -71,7 +71,7 @@ export function GuidedWorkBuddy({
 }: GuidedWorkBuddyProps) {
   // 不在首页、但下一步要点首页输入框的按钮时，提示学员先点「新建任务」回首页
   const isNeedBackToHome =
-    shell.view !== 'home' && shell.view !== 'settings' && Boolean(waitTarget?.startsWith('composer.'));
+    shell.view !== 'home' && shell.view !== 'settings' && /^(composer|plusMenu)\./.test(waitTarget ?? '');
   // 第 3、4 章的三个侧栏入口：作为课程目标时可点进对应页面
   const navTargets: Record<string, GuidedTargetId> = {
     extensions: 'nav.extensions',
@@ -91,8 +91,13 @@ export function GuidedWorkBuddy({
   const backToView = targetView && shell.view !== targetView ? targetView : null;
   /** 新视图共用的目标参数 */
   const kitProps = { waitTarget, waitCallout, urgent, onTargetClick, onAsideClick };
+  // + 菜单要等学员点里面的「添加文件 / 资料库」时，菜单被点掉了就在 + 上亮圈，点它重新打开
+  const plusNeedsReopen =
+    (waitTarget === 'plusMenu.addFile' || waitTarget === 'plusMenu.library') && shell.popover !== 'plus';
   const ring = (id: GuidedTargetId) =>
-    waitTarget === id ? (urgent ? 'sim-ring-urgent' : 'sim-ring') : '';
+    waitTarget === id || (id === 'composer.plus' && plusNeedsReopen) ? (urgent ? 'sim-ring-urgent' : 'sim-ring') : '';
+  /** + 菜单右侧当前展开的是「添加文件」二级菜单 */
+  const filesSub = shell.plusSubmenu === 'files';
 
   const handleOrAside = (
     id: GuidedTargetId,
@@ -454,6 +459,7 @@ export function GuidedWorkBuddy({
       </aside>
 
       {shell.popover === 'mobile' && <MobileLinkPopover shell={shell} {...kitProps} />}
+      {shell.libraryPickerOpen && <LibraryPickerModal shell={shell} {...kitProps} />}
 
       {/* ===== 主工作区：第 3、4 章的页面 / 首页 / 带真实积分消耗的对话 + 右侧产物区 ===== */}
       {shell.view === 'extensions' ? (
@@ -757,18 +763,27 @@ export function GuidedWorkBuddy({
                 <div className="w-[168px] rounded-[14px] bg-white border border-[#e6e6e3] shadow-[0_14px_36px_rgba(17,19,24,0.16)] p-1.5 flex flex-col gap-0.5">
                   <button
                     type="button"
+                    data-guided-target="plusMenu.addFile"
                     onClick={() =>
-                      onAsideClick(
+                      handleOrAside(
+                        'plusMenu.addFile',
                         '添加文件',
                         '点 <b>+ → 添加文件</b> 除了能传本地文件，还能直接选资料库、腾讯文档、ima 和乐享知识库里的云端资料。'
                       )
                     }
-                    className="w-full border-0 bg-transparent hover:bg-[#f4f4f5] rounded-lg px-2.5 py-2 flex items-center justify-between text-[#2b2f36] cursor-pointer"
+                    className={`relative w-full border-0 rounded-lg px-2.5 py-2 flex items-center justify-between cursor-pointer ${
+                      filesSub ? 'bg-[#f4f4f5] font-semibold text-[#111318]' : 'bg-transparent hover:bg-[#f4f4f5] text-[#2b2f36]'
+                    } ${ring('plusMenu.addFile')}`}
                   >
                     <span>添加文件</span>
                     <ChevronRightIcon size={12} className="text-[#8c9099]" />
+                    {waitTarget === 'plusMenu.addFile' && waitCallout && <GuidanceCallout text={waitCallout} placement="left" />}
                   </button>
-                  <div className="w-full rounded-lg px-2.5 py-2 flex items-center justify-between bg-[#f4f4f5] font-semibold text-[#111318]">
+                  <div
+                    className={`w-full rounded-lg px-2.5 py-2 flex items-center justify-between ${
+                      filesSub ? 'text-[#2b2f36]' : 'bg-[#f4f4f5] font-semibold text-[#111318]'
+                    }`}
+                  >
                     <span>模式</span>
                     <ChevronRightIcon size={12} className="text-[#5c5f66]" />
                   </div>
@@ -790,7 +805,43 @@ export function GuidedWorkBuddy({
                   ))}
                 </div>
 
+                {/* 右侧二级：添加文件（对照 01-加号添加文件菜单.png） */}
+                {filesSub && (
+                  <div className="w-[176px] rounded-[14px] bg-white border border-[#e6e6e3] shadow-[0_14px_36px_rgba(17,19,24,0.16)] p-1.5 flex flex-col gap-0.5">
+                    <button
+                      type="button"
+                      onClick={() => onAsideClick('本地文件', '从电脑里挑文件传给这次任务。这节要用的是资料库里整理好的那份，点下面的「资料库」。')}
+                      className="w-full border-0 bg-transparent hover:bg-[#f4f4f5] rounded-lg px-2.5 py-2 text-left text-[#2b2f36] cursor-pointer"
+                    >
+                      ⤒ 本地文件
+                    </button>
+                    <button
+                      type="button"
+                      data-guided-target="plusMenu.library"
+                      onClick={() =>
+                        handleOrAside('plusMenu.library', '资料库', '从资料库里挑文件给这次任务用，选的是哪份、哪个版本，一眼就能看到。')
+                      }
+                      className={`relative w-full border-0 bg-transparent hover:bg-[#f4f4f5] rounded-lg px-2.5 py-2 text-left text-[#2b2f36] cursor-pointer ${ring('plusMenu.library')}`}
+                    >
+                      📖 资料库
+                      {waitTarget === 'plusMenu.library' && waitCallout && <GuidanceCallout text={waitCallout} placement="right" />}
+                    </button>
+                    <div className="h-px bg-[#eeeeeb] my-1 mx-1" />
+                    {['腾讯文档', 'ima', '乐享知识库'].map((label) => (
+                      <button
+                        key={label}
+                        type="button"
+                        onClick={() => onAsideClick(label, `<b>${label}</b> 里的云端资料也能直接选进来，登录对应账号后可用。`)}
+                        className="w-full border-0 bg-transparent hover:bg-[#f4f4f5] rounded-lg px-2.5 py-2 text-left text-[#2b2f36] cursor-pointer"
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 {/* 右侧二级：模式开关（Plan / Ask） */}
+                {!filesSub && (
                 <div className="w-[244px] rounded-[14px] bg-white border border-[#e6e6e3] shadow-[0_14px_36px_rgba(17,19,24,0.16)] p-2 flex flex-col gap-1.5">
                   <div className="px-2 pt-1 text-[11px] text-[#8c9099]">
                     {shell.planOn
@@ -868,6 +919,7 @@ export function GuidedWorkBuddy({
                     )}
                   </button>
                 </div>
+                )}
               </div>
             )}
 
@@ -1055,7 +1107,7 @@ export function GuidedWorkBuddy({
                         className="sim-pop-up h-6 px-2 rounded-full bg-[#f3f5fe] border border-accent-200 text-accent-700 text-[11.5px] font-semibold inline-flex items-center gap-1 max-w-[170px]"
                         title={c.label}
                       >
-                        <span className="text-[10px] text-accent-500">{c.kind === 'expert' ? '专家' : c.kind === 'skill' ? '技能' : '连接器'}</span>
+                        <span className="text-[10px] text-accent-500">{chipKindLabel(c.kind)}</span>
                         <span className="truncate">{c.label}</span>
                         {/* × 移除：真机点了会把胶囊拿掉，课程里只做解释，避免打乱当前步骤 */}
                         <button
@@ -1225,7 +1277,7 @@ export function GuidedWorkBuddy({
                   <div className="self-end flex flex-wrap justify-end gap-1.5 -mb-3">
                     {chat.promptChips.map((c) => (
                       <span key={`${c.kind}-${c.label}`} className="h-6 px-2 rounded-full bg-[#f3f5fe] border border-accent-200 text-accent-700 text-[11.5px] font-semibold inline-flex items-center gap-1">
-                        <span className="text-[10px] text-accent-500">{c.kind === 'expert' ? '专家' : c.kind === 'skill' ? '技能' : '连接器'}</span>
+                        <span className="text-[10px] text-accent-500">{chipKindLabel(c.kind)}</span>
                         {c.label}
                       </span>
                     ))}

@@ -401,8 +401,16 @@ test.describe('第 03、04 章泊舟陪练模拟器', () => {
     await page.getByRole('button', { name: /下一节：3.7 资料库/ }).click();
     await walkLesson(page, [
       'btn:看看堆满了会怎样', 'composer.send', 'btn:标出问题', 'nav.library', 'library.newCategory',
-      'library.upload', 'composer.send',
+      'library.upload', 'composer.plus', 'plusMenu.addFile',
     ]);
+    // 点菜单外面把 + 菜单关掉后，+ 号亮圈，点它能重新打开（展开的子菜单会盖住问候语，所以直接派发点击事件）
+    await page.getByText('WorkBuddy，我帮你').dispatchEvent('click');
+    await expect(page.locator('[data-guided-target="plusMenu.library"]')).toHaveCount(0);
+    await expect(page.locator('[data-guided-target="composer.plus"]')).toHaveClass(/sim-ring/);
+    await page.locator('[data-guided-target="composer.plus"]').click();
+    await walkLesson(page, ['plusMenu.library', 'libraryPicker.pick']);
+    await expect(page.getByText('已选择 1 项')).toBeVisible();
+    await walkLesson(page, ['libraryPicker.confirm', 'composer.send']);
     await expect(page.getByText('资料库建库 4 条')).toBeVisible({ timeout: 8000 });
   });
 

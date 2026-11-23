@@ -111,6 +111,98 @@ export function LibraryView5113(props: Props) {
   );
 }
 
+/**
+ * + → 添加文件 → 资料库 弹出的「从资料库中选择」（文案来自 5.11.3 语言包 spaceLibrary.picker.*）
+ * 页签 最近 / 我的文档 / 团队空间，表格 名称 / 所有者 / 位置 / 最近访问，底部「已选择 n 项」和 取消 / 确定
+ */
+export function LibraryPickerModal(props: Props) {
+  const { shell } = props;
+  const kit = makeTargetKit(props);
+  const target = '差旅管理办法_2026版.pdf';
+  const selected = shell.libraryPickerSelected;
+  return (
+    <div className="absolute inset-0 z-40 bg-black/25 flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
+      <div className="sim-pop-up w-full max-w-[620px] rounded-[18px] bg-white shadow-[0_24px_60px_rgba(17,19,24,0.25)] p-5 flex flex-col gap-3 text-[13px]">
+        <div className="flex items-center justify-between">
+          <span className="text-[16px] font-bold text-[#111318]">从资料库中选择</span>
+          <span className="h-8 w-[180px] px-2.5 rounded-lg border border-[#e6e6e3] inline-flex items-center gap-1.5 text-[12.5px] text-[#9ea3ad]">
+            <SearchIcon size={13} /> 搜索文档
+          </span>
+        </div>
+        <div className="flex gap-1 text-[12.5px]">
+          {['最近', '我的文档', '团队空间'].map((t) => (
+            <span key={t} className={`px-3 py-1.5 rounded-lg ${t === '我的文档' ? 'bg-[#f1f1ef] font-semibold text-[#111318]' : 'text-[#5c5f66]'}`}>
+              {t}
+            </span>
+          ))}
+        </div>
+        <div className="text-[12.5px]">
+          <div className="grid grid-cols-[24px_2.2fr_0.7fr_1.3fr_0.9fr] gap-2 text-[#8c9099] pb-2 border-b border-[#f0f0ee]">
+            <span />
+            <span>名称</span>
+            <span>所有者</span>
+            <span>位置</span>
+            <span>最近访问</span>
+          </div>
+          {shell.libraryFiles.map((f) => {
+            const isTarget = f.name === target;
+            const on = selected.includes(f.name);
+            return (
+              <button
+                key={f.name}
+                type="button"
+                data-guided-target={isTarget ? 'libraryPicker.pick' : undefined}
+                onClick={
+                  isTarget
+                    ? kit.click('libraryPicker.pick', f.name, '勾上它。文件名里带着版本，选的是哪份一眼就清楚。')
+                    : kit.aside(f.name, `这份在「${f.category}」，和报销问题无关。这次只勾制度规范里的 ${target}。`)
+                }
+                className={`relative w-full grid grid-cols-[24px_2.2fr_0.7fr_1.3fr_0.9fr] gap-2 items-center py-2 border-0 border-b border-[#f7f7f6] text-left cursor-pointer rounded ${
+                  on ? 'bg-accent-50' : 'bg-transparent hover:bg-[#fafaf9]'
+                } ${isTarget ? kit.ring('libraryPicker.pick') : ''}`}
+              >
+                <span
+                  className={`w-4 h-4 rounded border inline-flex items-center justify-center text-[10px] ${
+                    on ? 'bg-accent-600 border-accent-600 text-white' : 'border-[#cfcfcb] bg-white'
+                  }`}
+                >
+                  {on ? '✓' : ''}
+                </span>
+                <span className="truncate text-[#111318]">📄 {f.name}</span>
+                <span className="text-[#5c5f66]">我</span>
+                <span className="truncate text-[#5c5f66]">我的资料/{f.category}</span>
+                <span className="text-[#8c9099] font-mono">刚刚</span>
+                {isTarget && kit.callout('libraryPicker.pick', 'right', 'center')}
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex items-center justify-between pt-1">
+          <span className="text-[12px] text-[#8c9099]">已选择 {selected.length} 项</span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={kit.aside('取消', '不选文件就关掉。这一步先选好那份 2026 版再点确定。')}
+              className="h-9 px-4 rounded-[10px] border-0 bg-[#f1f1ef] text-[13px] cursor-pointer"
+            >
+              取消
+            </button>
+            <button
+              type="button"
+              data-guided-target="libraryPicker.confirm"
+              onClick={kit.click('libraryPicker.confirm', '确定', '选好了就点确定，文件会挂到输入框上。')}
+              className={`relative h-9 px-4 rounded-[10px] border-0 bg-[#111318] text-white text-[13px] font-semibold cursor-pointer ${kit.ring('libraryPicker.confirm')}`}
+            >
+              确定
+              {kit.callout('libraryPicker.confirm', 'top', 'end')}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** 左下角「移动设备」小图标弹出的连接面板（文案来自设置 → 设备连接） */
 export function MobileLinkPopover(props: Props) {
   const { shell } = props;
