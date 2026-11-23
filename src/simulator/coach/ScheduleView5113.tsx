@@ -546,6 +546,12 @@ function TaskRunPage(props: Props) {
                 );
               })
             : r.artifactLines?.map((ln) => <div key={ln}>{ln}</div>)}
+          {/* 模拟产物：AI 在输出末尾说明文件存到了哪里 */}
+          {r.savedFile && (
+            <div className="mt-2 text-[#2b2f36]">
+              已按要求保存：<span className="px-1.5 py-0.5 rounded bg-[#f1f1ef] font-mono text-[12px] break-all">{r.savedFile}</span>
+            </div>
+          )}
           <div className="mt-4 flex items-center gap-4 text-[12.5px] text-[#6b7079]">
             {r.artifactItems && <span>{r.artifactItems.length * 4 + 3} 个来源</span>}
             {r.cost && <span>共消耗 ◇ {r.cost} · ⚡ 快速</span>}
@@ -638,11 +644,11 @@ function ScheduleModal(props: Props) {
                 <div className="text-[12.5px] leading-[1.7] text-[#111318] whitespace-pre-line">{t.prompt}</div>
                 <div className="flex flex-wrap items-center gap-3 text-[12px] text-[#4a4f57]">
                   {[
-                    ['Hy4 flash ∨', '定时任务可以单独选模型。早报这种活用便宜的就够。'],
+                    ['⚡ 快速 ∨', '定时任务可以单独选模型。早报这种活用便宜的就够。'],
                     ['技能', '可以给这个任务挂技能。'],
                     ['召唤专家 ∨', '可以指定一个专家来跑。'],
                   ].map(([label, tip]) => (
-                    <button key={label} type="button" onClick={kit.aside(label.replace(' ∨', ''), tip)} className="border-0 bg-transparent cursor-pointer text-[#4a4f57]">
+                    <button key={label} type="button" onClick={kit.aside(label.replace(' ∨', '').replace('⚡ ', ''), tip)} className="border-0 bg-transparent cursor-pointer text-[#4a4f57]">
                       {label}
                     </button>
                   ))}

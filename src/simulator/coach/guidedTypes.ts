@@ -269,6 +269,8 @@ export interface ScheduleRecord {
   artifactItems?: ScheduleNewsItem[];
   /** 这次运行消耗的积分 */
   cost?: string;
+  /** 这次运行保存的文件名（模拟产物） */
+  savedFile?: string;
 }
 
 /** 手机模拟面板里的一条消息 */
