@@ -165,9 +165,8 @@ export const CONNECTORS: ConnectorCard[] = [
 
 /** 飞书连接器的「可用功能」（教学抽象，真机列表以实际授权页为准） */
 export const FEISHU_CAPABILITIES: Array<{ name: string; risk?: boolean }> = [
-  { name: '搜索与读取云文档' },
-  { name: '读取群消息' },
-  { name: '读写多维表格' },
+  { name: '读取云文档' },
+  { name: '创建文档' },
+  { name: '录入多维表格' },
   { name: '发送消息', risk: true },
-  { name: '删除文档', risk: true },
 ];

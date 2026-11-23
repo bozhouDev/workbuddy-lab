@@ -135,7 +135,7 @@ export const connectorsLesson: GuidedLessonDef = {
       phase: 2,
       onEnter: () => ({ connectorDetailId: 'feishu', composerText: PROBE_PROMPT, composerChips: FEISHU_CHIP }),
       say: [
-        '「可用功能」这一栏就是它的权限清单：读文档、读群消息、读写多维表格是日常用的；<b>橙色的发送消息、删除文档是收不回来的动作</b>。<b>授权给了它什么，它就真能做什么。</b>',
+        '「可用功能」就是它能替你做的事，比如读文档、创建文档、往多维表格里录数据。<b>授权给了它什么，它就真能做什么</b>；像橙色的发送消息，发出去就收不回来，用之前要让它先列清单给你确认。',
         '第一次用，先做一个<b>只读、小范围</b>的验货。我把句子放进输入框了，先点左上角「新建任务」回首页，再发送。',
       ],
       wait: { target: 'composer.send', callout: '只读小范围验货', label: '发送（验货）' },

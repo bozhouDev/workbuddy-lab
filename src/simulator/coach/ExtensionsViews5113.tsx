@@ -784,7 +784,8 @@ function ExtensionOverlays(props: Props) {
               </div>
             </div>
           </div>
-          <Section title="可用功能">
+          {/* 真机清单更长，这里只举几个例子 */}
+          <Section title="可用功能（举例）">
             <div className="flex flex-col gap-1.5">
               {FEISHU_CAPABILITIES.map((c) => (
                 <div key={c.name} className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg ${c.risk ? 'bg-[#fff6ef]' : 'bg-[#f7f7f6]'}`}>
