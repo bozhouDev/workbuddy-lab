@@ -103,7 +103,7 @@ export const assistantLesson: GuidedLessonDef = {
       phase: 2,
       navLabel: '我的电脑',
       say: [
-        '弹出「<b>选择设备</b>」：第一项是云电脑，第二项就是你自己的电脑，显示电脑名字。后面的绿色「<b>在线</b>」说明它开着、连得上；电脑关机或睡着了，这里会显示「<b>离线</b>」，手机就用不了它，所以 1.1 节的防休眠要开好。选它。',
+        '弹出「<b>选择设备</b>」：第一项是云电脑，第二项就是你自己的电脑，显示电脑名字。后面的绿色「<b>在线</b>」说明它开着、连得上；电脑关机或睡着了，这里会显示「<b>离线</b>」，所以 1.1 节的防休眠要开好。选它。',
       ],
       wait: { target: 'phone.modeComputer', callout: '选你自己的电脑', label: '学员的 MacBook Pro' },
       onAction: () => ({ phoneMode: 'computer', phoneDeviceSheetOpen: false, followupText: PHONE_PROMPT }),
