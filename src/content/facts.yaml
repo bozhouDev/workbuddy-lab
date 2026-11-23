@@ -46,9 +46,10 @@
   status: pending
   source: 待截取 5.11.3 飞书连接器详情页
 - id: phone-work-modes
-  text: 手机端对话标题下方显示任务运行位置（默认「云电脑」），可在云电脑和本地电脑之间切换；云电脑无法处理本地未上传的资料。点开后的切换面板样式待核对。
-  status: pending
-  source: 标题下「云电脑」来自泊舟手机小程序截图（2026-11-23）；选项说明来自 5.11.3 语言包 home.taskTarget.* / remoteDevice.switcher.*；切换面板待截图
+  text: 手机端标题下方显示任务运行位置（「☁ 云电脑 ›」），点开是「选择设备」，列出云电脑和已连接的电脑（电脑名 + 「在线」）；云电脑无法处理本地未上传的资料。
+  status: verified
+  verifiedAt: 2026-11-23
+  source: 泊舟手机小程序截图（2026-11-23）；云电脑说明来自 5.11.3 语言包 home.taskTarget.*。选中电脑后标题下显示什么还没截图
 - id: schedule-default-permission
   text: 定时任务默认「允许完全访问」，即使全局是「默认权限」也一样；下拉里另一档是「默认权限」。
   status: verified

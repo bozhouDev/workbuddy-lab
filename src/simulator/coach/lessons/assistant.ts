@@ -73,7 +73,7 @@ export const assistantLesson: GuidedLessonDef = {
       }),
       say: [
         '右边是手机上的 WorkBuddy（照小程序画的）。看标题下面那行小字「<b>☁ 云电脑</b>」：它说的是<b>这个活在哪台电脑上跑</b>。',
-        '<b>云电脑</b>是腾讯云上的一台电脑，你家里电脑关着也能跑；<b>本地电脑</b>就是你自己那台。现在是云电脑。我填了一句要用电脑里文件的活，点手机上的发送。',
+        '<b>云电脑</b>是腾讯云上的一台电脑，你家里电脑关着也能跑；另一个选项就是<b>你自己那台电脑</b>。现在是云电脑。我填了一句要用电脑里文件的活，点手机上的发送。',
       ],
       wait: { target: 'phone.send', callout: '在手机上发', label: '手机发送（云电脑）' },
       onAction: (s) => ({
@@ -83,7 +83,7 @@ export const assistantLesson: GuidedLessonDef = {
           { from: 'me', text: PHONE_PROMPT },
           {
             from: 'bot',
-            text: '我现在在云电脑上运行，访问不到你电脑里的文件。可以先把文件上传再发，或者切换到本地电脑。',
+            text: '我现在在云电脑上运行，访问不到你电脑里的文件。可以先把文件上传再发，或者切换到你的电脑。',
             tone: 'warn',
           },
         ],
@@ -93,17 +93,19 @@ export const assistantLesson: GuidedLessonDef = {
       id: 'switch-device',
       phase: 2,
       say: [
-        '碰壁了：<b>云电脑处理不了你电脑里没上传的资料</b>。云电脑适合查资料、写东西这种不碰本机文件的活；要用电脑里的东西，就得切到本地电脑。点标题下面的「云电脑」。',
+        '碰壁了：<b>云电脑处理不了你电脑里没上传的资料</b>。云电脑适合查资料、写东西这种不碰本机文件的活；要用电脑里的东西，就得切到你自己的电脑。点标题下面的「云电脑 ›」。',
       ],
-      wait: { target: 'phone.deviceSwitch', callout: '点这里切换', label: '切换电脑' },
+      wait: { target: 'phone.deviceSwitch', callout: '点这里切换', label: '选择设备' },
       onAction: () => ({ phoneDeviceSheetOpen: true }),
     },
     {
       id: 'switch-computer',
       phase: 2,
-      navLabel: '本地电脑',
-      say: [],
-      wait: { target: 'phone.modeComputer', callout: '选本地电脑', label: '本地电脑' },
+      navLabel: '我的电脑',
+      say: [
+        '弹出「<b>选择设备</b>」：第一项是云电脑，第二项就是你自己的电脑，显示电脑名字。后面的绿色「<b>在线</b>」说明它开着、连得上；电脑睡着了就不在线，选不了。选它。',
+      ],
+      wait: { target: 'phone.modeComputer', callout: '选你自己的电脑', label: '学员的 MacBook Pro' },
       onAction: () => ({ phoneMode: 'computer', phoneDeviceSheetOpen: false, followupText: PHONE_PROMPT }),
     },
     {

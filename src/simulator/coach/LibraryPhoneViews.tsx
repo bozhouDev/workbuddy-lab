@@ -244,21 +244,26 @@ export function MobileLinkPopover(props: Props) {
   );
 }
 
-/** 切换电脑面板里的两个选项（说明文字取自 5.11.3 语言包 home.taskTarget.*） */
+/**
+ * 「选择设备」面板里的两项（对照泊舟手机截图）：云电脑 + 你自己那台电脑（电脑名字 + 「在线」）
+ * 仓库公开，电脑名用通用的「学员的 MacBook Pro」
+ */
 const PHONE_DEVICES = [
-  { id: 'cloud' as const, icon: '☁', name: '云电脑', desc: '云端运行，关机不中断、多端同步接力；无法处理本地未上传的资料。' },
-  { id: 'computer' as const, icon: '💻', name: '本地电脑', desc: '本地运行，直接处理本机资料、操作当前电脑；需保持电脑在线。' },
+  { id: 'cloud' as const, icon: '☁', name: '云电脑', online: false },
+  { id: 'computer' as const, icon: '🖥', name: '学员的 MacBook Pro', online: true },
 ];
 
 /**
  * 手机模拟面板（对照泊舟手机上 WorkBuddy 微信小程序截图）
- * 顶栏：≡、新会话、标题 + 「☁ 云电脑 ▾」（任务在哪台电脑跑）、小程序胶囊；中间对话；底部输入框和 任务 / 定时任务 / 发现 / 我的
+ * 顶栏：≡、新会话、标题 + 「☁ 云电脑 ›」（任务在哪台电脑跑，点开是「选择设备」）、小程序胶囊；
+ * 中间：没消息时是「WorkBuddy，我帮你」+ 快捷入口，有消息时是对话；底部输入框和 任务 / 定时任务 / 发现 / 我的
  */
 export function PhonePanel(props: Props & { draft: string }) {
   const { shell, draft } = props;
   const kit = makeTargetKit(props);
   const device = PHONE_DEVICES.find((d) => d.id === shell.phoneMode) ?? PHONE_DEVICES[0];
-  const title = shell.phoneMessages.length > 0 ? '读书会筹备纪要' : '打招呼开始新会话';
+  const empty = shell.phoneMessages.length === 0;
+  const title = empty ? 'WorkBuddy' : '读书会筹备纪要';
   return (
     <div className="sim-slide-in-panel absolute right-4 top-4 bottom-4 z-20 w-[272px] rounded-[30px] bg-[#111318] p-2 shadow-[0_24px_60px_rgba(17,19,24,0.35)]" onClick={(e) => e.stopPropagation()}>
       <div className="relative h-full rounded-[24px] bg-[#f7f7f7] flex flex-col overflow-hidden text-[12.5px]">
@@ -275,11 +280,11 @@ export function PhonePanel(props: Props & { draft: string }) {
             <button
               type="button"
               data-guided-target="phone.deviceSwitch"
-              aria-label="切换电脑"
-              onClick={kit.click('phone.deviceSwitch', '切换电脑', '这行小字是这个活在哪台电脑上跑，点它能在云电脑和本地电脑之间切换。')}
+              aria-label="选择设备"
+              onClick={kit.click('phone.deviceSwitch', '选择设备', '这行小字是这个活在哪台电脑上跑，点它能在云电脑和你自己的电脑之间切换。')}
               className={`relative border-0 bg-transparent px-1.5 rounded text-[11px] text-[#6b7079] cursor-pointer ${kit.ring('phone.deviceSwitch')}`}
             >
-              {device.icon} {device.name} ▾
+              {device.icon} {device.name} ›
               {kit.callout('phone.deviceSwitch', 'bottom', 'center')}
             </button>
           </div>
@@ -289,7 +294,19 @@ export function PhonePanel(props: Props & { draft: string }) {
         </div>
         {/* 对话 */}
         <div className="flex-1 overflow-y-auto px-3 pb-2 flex flex-col gap-2.5">
-          <div className="text-center text-[10.5px] text-[#9ea3ad]">内容由 AI 生成</div>
+          {empty ? (
+            // 空首页：问候语 + 三个快捷入口（对照手机截图）
+            <div className="mt-auto mb-2 flex flex-col items-start gap-2 px-1">
+              <div className="text-[19px] font-bold text-[#111318] mb-1">WorkBuddy，我帮你</div>
+              {['进行数据分析及可视化', '进行文档处理', '做一份幻灯片'].map((t) => (
+                <span key={t} className="px-3 py-1.5 rounded-full bg-[#ececec] text-[11.5px] text-[#2b2f36]">
+                  {t}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center text-[10.5px] text-[#9ea3ad]">内容由 AI 生成</div>
+          )}
           {shell.phoneMessages.map((m, i) =>
             m.from === 'me' ? (
               <div key={i} className="sim-msg-rise self-end max-w-[86%] rounded-[14px] bg-[#ebebeb] px-2.5 py-1.5 leading-[1.6] text-[#111318]">
@@ -336,38 +353,48 @@ export function PhonePanel(props: Props & { draft: string }) {
             </span>
           ))}
         </div>
-        {/* 切换电脑面板（底部留白给蓝圈提示，避免被手机外框裁掉） */}
+        {/* 「选择设备」面板（底部留白给蓝圈提示，避免被手机外框裁掉） */}
         {shell.phoneDeviceSheetOpen && (
           <div className="absolute inset-0 bg-black/25 flex items-end">
-            <div className="sim-pop-up w-full rounded-t-[18px] bg-white px-3 pt-3 pb-10 flex flex-col gap-2">
-              <div className="text-center font-semibold text-[13px] text-[#111318]">
-                切换电脑 <span className="font-normal text-[10.5px] text-[#9ea3ad]">（模拟）</span>
+            <div className="sim-pop-up w-full rounded-t-[18px] bg-[#f7f7f7] px-3 pt-3 pb-10 flex flex-col gap-2.5">
+              <div className="flex items-center justify-between px-1">
+                <span className="font-semibold text-[14px] text-[#111318]">选择设备</span>
+                <button
+                  type="button"
+                  aria-label="关闭选择设备"
+                  onClick={kit.aside('关闭', '先选一台设备。这次要用你自己的电脑。')}
+                  className="border-0 bg-transparent text-[16px] text-[#4a4f57] cursor-pointer"
+                >
+                  ×
+                </button>
               </div>
-              {PHONE_DEVICES.map((d) => {
-                const on = d.id === shell.phoneMode;
-                const isTarget = d.id === 'computer';
-                return (
-                  <button
-                    key={d.id}
-                    type="button"
-                    data-guided-target={isTarget ? 'phone.modeComputer' : undefined}
-                    onClick={
-                      isTarget
-                        ? kit.click('phone.modeComputer', d.name, '切到本地电脑，活就在你自己那台电脑上跑。')
-                        : kit.aside(d.name, '现在就是云电脑。它处理不了你电脑里没上传的资料，这次要切到本地电脑。')
-                    }
-                    className={`relative text-left rounded-[12px] border px-3 py-2 cursor-pointer ${on ? 'border-accent-300 bg-accent-50' : 'border-[#ececea] bg-white'} ${
-                      isTarget ? kit.ring('phone.modeComputer') : ''
-                    }`}
-                  >
-                    <div className="font-semibold text-[12.5px] text-[#111318]">
-                      {d.icon} {d.name} {on && <span className="text-accent-700">✓</span>}
-                    </div>
-                    <div className="text-[10.5px] text-[#6b7079] leading-[1.5]">{d.desc}</div>
-                    {isTarget && kit.callout('phone.modeComputer', 'bottom', 'center')}
-                  </button>
-                );
-              })}
+              <div className="rounded-[14px] bg-white px-3">
+                {PHONE_DEVICES.map((d, idx) => {
+                  const on = d.id === shell.phoneMode;
+                  const isTarget = d.id === 'computer';
+                  return (
+                    <button
+                      key={d.id}
+                      type="button"
+                      data-guided-target={isTarget ? 'phone.modeComputer' : undefined}
+                      onClick={
+                        isTarget
+                          ? kit.click('phone.modeComputer', d.name, '选你自己的电脑，活就在这台电脑上跑。')
+                          : kit.aside(d.name, '现在就是云电脑。它处理不了你电脑里没上传的资料，这次要选你自己的电脑。')
+                      }
+                      className={`relative w-full text-left border-0 bg-transparent py-3 flex items-center gap-2 cursor-pointer rounded-lg ${
+                        idx > 0 ? 'border-t border-[#ececea]' : ''
+                      } ${isTarget ? kit.ring('phone.modeComputer') : ''}`}
+                    >
+                      <span className="text-[13px]">{d.icon}</span>
+                      <span className="text-[12.5px] text-[#111318] truncate">{d.name}</span>
+                      {d.online && <span className="shrink-0 px-1.5 rounded bg-[#e7f7ee] text-[10.5px] text-[#16a34a]">在线</span>}
+                      {on && <span className="ml-auto text-[14px] text-[#16a34a]">✓</span>}
+                      {isTarget && kit.callout('phone.modeComputer', 'bottom', 'center')}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}
