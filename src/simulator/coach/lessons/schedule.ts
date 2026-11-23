@@ -244,30 +244,14 @@ export const scheduleLesson: GuidedLessonDef = {
       onAction: () => ({ view: 'schedule', scheduleTab: 'tasks', scheduleTemplatesOpen: false, toast: null }),
     },
     {
-      id: 'open-task',
-      phase: 1,
-      navLabel: '打开任务',
-      say: ['两张卡片了。早报这张<b>建好就已经启用</b>，别急着走，<b>点开检查一遍</b>。'],
-      wait: { target: 'schedule.openTask', callout: '点开检查', label: '每日 AI 资讯早报' },
-      onAction: () => ({ scheduleTaskPageId: TASK.id }),
-    },
-    {
-      id: 'task-settings',
-      phase: 1,
-      navLabel: '定时任务',
-      say: [
-        '点卡片进来的是<b>这个任务自己的页面</b>：中间以后放每次运行的结果，右边是它的运行记录和「下一次运行 明天 08:30」。还没跑过，所以现在是空的。',
-        '要看设置，点右上角的时钟「<b>定时任务</b>」。',
-      ],
-      wait: { target: 'schedule.taskSettings', callout: '打开设置', label: '定时任务' },
-      onAction: () => ({ scheduleSettingsOpen: true }),
-    },
-    {
       id: 'edit-task',
       phase: 1,
       navLabel: '编辑',
-      say: ['弹出「定时任务」，列着这个对话里建的定时任务。点早报，进去编辑。'],
-      wait: { target: 'schedule.editTask', callout: '点进去编辑', label: '每日 AI 资讯早报' },
+      say: [
+        '两张卡片了。早报这张<b>建好就已经启用</b>，别急着走，先检查一遍设置。',
+        '鼠标移到卡片上，右上角会出现三个按钮：▷ 立即运行、✎ 编辑、··· 更多。点 <b>✎ 编辑</b>。',
+      ],
+      wait: { target: 'schedule.editTask', callout: '点编辑', label: '编辑' },
       onAction: () => ({ scheduleModalTaskId: TASK.id }),
     },
     {
@@ -282,17 +266,27 @@ export const scheduleLesson: GuidedLessonDef = {
       wait: { target: 'schedule.run', callout: '先试跑一次', label: '运行' },
       onAction: () => ({
         scheduleModalTaskId: null,
-        scheduleSettingsOpen: false,
         // 真机这里会弹一条提示；模拟器里由陪练转述
         scheduleRecords: [TEST_RECORD],
       }),
+    },
+    {
+      id: 'open-task',
+      phase: 2,
+      navLabel: '打开任务',
+      say: [
+        '真机这时会提示「已触发测试运行。<b>测试运行不会影响正式调度时间。</b>」大概一两分钟跑完。',
+        '结果在哪看？<b>点卡片本身</b>，进到这个任务自己的页面。',
+      ],
+      wait: { target: 'schedule.openTask', callout: '点卡片看结果', label: '每日 AI 资讯早报' },
+      onAction: () => ({ scheduleTaskPageId: TASK.id }),
     },
     {
       id: 'check-source',
       phase: 2,
       navLabel: '核对来源',
       say: [
-        '真机这时会提示「已触发测试运行。<b>测试运行不会影响正式调度时间。</b>」大概一两分钟后，结果就出在这个任务页：中间是完整输出，右边多了一条运行记录。',
+        '这就是任务页：中间是这次运行的完整输出，右边是它的<b>运行记录</b>和「下一次运行」，右上角的时钟能收起或展开右边这栏。',
         '跑完了，但<b>成功只说明跑完了，不说明内容对</b>。先看第二行的<b>覆盖时段</b>，是不是你要的「过去 24 小时」。再抽一条核对：点第一条的来源「<b>某科技媒体</b>」，看标题和发布时间对不对得上。',
       ],
       wait: { target: 'schedule.checkSource', callout: '点开原文核对', label: '来源链接' },
@@ -356,8 +350,8 @@ export const scheduleLesson: GuidedLessonDef = {
         rows: [
           ['① 选建法', '提醒类用模板；干活类用自己手动跑满意 2–3 次的提示词「从对话新建」'],
           ['② 说清三样', '提示词 + 频率时间 + 安全边界（只读 / 只生成）'],
-          ['③ 点卡片进任务页，右上角时钟里编辑、点「运行」试跑', '测试运行不影响正式调度；连接器用不到别勾'],
-          ['④ 在任务页核对试跑结果', '看覆盖时段，抽查两三条来源；不满意就先暂停'],
+          ['③ 卡片上点 ✎ 编辑，核对后点「运行」试跑', '测试运行不影响正式调度；连接器用不到别勾'],
+          ['④ 点卡片进任务页核对结果', '看覆盖时段，抽查两三条来源；不满意就先暂停'],
           ['⑤ 记住默认是完全访问', '没人把关，边界必须写在提示词里'],
           ['⑥ 电脑别睡', '合盖或退出客户端会错过，只能补跑'],
           ['⑦ 不要了就暂停或删除', '每次运行都会消耗额度'],

@@ -146,7 +146,6 @@ export type GuidedTargetId =
   | 'schedule.run'
   | 'schedule.fastForward'
   | 'schedule.viewRecords'
-  | 'schedule.taskSettings'
   | 'schedule.editTask'
   | 'schedule.checkSource'
   // 助理（手机遥控）
@@ -370,9 +369,7 @@ export interface GuidedShellState {
   scheduleTemplatesOpen: boolean;
   /** 「新建定时任务」表单正在用的模板 id */
   scheduleCreateTemplateId: string | null;
-  /** 任务页右上角时钟打开的「定时任务」弹窗 */
-  scheduleSettingsOpen: boolean;
-  /** 「定时任务」弹窗里正在编辑的任务 id（有值时显示「编辑定时任务」，‹ 返回列表） */
+  /** 「编辑定时任务」弹窗正在编辑的任务 id（任务卡片上点 ✎ 打开） */
   scheduleModalTaskId: string | null;
   /** 制品里点开核对过的来源（条目标题） */
   scheduleCheckedSource: string | null;

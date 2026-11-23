@@ -72,6 +72,27 @@ export function TrashIcon({ size = 15, ...rest }: IconProps) {
   );
 }
 
+/** 立即运行（定时任务卡片悬停时右上角的 ▷） */
+export function PlayIcon({ size = 15, ...rest }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true" {...rest}>
+      <path d="M4.5 3.2v9.6c0 .4.4.6.7.4l7.2-4.8c.3-.2.3-.6 0-.8L5.2 2.8c-.3-.2-.7 0-.7.4Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** 圆圈里三个点的「更多」（定时任务卡片悬停时右上角） */
+export function MoreCircleIcon({ size = 15, ...rest }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true" {...rest}>
+      <circle cx="8" cy="8" r="6.2" stroke="currentColor" strokeWidth="1.2" />
+      <circle cx="5.4" cy="8" r="0.8" fill="currentColor" />
+      <circle cx="8" cy="8" r="0.8" fill="currentColor" />
+      <circle cx="10.6" cy="8" r="0.8" fill="currentColor" />
+    </svg>
+  );
+}
+
 export function FilterIcon({ size = 15, ...rest }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true" {...rest}>
