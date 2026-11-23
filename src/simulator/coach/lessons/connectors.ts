@@ -2,10 +2,9 @@ import type { ComposerChip, GuidedLessonDef } from '../guidedTypes';
 import { createBaseGuidedState } from './baseState';
 import { freeChat } from './freeChat';
 
-const ASK_PROMPT = '总结一下飞书里这周的项目周报。';
 /** 在对话里发起飞书授权（与图文实测流程一致） */
 const AUTH_PROMPT = '帮我认证飞书';
-/** 第一次验货：只读、小范围 */
+/** 第一次试读：只读、小范围 */
 const PROBE_PROMPT = '用飞书列出我最近更新的 5 篇文档的名称和更新时间，不要修改任何文档。';
 /** 不说范围的说法 */
 const VAGUE_PROMPT = '用飞书帮我整理一下项目资料。';
@@ -23,41 +22,23 @@ export const connectorsLesson: GuidedLessonDef = {
     createBaseGuidedState({
       selectedGroup: 'WorkBuddy-练习',
       selectedModel: 'Hy4 flash',
-      composerText: ASK_PROMPT,
+      composerText: '',
     }),
   steps: [
     {
       id: 'intro',
       phase: 0,
       say: [
-        '连接器就是<b>一根外部数据线</b>：飞书、QQ邮箱、腾讯文档里的东西，它本来是看不到的，接上才看得到。',
-        '这节用飞书演示一整圈：<b>安装 → 授权 → 看清给了它什么权限 → 小范围验货 → 说清范围再用</b>。先看没接的时候。',
+        '3.1 拆开看过：连接器是<b>一个授权通道</b>，让它读得到飞书、QQ邮箱、腾讯文档里的东西。它只管<b>拿得到什么</b>，不管怎么做。',
+        '这节用飞书走一整圈：<b>安装 → 授权 → 看清给了它什么权限 → 在对话里打开开关 → 小范围试读 → 说清范围再用 → 用完关掉</b>。先去装。',
       ],
-      buttons: [{ label: '先看没接连接器', primary: true }],
-    },
-    {
-      id: 'run-none',
-      phase: 1,
-      onEnter: () => ({ view: 'home', composerText: ASK_PROMPT, composerChips: [] }),
-      say: ['直接问它飞书里的周报。'],
-      wait: { target: 'composer.send', callout: '没接连接器，直接问', label: '发送（未接飞书）' },
-      runChat: () =>
-        freeChat({
-          id: 'connectors-none',
-          prompt: ASK_PROMPT,
-          chatTitle: '① 未接飞书 · 周报',
-          footerTip: '没接连接器时，它只能让你自己复制',
-          elapsed: '3s',
-          steps: [{ running: '查找可用的飞书数据来源…', done: '未找到已连接的飞书' }],
-          replyHtml:
-            '{{wrong:我目前访问不到你的飞书。}}你可以把周报内容复制给我，或者在「连接器」里连接飞书后再试。',
-        }),
+      buttons: [{ label: '去装飞书', primary: true }],
     },
     {
       id: 'open-ext',
       phase: 1,
       navLabel: '专家·技能·连接器',
-      say: ['它很老实：<b>读不到就说读不到</b>。这比编一份强，但活没干成。去把飞书接上。'],
+      say: [],
       wait: { target: 'nav.extensions', callout: '点这里进入', label: '专家·技能·连接器' },
       onAction: () => ({ view: 'extensions', extTab: 'skills' }),
     },
@@ -131,21 +112,57 @@ export const connectorsLesson: GuidedLessonDef = {
       onAction: () => ({ connectorDetailId: 'feishu' }),
     },
     {
-      id: 'run-probe',
-      phase: 2,
-      onEnter: () => ({ connectorDetailId: 'feishu', composerText: PROBE_PROMPT, composerChips: FEISHU_CHIP }),
+      id: 'read-caps',
+      phase: 1,
       say: [
         '「可用功能」就是它能替你做的事，比如读文档、创建文档、往多维表格里录数据。<b>授权给了它什么，它就真能做什么</b>；像橙色的发送消息，发出去就收不回来，用之前要让它先列清单给你确认。',
-        '第一次用，先做一个<b>只读、小范围</b>的验货。我把句子放进输入框了，先点左上角「新建任务」回首页，再发送。',
       ],
-      wait: { target: 'composer.send', callout: '只读小范围验货', label: '发送（验货）' },
-      onAction: () => ({ composerChips: [] }),
+      buttons: [{ label: '看懂了，去对话里用它', primary: true }],
+    },
+    {
+      id: 'open-plus',
+      phase: 1,
+      navLabel: '+',
+      onEnter: () => ({ view: 'home', connectorDetailId: null, composerText: PROBE_PROMPT, composerChips: [], popover: null }),
+      say: ['装好、授权好，还差一步：<b>在对话里把它打开</b>。回到首页，点输入框左下角的 <b>+</b>。'],
+      wait: { target: 'composer.plus', callout: '点 +', label: '+' },
+      onAction: () => ({ popover: 'plus', plusSubmenu: 'mode' }),
+    },
+    {
+      id: 'plus-connectors',
+      phase: 1,
+      navLabel: '连接器',
+      say: [],
+      wait: { target: 'plusMenu.connectors', callout: '点「连接器」', label: '连接器' },
+      onAction: () => ({ plusSubmenu: 'connectors' }),
+    },
+    {
+      id: 'toggle-feishu',
+      phase: 1,
+      navLabel: '打开飞书',
+      say: [
+        '这个列表和真机一样：<b>已经接好的显示开关</b>，没接的显示「连接」，最底下「管理连接器」回到刚才那页。把飞书的开关打开。',
+      ],
+      wait: { target: 'plusMenu.toggleFeishu', callout: '打开飞书', label: '飞书开关' },
+      onAction: (s) => ({
+        enabledConnectorIds: s.enabledConnectorIds.includes('feishu') ? s.enabledConnectorIds : [...s.enabledConnectorIds, 'feishu'],
+        popover: null,
+      }),
+    },
+    {
+      id: 'run-probe',
+      phase: 2,
+      say: [
+        '输入框底栏多了飞书图标。<b>注意：这个开关是全局的</b>，打开以后所有对话都能用飞书，直到你回来关掉。',
+        '第一次用，先做一个<b>只读、小范围</b>的试读，确认它读得对。句子已经放好了，发送。',
+      ],
+      wait: { target: 'composer.send', callout: '只读小范围试读', label: '发送（试读）' },
       runChat: () =>
         freeChat({
           id: 'connectors-probe',
           prompt: PROBE_PROMPT,
           promptChips: FEISHU_CHIP,
-          chatTitle: '② 飞书验货 · 最近 5 篇',
+          chatTitle: '① 飞书试读 · 最近 5 篇',
           footerTip: '第一次先只读、小范围，确认它读得对',
           elapsed: '6s',
           steps: [{ running: '调用 飞书 · 搜索文档（按更新时间）…', done: '调用 飞书 · 搜索文档：返回 5 条' }],
@@ -156,18 +173,17 @@ export const connectorsLesson: GuidedLessonDef = {
     {
       id: 'run-vague',
       phase: 1,
-      onEnter: () => ({ view: 'home', composerText: VAGUE_PROMPT, composerChips: FEISHU_CHIP }),
+      onEnter: () => ({ view: 'home', composerText: VAGUE_PROMPT }),
       say: [
         '读得准，说明连接没问题。接下来很多人会犯的错：<b>不说范围，让它「整理一下」</b>。发出去看看。',
       ],
       wait: { target: 'composer.send', callout: '不说范围直接发', label: '发送（不说范围）' },
-      onAction: () => ({ composerChips: [] }),
       runChat: () =>
         freeChat({
           id: 'connectors-vague',
           prompt: VAGUE_PROMPT,
           promptChips: FEISHU_CHIP,
-          chatTitle: '③ 不说范围 · 整理项目资料',
+          chatTitle: '② 不说范围 · 整理项目资料',
           footerTip: '不说范围，它会把能读到的都读一遍',
           elapsed: '6m 12s',
           hideMarksInitially: true,
@@ -197,19 +213,18 @@ export const connectorsLesson: GuidedLessonDef = {
     {
       id: 'run-good',
       phase: 2,
-      onEnter: () => ({ view: 'home', composerText: GOOD_PROMPT, composerChips: FEISHU_CHIP }),
+      onEnter: () => ({ view: 'home', composerText: GOOD_PROMPT }),
       say: [
         '用连接器要说清 <b>5 件事</b>：哪个服务、找什么、时间范围、做什么、结果放哪。我按这个改好了，再发一次。',
       ],
       wait: { target: 'composer.send', callout: '说清范围再发', label: '发送（说清范围）' },
-      onAction: () => ({ composerChips: [] }),
       runChat: () =>
         freeChat({
           id: 'connectors-good',
           prompt: GOOD_PROMPT,
           promptChips: FEISHU_CHIP,
-          chatTitle: '④ 说清范围 · 本周周报汇总',
-          footerTip: '在左侧 最近 里点 ③ 和 ④ 对比',
+          chatTitle: '③ 说清范围 · 本周周报汇总',
+          footerTip: '在左侧 最近 里点 ② 和 ③ 对比',
           elapsed: '28s',
           steps: [
             { running: '调用 飞书 · 搜索文档（读书会项目 · 11-17~11-21）…', done: '调用 飞书 · 搜索文档：返回 2 条' },
@@ -221,21 +236,53 @@ export const connectorsLesson: GuidedLessonDef = {
         }),
     },
     {
+      id: 'off-plus',
+      phase: 2,
+      navLabel: '+',
+      onEnter: () => ({ view: 'home', composerText: '', popover: null }),
+      say: [
+        '同一个飞书，说清范围之后：<b>只读 2 份、28 秒、结果干净</b>。',
+        '最后一件事：开关是全局的，<b>这节练完就把它关掉</b>，免得以后做别的任务时它也去翻你的飞书。点 <b>+</b>。',
+      ],
+      wait: { target: 'composer.plus', callout: '点 +', label: '+' },
+      onAction: () => ({ popover: 'plus', plusSubmenu: 'mode' }),
+    },
+    {
+      id: 'off-connectors',
+      phase: 2,
+      navLabel: '连接器',
+      say: [],
+      wait: { target: 'plusMenu.connectors', callout: '点「连接器」', label: '连接器' },
+      onAction: () => ({ plusSubmenu: 'connectors' }),
+    },
+    {
+      id: 'off-feishu',
+      phase: 2,
+      navLabel: '关掉飞书',
+      say: [],
+      wait: { target: 'plusMenu.toggleFeishu', callout: '关掉飞书', label: '飞书开关' },
+      onAction: (s) => ({
+        enabledConnectorIds: s.enabledConnectorIds.filter((id) => id !== 'feishu'),
+        popover: null,
+        toast: '飞书已关闭，授权还在，下次用时再打开',
+      }),
+    },
+    {
       id: 'summary',
       phase: 3,
-      say: ['同一个飞书，说清范围之后：<b>只读 2 份、28 秒、结果干净</b>。'],
+      say: ['底栏的飞书图标没了。授权还在，下次要用时在 <b>+ → 连接器</b> 里再打开就行。'],
       card: {
         kind: 'compare',
         title: '同一个连接器，两种说法',
-        leftLabel: '③ 只说「整理一下」',
+        leftLabel: '② 只说「整理一下」',
         leftTone: 'warn',
         leftHtml: '翻了 186 篇，混进去年的、别人的资料，跑了 6 分多钟。',
-        rightLabel: '④ 说清 5 件事',
+        rightLabel: '③ 说清 5 件事',
         rightTone: 'ok',
         rightHtml: '<b>只读 2 份本周周报</b>，按三栏汇总，28 秒。',
       },
       after: [
-        '用连接器记住 3 条：<b>① 刚接上先做只读、小范围的验货</b>；<b>② 删除、发消息、发邮件这类收不回的动作，提示词里写死「先列清单给我确认」</b>；<b>③ 不用了在详情里点「解除授权」</b>。',
+        '用连接器记住 4 条：<b>① 在 + → 连接器 里打开开关它才会用；开关是全局的，用完就关</b>；<b>② 刚接上先做只读、小范围的试读</b>；<b>③ 删除、发消息、发邮件这类收不回的动作，提示词里写死「先列清单给我确认」</b>；<b>④ 彻底不用了，在详情里点「解除授权」</b>。',
       ],
       buttons: [
         { label: '下一节：3.6 自定义连接器（MCP）→', primary: true, nextLesson: 'custom-connector' },

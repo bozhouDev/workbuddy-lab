@@ -441,11 +441,21 @@ test.describe('第 03、04 章泊舟陪练模拟器', () => {
     await page.setViewportSize({ width: WALK_WIDTH, height: 900 });
     await page.goto('/simulator/?route=connectors');
     await walkLesson(page, [
-      'btn:先看没接连接器', 'composer.send', 'nav.extensions', 'ext.tab.connectors', 'connectors.add',
+      'btn:去装飞书', 'nav.extensions', 'ext.tab.connectors', 'connectors.add',
       'composer.send', 'chat.actionCard', 'nav.extensions', 'connectors.card',
     ]);
     await expect(page.getByText('可用功能').first()).toBeVisible();
-    await walkLesson(page, ['home', 'composer.send', 'composer.send', 'btn:标出问题', 'btn:好，说清范围再发一次', 'composer.send']);
+    // 在对话里用 + → 连接器 打开飞书开关（开关全局生效，底栏出现飞书图标）
+    await walkLesson(page, ['btn:看懂了，去对话里用它', 'composer.plus', 'plusMenu.connectors']);
+    await expect(page.getByText('管理连接器')).toBeVisible();
+    await walkLesson(page, ['plusMenu.toggleFeishu']);
+    await expect(page.getByRole('button', { name: '连接器：飞书' })).toBeVisible();
+    await walkLesson(page, ['composer.send', 'composer.send', 'btn:标出问题', 'btn:好，说清范围再发一次', 'composer.send']);
+    // 发送后飞书仍开着；练完把它关掉
+    await walkLesson(page, ['composer.plus', 'plusMenu.connectors']);
+    await expect(page.getByRole('switch', { name: '飞书 开关' })).toHaveAttribute('aria-checked', 'true');
+    await walkLesson(page, ['plusMenu.toggleFeishu']);
+    await expect(page.getByRole('button', { name: '连接器：飞书' })).toHaveCount(0);
     await expect(page.getByText('同一个连接器，两种说法')).toBeVisible({ timeout: 8000 });
 
     await page.getByRole('button', { name: /下一节：3.6 自定义连接器/ }).click();
