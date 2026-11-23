@@ -337,44 +337,58 @@ export function CoachRail({
           </div>
         </div>
 
-        {/* 4 段循环进度条（已走过的阶段可点击回看） */}
-        <div className="grid grid-cols-4 gap-1 mt-2.5" role="list" aria-label="4 段陪练进度">
-          {PHASE_LABELS.map((label, idx) => {
-            const pIdx = idx as PhaseIndex;
-            const isOn = idx === phase;
-            const isDone = idx < phase;
-            const canJump = Boolean(onJumpPhase && !isOn && jumpablePhases.includes(pIdx));
-            if (canJump) {
+        {/* 4 段循环进度条（#35 标签切换滑动指示条；已走过的阶段可点击回看） */}
+        <div
+          className="relative mt-2.5 p-[3px] rounded-[9px] bg-gray-100"
+          role="list"
+          aria-label="4 段陪练进度"
+        >
+          <span
+            aria-hidden="true"
+            className="sim-phase-thumb pointer-events-none absolute top-[3px] bottom-[3px] left-[3px] rounded-[7px] bg-gray-900 shadow-2xs"
+            style={{
+              width: 'calc((100% - 6px) / 4)',
+              transform: `translateX(${phase * 100}%)`,
+            }}
+          />
+          <div className="relative z-10 grid grid-cols-4">
+            {PHASE_LABELS.map((label, idx) => {
+              const pIdx = idx as PhaseIndex;
+              const isOn = idx === phase;
+              const isDone = idx < phase;
+              const canJump = Boolean(onJumpPhase && !isOn && jumpablePhases.includes(pIdx));
+              if (canJump) {
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    role="listitem"
+                    title={`回到 ${label} 阶段`}
+                    onClick={() => onJumpPhase?.(pIdx)}
+                    className="border-0 text-center text-[11.5px] py-1 rounded-[7px] bg-transparent hover:bg-black/5 text-gray-800 font-medium cursor-pointer transition-colors"
+                  >
+                    ↺ {label}
+                  </button>
+                );
+              }
               return (
-                <button
+                <span
                   key={label}
-                  type="button"
                   role="listitem"
-                  title={`回到 ${label} 阶段`}
-                  onClick={() => onJumpPhase?.(pIdx)}
-                  className="border-0 text-center text-[11.5px] py-1 rounded-[7px] bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium cursor-pointer transition-colors"
+                  aria-current={isOn ? 'step' : undefined}
+                  className={`text-center text-[11.5px] py-1 rounded-[7px] transition-colors duration-200 ${
+                    isOn
+                      ? 'text-white font-semibold'
+                      : isDone
+                        ? 'text-gray-800 font-medium'
+                        : 'text-gray-500'
+                  }`}
                 >
-                  ↺ {label}
-                </button>
+                  {label}
+                </span>
               );
-            }
-            return (
-              <span
-                key={label}
-                role="listitem"
-                aria-current={isOn ? 'step' : undefined}
-                className={`text-center text-[11.5px] py-1 rounded-[7px] transition-colors ${
-                  isOn
-                    ? 'bg-gray-900 text-white font-semibold'
-                    : isDone
-                      ? 'bg-gray-100 text-gray-800 font-medium'
-                      : 'bg-gray-100 text-gray-500'
-                }`}
-              >
-                {label}
-              </span>
-            );
-          })}
+            })}
+          </div>
         </div>
       </div>
 
@@ -408,12 +422,19 @@ export function CoachRail({
           }
 
           if (item.kind === 'aside') {
+            const isWarn = item.tone === 'warn';
             return (
               <div
                 key={item.id}
-                className="sim-msg-rise coach-bubble self-start max-w-[94%] ml-9 rounded-[12px] border border-[#e3e7f3] border-l-[3px] border-l-accent-500 bg-[#fafbff] px-3.5 py-2.5 text-[13px] leading-[1.68] text-[#3a3f4b]"
+                className={`${
+                  isWarn ? 'sim-shake border-[#f6d7c2] border-l-[#c2410c] bg-[#fff8f3]' : 'sim-msg-rise border-[#e3e7f3] border-l-accent-500 bg-[#fafbff]'
+                } coach-bubble self-start max-w-[94%] ml-9 rounded-[12px] border border-l-[3px] px-3.5 py-2.5 text-[13px] leading-[1.68] text-[#3a3f4b]`}
               >
-                <span className="block text-[11px] font-semibold text-accent-600 mb-0.5">
+                <span
+                  className={`block text-[11px] font-semibold mb-0.5 ${
+                    isWarn ? 'text-[#c2410c]' : 'text-accent-600'
+                  }`}
+                >
                   你点的是 · {item.label}
                 </span>
                 <span dangerouslySetInnerHTML={{ __html: item.html }} />
@@ -480,8 +501,12 @@ export function CoachRail({
               >
                 <div className="px-3 py-2 bg-[#fbfbfa] border-b border-[#eeeeeb] flex items-center justify-between text-[12px]">
                   <span className="font-semibold text-gray-900">首页 7 块核心区</span>
-                  <span className="font-mono text-accent-600 font-semibold">
-                    已认 {exploredCount} / {EXPLORE_AREAS.length}
+                  <span className="font-mono text-accent-600 font-semibold tabular-nums">
+                    已认{' '}
+                    <span key={exploredCount} className="sim-digit-roll">
+                      {exploredCount}
+                    </span>{' '}
+                    / {EXPLORE_AREAS.length}
                   </span>
                 </div>
                 <div className="divide-y divide-[#f2f2ef]">

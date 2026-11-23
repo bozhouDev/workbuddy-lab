@@ -232,18 +232,96 @@ header.header {
   animation: sim-callout-bob 1.5s ease-in-out infinite;
 }
 
-/* 顶部轻提示：弹出后停留约 2.6 秒自动淡出（和真机 toast 一样不用手动关） */
+/* 顶部轻提示：弹出后停留约 2.6 秒自动淡出，底部带倒计时进度线（#40 Toast） */
 @keyframes sim-toast {
   0% { opacity: 0; transform: translate(-50%, -6px); }
   8% { opacity: 1; transform: translate(-50%, 0); }
   85% { opacity: 1; transform: translate(-50%, 0); }
   100% { opacity: 0; transform: translate(-50%, -6px); visibility: hidden; }
 }
+/* 只改透明度的版本，给「减少动态效果」用 */
+@keyframes sim-toast-fade {
+  0% { opacity: 0; }
+  6% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { opacity: 0; visibility: hidden; }
+}
+@keyframes sim-toast-bar {
+  0% { transform: scaleX(1); }
+  100% { transform: scaleX(0); }
+}
 .sim-toast {
   animation: sim-toast 3s ease both;
 }
-@media (prefers-reduced-motion: reduce) {
-  .sim-toast { animation: none; }
+.sim-toast-bar {
+  transform-origin: left center;
+  animation: sim-toast-bar 2.55s linear 0.12s both;
+}
+
+/* 翻车 / 错误反馈轻抖（#46 Error feedback） */
+@keyframes sim-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  45% { transform: translateX(4px); }
+  70% { transform: translateX(-2.5px); }
+  88% { transform: translateX(2px); }
+}
+@keyframes sim-warn-reveal {
+  0% { background-color: #fde4d2; transform: translateX(0); }
+  22% { transform: translateX(-3px); }
+  48% { transform: translateX(3px); }
+  72% { transform: translateX(-1.5px); }
+  100% { background-color: #fff1e8; transform: translateX(0); }
+}
+.sim-shake {
+  animation: sim-shake 320ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+.sim-warn-reveal {
+  animation: sim-warn-reveal 380ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* 计数数字轻柔向上滚入（#39 Animated counter） */
+@keyframes sim-digit-roll {
+  from { opacity: 0; transform: translateY(45%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.sim-digit-roll {
+  display: inline-block;
+  animation: sim-digit-roll 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* 记忆条目删除平滑收起补位（#42 Layout animation） */
+@keyframes sim-collapse-out {
+  0% {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    margin-bottom: 0;
+  }
+  45% {
+    opacity: 0;
+    transform: translateX(6px);
+  }
+  100% {
+    grid-template-rows: 0fr;
+    opacity: 0;
+    margin-bottom: -12px;
+  }
+}
+.sim-collapse-wrap {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+.sim-collapse-wrap > div {
+  overflow: hidden;
+}
+.sim-collapse-out {
+  animation: sim-collapse-out 280ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  pointer-events: none;
+}
+
+/* #35 模拟器 4 段进度滑动指示条 */
+.sim-phase-thumb {
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .sim-pop-up {
@@ -336,8 +414,20 @@ header.header {
   .sim-slide-in-panel,
   .sim-msg-rise,
   .sim-check-pop,
-  .sim-typing-dot {
+  .sim-typing-dot,
+  .sim-toast,
+  .sim-toast-bar,
+  .sim-shake,
+  .sim-warn-reveal,
+  .sim-digit-roll,
+  .sim-collapse-out,
+  .sim-phase-thumb {
     animation: none !important;
     transition: none !important;
+  }
+
+  /* 减少动态效果时轻提示不位移，但仍要按时淡出，否则会一直挡在界面上 */
+  .sim-toast {
+    animation: sim-toast-fade 3s linear both !important;
   }
 }

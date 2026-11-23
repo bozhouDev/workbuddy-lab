@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { GuidanceCallout } from './GuidanceCue';
-import type { GuidedShellState, GuidedTargetId, SettingsTab } from './guidedTypes';
+import type { CloudMemoryItem, GuidedShellState, GuidedTargetId, SettingsTab } from './guidedTypes';
 
 interface SettingsViewsProps {
   shell: GuidedShellState;
@@ -254,6 +254,26 @@ export function SettingsViews5113({
   const [notifySound, setNotifySound] = useState('无音效');
   const [scheduleNotify, setScheduleNotify] = useState(true);
   const [privacyPlan, setPrivacyPlan] = useState(true);
+
+  // #42 布局过渡：删掉云端记忆条目时，保留退出中快照 280ms 做平滑收起补位
+  const prevMemoriesRef = useRef<CloudMemoryItem[]>(shell.cloudMemories);
+  const [exitingMemories, setExitingMemories] = useState<Array<{ item: CloudMemoryItem; index: number }>>([]);
+
+  useEffect(() => {
+    const prev = prevMemoriesRef.current;
+    const currIds = new Set(shell.cloudMemories.map((m) => m.id));
+    const removed: Array<{ item: CloudMemoryItem; index: number }> = [];
+    prev.forEach((item, index) => {
+      if (!currIds.has(item.id)) removed.push({ item, index });
+    });
+    prevMemoriesRef.current = shell.cloudMemories;
+    if (removed.length > 0) {
+      setExitingMemories(removed);
+      const t = window.setTimeout(() => setExitingMemories([]), 290);
+      return () => window.clearTimeout(t);
+    }
+    return undefined;
+  }, [shell.cloudMemories]);
 
   // 当引导步骤切换到下方控件（如存储路径「更改」或「桌面通知」）时，自动平滑滚入视野中央
   useEffect(() => {
@@ -1245,23 +1265,37 @@ export function SettingsViews5113({
                   </div>
 
                   <div className="p-4 flex flex-col gap-3 text-[13px] leading-[1.78] text-[#1f2329] select-text">
-                    {shell.cloudMemories.map((mem) => (
-                      <div
-                        key={mem.id}
-                        className={
-                          mem.bad
-                            ? 'sim-msg-rise rounded-[9px] bg-[#fff5ee] border border-[#f6d7c2] px-3 py-2 text-[#9a3412]'
-                            : ''
+                    {(() => {
+                      const rows: Array<{ mem: CloudMemoryItem; exiting: boolean }> =
+                        shell.cloudMemories.map((mem) => ({ mem, exiting: false }));
+                      exitingMemories.forEach(({ item, index }) => {
+                        if (!rows.some((r) => r.mem.id === item.id)) {
+                          const pos = Math.min(index, rows.length);
+                          rows.splice(pos, 0, { mem: item, exiting: true });
                         }
-                      >
-                        <div className="text-[12px] font-semibold text-[#5c6270] mb-0.5">
-                          ## {mem.tag}
+                      });
+                      return rows.map(({ mem, exiting }) => (
+                        <div
+                          key={mem.id}
+                          className={exiting ? 'sim-collapse-wrap sim-collapse-out' : ''}
+                        >
+                          <div
+                            className={
+                              mem.bad
+                                ? 'sim-msg-rise rounded-[9px] bg-[#fff5ee] border border-[#f6d7c2] px-3 py-2 text-[#9a3412]'
+                                : ''
+                            }
+                          >
+                            <div className="text-[12px] font-semibold text-[#5c6270] mb-0.5">
+                              ## {mem.tag}
+                            </div>
+                            <div className={mem.bad ? 'font-medium text-[#9a3412]' : 'text-[#2b2f36]'}>
+                              - {mem.text}
+                            </div>
+                          </div>
                         </div>
-                        <div className={mem.bad ? 'font-medium text-[#9a3412]' : 'text-[#2b2f36]'}>
-                          - {mem.text}
-                        </div>
-                      </div>
-                    ))}
+                      ));
+                    })()}
                   </div>
 
                   {hasBadMemory && (

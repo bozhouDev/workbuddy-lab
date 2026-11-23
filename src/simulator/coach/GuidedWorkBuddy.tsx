@@ -25,6 +25,7 @@ import {
   SparkleIcon,
 } from '../shell/icons';
 import { RichText } from '../shell/RichText';
+import { AnimatedNumber } from './AnimatedNumber';
 import { GuidanceCallout } from './GuidanceCue';
 import { chipKindLabel, type GuidedShellState, type GuidedTargetId } from './guidedTypes';
 import type { PopoverId } from './types';
@@ -171,7 +172,7 @@ export function GuidedWorkBuddy({
             <div>
               <div className="text-[11px] text-[#8c9099]">积分余额</div>
               <div className="text-[14px] font-bold font-mono text-[#111318]">
-                {shell.creditBalance.toFixed(2)}
+                <AnimatedNumber value={shell.creditBalance} highlightDrop />
               </div>
             </div>
           </div>
@@ -420,7 +421,7 @@ export function GuidedWorkBuddy({
               <div className="text-left leading-tight">
                 <div className="text-[12.5px] font-medium text-[#1f2329]">学员</div>
                 <div className="text-[10.5px] font-mono text-[#6b7079]">
-                  ✧ {shell.creditBalance.toFixed(2)}
+                  ✧ <AnimatedNumber value={shell.creditBalance} highlightDrop />
                 </div>
               </div>
             )}
@@ -1660,7 +1661,7 @@ export function GuidedWorkBuddy({
                       key={idx}
                       className={
                         ln.tone === 'warn' && shell.marksRevealed
-                          ? 'px-2 py-1 rounded bg-[#fff1e8] text-[#9a3412] font-medium'
+                          ? 'sim-warn-reveal px-2 py-1 rounded bg-[#fff1e8] text-[#9a3412] font-medium'
                           : ln.tone === 'ok' && shell.marksRevealed
                             ? 'px-2 py-1 rounded bg-[#eef2ff] text-accent-700 font-medium'
                             : 'text-[#2b2f36]'
@@ -1676,14 +1677,18 @@ export function GuidedWorkBuddy({
         </div>
       )}
 
-      {/* 顶部轻提示（召唤成功、安装成功、连接成功、定时任务已新建等） */}
+      {/* 顶部轻提示（#40 Toast：带底部倒计时进度线，召唤成功/安装成功/连接成功等） */}
       {shell.toast && (
         <div
           key={shell.toast}
           role="status"
-          className="sim-toast absolute top-3 left-1/2 z-40 px-3.5 py-2 rounded-[10px] bg-[#111318] text-white text-[12.5px] shadow-lg whitespace-nowrap pointer-events-none"
+          className="sim-toast absolute top-3 left-1/2 z-40 overflow-hidden px-3.5 pt-2 pb-2.5 rounded-[10px] bg-[#111318] text-white text-[12.5px] shadow-lg whitespace-nowrap pointer-events-none"
         >
-          {shell.toast}
+          <span>{shell.toast}</span>
+          <span
+            aria-hidden="true"
+            className="sim-toast-bar absolute left-0 right-0 bottom-0 h-[2px] bg-white/55"
+          />
         </div>
       )}
 

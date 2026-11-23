@@ -402,6 +402,7 @@ export default function InterfaceLesson({
           {
             id: nextId(),
             kind: 'aside',
+            tone: 'warn',
             label: ACTION_LABEL[action],
             html: `${ASIDE_EXPLAIN[action]}<br/><span style="color:#6b7079">再找找：指定本地保存文件夹的按钮在输入框外面左下角（蓝圈亮起来了）。</span>`,
           },

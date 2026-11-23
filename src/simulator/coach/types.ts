@@ -58,7 +58,7 @@ export type NavTrailStep = {
 
 export type FeedItem =
   | { id: string; kind: 'coach'; html: string }
-  | { id: string; kind: 'aside'; label: string; html: string }
+  | { id: string; kind: 'aside'; label: string; html: string; tone?: 'warn' }
   | { id: string; kind: 'mine'; text: string }
   | { id: string; kind: 'did'; text: string }
   | { id: string; kind: 'checklist' }

@@ -104,9 +104,19 @@ export default function App() {
           <button
             type="button"
             onClick={copyLink}
-            className="w-full h-11 rounded-[10px] border-0 bg-gray-900 text-white text-[14.5px] font-semibold cursor-pointer"
+            className="wbl-btn-spring w-full h-11 rounded-[10px] border-0 bg-gray-900 text-white text-[14.5px] font-semibold inline-flex items-center justify-center gap-2 cursor-pointer"
           >
-            {copied ? '已复制链接' : '复制链接，发到电脑'}
+            {copied ? (
+              <>
+                <svg className="sim-check-pop" width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.5" />
+                  <path d="M5.2 8.2 7.1 10.1 10.9 6.1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>已复制链接</span>
+              </>
+            ) : (
+              '复制链接，发到电脑'
+            )}
           </button>
           <a href="/" className="text-[13.5px] text-accent-600 font-medium no-underline hover:underline">
             ← 返回首页读图文教程

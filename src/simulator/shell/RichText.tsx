@@ -15,8 +15,8 @@ function InlineLine({ text, revealMarks = true }: RichTextProps) {
           if (!revealMarks) return <span key={i}>{tok.text}</span>;
           return (
             <span
-              key={i}
-              className="inline-block px-1.5 py-[1px] mx-0.5 rounded-[5px] bg-[#fff1e8] text-[#9a3412] font-medium border border-[#f6d7c2] transition-colors duration-300"
+              key={`wrong-${i}`}
+              className="sim-warn-reveal inline-block px-1.5 py-[1px] mx-0.5 rounded-[5px] bg-[#fff1e8] text-[#9a3412] font-medium border border-[#f6d7c2] transition-colors duration-300"
             >
               {tok.text}
             </span>
