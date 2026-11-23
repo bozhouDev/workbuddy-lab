@@ -1565,14 +1565,19 @@ export function GuidedWorkBuddy({
                       type="button"
                       data-guided-target="composer.plus"
                       aria-label="展开 + 菜单"
-                      onClick={() =>
+                      onClick={() => {
+                        // 判断练习里 + 是学员自己挂东西的入口：直接开关菜单，不插解释打断
+                        if (shell.freeMount && waitTarget !== 'composer.plus') {
+                          onTogglePopover('plus');
+                          return;
+                        }
                         handleOrAside(
                           'composer.plus',
                           '+ 菜单',
                           '点左下角 <b>+</b> 号可以添加本地/云端文件，也能切换默认 / Plan / Ask 模式。',
                           'plus'
-                        )
-                      }
+                        );
+                      }}
                       className={`relative w-8 h-8 rounded-lg border-0 inline-flex items-center justify-center text-[19px] text-[#2b2f36] shrink-0 cursor-pointer transition-colors ${
                         shell.popover === 'plus' ? 'bg-[#ececef]' : 'bg-transparent hover:bg-[#f4f4f5]'
                       } ${ring('composer.plus')}`}
@@ -1608,13 +1613,20 @@ export function GuidedWorkBuddy({
                           <button
                             type="button"
                             aria-label={`移除 ${c.label}`}
+                            data-guided-target="composer.expertRemove"
                             onClick={(e) => {
                               e.stopPropagation();
+                              // 课程要点 × 就推进；判断练习里直接取下；其他时候只解释
+                              if (waitTarget === 'composer.expertRemove') return onTargetClick('composer.expertRemove');
+                              if (shell.freeMount) return onFreeMount(c);
                               onAsideClick('移除专家', `点 × 会取消召唤「${c.label}」。换活时记得点掉，这一步先留着它。`);
                             }}
-                            className="border-0 bg-transparent p-0 text-[#9ea3ad] hover:text-[#111318] cursor-pointer leading-none text-[13px]"
+                            className={`relative border-0 bg-transparent p-0 text-[#9ea3ad] hover:text-[#111318] cursor-pointer leading-none text-[13px] ${ring('composer.expertRemove')}`}
                           >
                             ×
+                            {waitTarget === 'composer.expertRemove' && waitCallout && (
+                              <GuidanceCallout text={waitCallout} placement="top" />
+                            )}
                           </button>
                         </span>
                       ))}

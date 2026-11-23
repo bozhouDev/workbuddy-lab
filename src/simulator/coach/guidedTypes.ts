@@ -83,6 +83,7 @@ export type GuidedTargetId =
   | 'plusMenu.togglePlan'
   | 'plusMenu.toggleAsk'
   // + → 连接器 二级菜单与飞书开关
+  | 'composer.expertRemove'
   | 'plusMenu.experts'
   | 'plusMenu.pickExpert'
   | 'plusMenu.skills'
@@ -438,6 +439,8 @@ export interface GuidedStep {
   navLabel?: string;
   /** 进入该步骤时是否点亮对话里的 {{wrong:}} / {{ok:}} 高亮标记 */
   revealMarksOnEnter?: boolean;
+  /** 按进入这一步时的界面状态动态生成的话（排在 say 前面），用于判断练习里按学员挂了什么来点评 */
+  sayFrom?: (s: GuidedShellState) => string[];
   say: string[];
   card?: CoachCardSpec;
   after?: string[];

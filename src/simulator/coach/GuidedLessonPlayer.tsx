@@ -336,7 +336,8 @@ export default function GuidedLessonPlayer({
         );
       }
 
-      const items: FeedItemInput[] = step.say.map((html) => ({
+      const sayLines = [...(step.sayFrom ? step.sayFrom(nextShell) : []), ...step.say];
+      const items: FeedItemInput[] = sayLines.map((html) => ({
         kind: 'coach',
         html,
       }));
