@@ -3,6 +3,7 @@
 import '../styles/global.css';
 import HeroSimPreview from '../components/HeroSimPreview.astro';
 import { SITE } from '../site.config.mjs';
+import { LESSON_CATALOG } from '../simulator/coach/guidedTypes';
 
 const steps = [
   { n: '01', t: '是什么', d: '泊舟用一两句话说清它管什么，先看原来的样子。' },
@@ -70,6 +71,7 @@ const chapters: { n: string; t: string; items: ChapterItem[] }[] = [
       { t: '记忆', href: '/features/setup/memory/', sim: true },
       { t: '个性化', href: '/features/setup/personalization/', sim: true },
       { t: '模型与积分', href: '/features/setup/models-credits/', sim: true },
+      { t: '配置自定义模型（以 GPT 为例）', href: '/features/setup/custom-model/', sim: true },
     ],
   },
   {
@@ -107,6 +109,8 @@ const chapters: { n: string; t: string; items: ChapterItem[] }[] = [
     ],
   },
 ];
+
+const featureCount = chapters.reduce((count, chapter) => count + chapter.items.filter((item) => item.href).length, 0);
 
 const cases = [
   // href 有值的卡片可点进图文；还在实测的不放链接，只显示「实测中」
@@ -406,7 +410,7 @@ const cases = [
         <div class="max-w-[1200px] mx-auto px-4 sm:px-6 py-16 sm:py-28 flex flex-col gap-10 sm:gap-12">
           <div data-reveal class="flex justify-between items-end gap-4 flex-wrap">
             <div class="flex flex-col gap-2.5">
-              <div class="font-mono text-[12px] text-accent-600 tracking-[0.06em]">功能篇 · 23 节已全部上线（13 节可进模拟器实操）</div>
+              <div class="font-mono text-[12px] text-accent-600 tracking-[0.06em]">功能篇 · {featureCount} 篇图文（{LESSON_CATALOG.length} 节可进模拟器实操）</div>
               <h2 class="m-0 text-[22px] sm:text-[36px] leading-[1.25] tracking-[-0.02em] font-bold">
                 从装好软件，到把它用顺
               </h2>

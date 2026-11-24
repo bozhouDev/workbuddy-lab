@@ -28,6 +28,7 @@ import {
 } from '../shell/icons';
 import { RichText } from '../shell/RichText';
 import { AnimatedNumber } from './AnimatedNumber';
+import { PRACTICE_MODEL_ID, PRACTICE_PROMPT } from './customModelPractice';
 import { GuidanceCallout } from './GuidanceCue';
 import { type ComposerChip, type GuidedShellState, type GuidedTargetId } from './guidedTypes';
 import type { PlusSubmenu, PopoverId } from './types';
@@ -43,6 +44,7 @@ interface GuidedWorkBuddyProps {
   shell: GuidedShellState;
   waitTarget: GuidedTargetId | null;
   waitCallout: string | null;
+  showTargetHint: boolean;
   urgent: boolean;
   onTargetClick: (target: GuidedTargetId) => void;
   onToggleSidebar: () => void;
@@ -53,6 +55,7 @@ interface GuidedWorkBuddyProps {
   /** 回到当前步骤所在页面（学员中途逛走后用） */
   onBackToView: (view: GuidedShellState['view']) => void;
   onAsideClick: (label: string, explain: string) => void;
+  onPracticeGuide: (html: string) => void;
   /** 自由切换 + 菜单右侧的二级菜单（非课程目标时也能逛） */
   onSelectPlusSubmenu: (sub: PlusSubmenu) => void;
   /** 判断练习：随手挂上 / 取下专家或技能 */
@@ -115,6 +118,7 @@ export function GuidedWorkBuddy({
   shell,
   waitTarget,
   waitCallout,
+  showTargetHint,
   urgent,
   onTargetClick,
   onToggleSidebar,
@@ -124,16 +128,20 @@ export function GuidedWorkBuddy({
   onNewTask,
   onBackToView,
   onAsideClick,
+  onPracticeGuide,
   onSelectPlusSubmenu,
   onFreeMount,
   onFreeToggleConnector,
 }: GuidedWorkBuddyProps) {
+  const modelMenuNeedsReopen = waitTarget === 'modelMenu.pickCustom' && shell.popover !== 'model';
+  const cueTarget = modelMenuNeedsReopen ? 'composer.model' : waitTarget;
   // 不在首页、但下一步要点首页输入框的按钮时，提示学员先点「新建任务」回首页
   const isNeedBackToHome =
-    shell.view !== 'home' && shell.view !== 'settings' && /^(composer|plusMenu)\./.test(waitTarget ?? '');
+    showTargetHint && shell.view !== 'home' && shell.view !== 'settings' && /^(composer|plusMenu)\./.test(cueTarget ?? '');
   const isWaitingMention = shell.view === 'home' && waitTarget === 'composer.mention';
   const isWaitingSlash = shell.view === 'home' && waitTarget === 'composer.slash';
   const isWaitingComposerKey = isWaitingMention || isWaitingSlash;
+  const isWaitingPracticeMessage = shell.view === 'home' && !!shell.customModelPractice && waitTarget === 'composer.send';
   const composerInputRef = useRef<HTMLTextAreaElement>(null);
   const [composerDraft, setComposerDraft] = useState(shell.composerText);
   const [wrongKeyHint, setWrongKeyHint] = useState(false);
@@ -183,7 +191,9 @@ export function GuidedWorkBuddy({
   // + 菜单要等学员点里面的「添加文件 / 资料库」时，菜单被点掉了就在 + 上亮圈，点它重新打开
   const plusNeedsReopen = (waitTarget ?? '').startsWith('plusMenu.') && shell.popover !== 'plus';
   const ring = (id: GuidedTargetId) =>
-    waitTarget === id || (id === 'composer.plus' && plusNeedsReopen) ? (urgent ? 'sim-ring-urgent' : 'sim-ring') : '';
+    showTargetHint && (cueTarget === id || (id === 'composer.plus' && plusNeedsReopen))
+      ? (urgent ? 'sim-ring-urgent' : 'sim-ring')
+      : '';
   /** + 菜单右侧当前展开的是「添加文件」二级菜单 */
   const filesSub = shell.plusSubmenu === 'files';
   /** + 菜单右侧当前展开的是「连接器」二级菜单 */
@@ -231,12 +241,25 @@ export function GuidedWorkBuddy({
           urgent={urgent}
           onTargetClick={onTargetClick}
           onAsideClick={onAsideClick}
+          onPracticeGuide={onPracticeGuide}
         />
       </div>
     );
   }
 
-  const hasText = shell.composerText.trim().length > 0;
+  const hasText = isWaitingPracticeMessage || shell.composerText.trim().length > 0;
+  const isPracticeModelSelected = shell.selectedModel === PRACTICE_MODEL_ID;
+  const sendFromHome = () => {
+    if (isWaitingPracticeMessage) {
+      if (isPracticeModelSelected) onTargetClick('composer.send');
+      return;
+    }
+    if (shell.customModelPractice?.saved && (waitTarget === 'composer.model' || waitTarget === 'modelMenu.pickCustom')) {
+      onAsideClick('发送', '这条练习消息要用刚保存的模型。先切换，再发消息。');
+      return;
+    }
+    handleOrAside('composer.send', '发送', '跟着右边泊舟的提示先完成这一步再点发送。');
+  };
   const chat = shell.activeChat;
   const isStreaming = shell.chatPhase === 'streaming';
   const isDone = shell.chatPhase === 'done';
@@ -417,7 +440,8 @@ export function GuidedWorkBuddy({
                     onBackToView(backToView);
                     return;
                   }
-                  onAsideClick(it.label, `<b>${it.label}</b>这一步先不用点，跟着右边蓝圈步骤走就行。`);
+                  const hint = showTargetHint ? '这一步先不用点，跟着右边蓝圈步骤走就行。' : '这一步先不用点。';
+                  onAsideClick(it.label, `<b>${it.label}</b>${hint}`);
                 }}
                 className={`relative w-full border-0 text-left flex items-center ${
                   shell.sidebarCollapsed ? 'justify-center' : 'gap-2.5 px-2.5'
@@ -1372,7 +1396,9 @@ export function GuidedWorkBuddy({
                     handleOrAside(
                       'modelMenu.pickFree',
                       'Hy4 flash（限时免费）',
-                      '简单整理和日常练手选限时免费（0.00x）或快速档（0.15x）最省积分。'
+                      waitTarget === 'modelMenu.pickCustom'
+                        ? '这是当前的内置模型。这一轮要换成刚保存的模型，再在列表里找一下。'
+                        : '简单整理和日常练手选限时免费（0.00x）或快速档（0.15x）最省积分。'
                     )
                   }
                   className={`relative w-full border-0 flex items-center justify-between px-2.5 py-2 rounded-lg cursor-pointer bg-[#f3f5fe] hover:bg-[#e6ebfd] ${ring(
@@ -1399,6 +1425,23 @@ export function GuidedWorkBuddy({
                   </span>
                   <span className="font-mono text-[11.5px] text-[#8c9099]">0.11x</span>
                 </div>
+                {shell.customModelPractice?.saved && (
+                  <div className="mt-1 border-t border-gray-200 pt-1">
+                    <p className="m-0 px-2.5 py-1 text-[11px] text-gray-600">自定义模型</p>
+                    <button
+                      type="button"
+                      data-guided-target="modelMenu.pickCustom"
+                      className={`relative flex w-full items-center gap-1.5 rounded-lg border-0 bg-white px-2.5 py-2 text-left font-medium text-gray-900 hover:bg-[#f3f5fe] cursor-pointer ${ring('modelMenu.pickCustom')}`}
+                      onClick={() => handleOrAside('modelMenu.pickCustom', '练习模型', '这是这轮保存的自定义模型。')}
+                    >
+                      <ModelDotIcon size={13} />
+                      <span>{PRACTICE_MODEL_ID}</span>
+                      {waitTarget === 'modelMenu.pickCustom' && waitCallout && (
+                        <GuidanceCallout text={waitCallout} placement="left" />
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1489,6 +1532,20 @@ export function GuidedWorkBuddy({
                       <GuidanceCallout text={waitCallout} placement="top" align="start" />
                     )}
                   </div>
+                ) : isWaitingPracticeMessage ? (
+                  <textarea
+                    aria-label="练习消息"
+                    rows={2}
+                    value={PRACTICE_PROMPT}
+                    readOnly
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                        e.preventDefault();
+                        sendFromHome();
+                      }
+                    }}
+                    className="w-full min-h-[56px] resize-none rounded-lg border-0 bg-white text-[14.5px] leading-[1.65] text-[#111318] select-text"
+                  />
                 ) : (
                   <div className="min-h-[54px] text-[14.5px] leading-[1.65]">
                     {/* 资料库添加的文件附件显示在输入框上方 */}
@@ -1659,14 +1716,18 @@ export function GuidedWorkBuddy({
                     <button
                       type="button"
                       data-guided-target="composer.model"
-                      onClick={() =>
+                      onClick={() => {
+                        if (modelMenuNeedsReopen) {
+                          onTogglePopover('model');
+                          return;
+                        }
                         handleOrAside(
                           'composer.model',
                           '模型选择',
                           '点这里切换模型档位与倍率（限时免费 0.00x / 快速 0.15x / 均衡 0.50x / 极致 1.00x）。',
                           'model'
-                        )
-                      }
+                        );
+                      }}
                       className={`relative border-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-medium whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
                         shell.popover === 'model' ? 'bg-[#f4f4f5]' : 'bg-transparent hover:bg-[#f4f4f5]'
                       } ${ring('composer.model')}`}
@@ -1674,8 +1735,8 @@ export function GuidedWorkBuddy({
                       <ModelDotIcon size={14} />
                       <span>{shell.selectedModel}</span>
                       {shell.popover === 'model' ? <ChevronUpIcon size={11} /> : <ChevronDownIcon size={11} />}
-                      {waitTarget === 'composer.model' && waitCallout && (
-                        <GuidanceCallout text={waitCallout} placement="top" align="end" />
+                      {cueTarget === 'composer.model' && waitCallout && (
+                        <GuidanceCallout text={modelMenuNeedsReopen ? '重新打开模型列表' : waitCallout} placement="top" align="end" />
                       )}
                     </button>
 
@@ -1685,10 +1746,9 @@ export function GuidedWorkBuddy({
                       type="button"
                       data-guided-target="composer.send"
                       aria-label="发送"
-                      onClick={() =>
-                        handleOrAside('composer.send', '发送', '跟着右边泊舟的提示先完成这一步再点发送。')
-                      }
-                      className={`relative w-8 h-8 rounded-full border-0 inline-flex items-center justify-center text-white cursor-pointer transition-all active:scale-[0.93] ${
+                      disabled={isWaitingPracticeMessage && !isPracticeModelSelected}
+                      onClick={sendFromHome}
+                      className={`relative w-8 h-8 rounded-full border-0 inline-flex items-center justify-center text-white cursor-pointer disabled:cursor-not-allowed transition-all active:scale-[0.93] ${
                         hasText ? 'bg-[#1a1a1a] hover:bg-[#333]' : 'bg-[#c9ccd1]'
                       } ${ring('composer.send')}`}
                     >
@@ -2042,7 +2102,7 @@ export function GuidedWorkBuddy({
                         <span>•••</span>
                         <span className="inline-flex items-center gap-1 text-[#5c5f66]">
                           <ModelDotIcon size={12} />
-                          <span>{chat.model}</span>
+                          <span aria-label={shell.customModelPractice ? '本次回复使用的模型' : undefined}>{chat.model}</span>
                         </span>
                       </div>
                     </div>

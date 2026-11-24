@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { GuidanceCallout } from './GuidanceCue';
+import { CustomModelPracticePanel } from './CustomModelPracticePanel';
 import type { CloudMemoryItem, GuidedShellState, GuidedTargetId, SettingsTab } from './guidedTypes';
 
 interface SettingsViewsProps {
@@ -9,6 +10,7 @@ interface SettingsViewsProps {
   urgent: boolean;
   onTargetClick: (target: GuidedTargetId) => void;
   onAsideClick: (label: string, explain: string) => void;
+  onPracticeGuide: (html: string) => void;
 }
 
 function Toggle({ on, accent = 'green' }: { on: boolean; accent?: 'green' | 'blue' }) {
@@ -235,6 +237,7 @@ export function SettingsViews5113({
   urgent,
   onTargetClick,
   onAsideClick,
+  onPracticeGuide,
 }: SettingsViewsProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -349,6 +352,8 @@ export function SettingsViews5113({
     {
       label: '模型',
       icon: 'model',
+      tab: shell.customModelPractice ? 'models' : undefined,
+      target: shell.customModelPractice ? 'settings.tab.models' : undefined,
       explain: '<b>模型</b>管理可用模型列表，或者接入你自己其他平台的 API Key（新手不用折腾）。',
     },
     {
@@ -507,6 +512,17 @@ export function SettingsViews5113({
         ref={scrollRef}
         className="flex-1 min-w-0 overflow-y-auto p-5 xl:p-6 flex flex-col gap-3.5"
       >
+        {shell.settingsTab === 'models' && shell.customModelPractice && (
+          <CustomModelPracticePanel
+            practice={shell.customModelPractice}
+            waitTarget={waitTarget}
+            waitCallout={waitCallout}
+            urgent={urgent}
+            onTargetClick={onTargetClick}
+            onAsideClick={onAsideClick}
+            onPracticeGuide={onPracticeGuide}
+          />
+        )}
         {/* ===== Tab 1：通用设置（完整还原 5 大区块：常规 / 权限 / 存储 / 通知 / 隐私） ===== */}
         {shell.settingsTab === 'general' && (
           <>

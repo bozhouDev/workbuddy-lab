@@ -12,7 +12,8 @@ export type LessonId =
   | 'connectors'
   | 'choose'
   | 'schedule'
-  | 'assistant';
+  | 'assistant'
+  | 'custom-model';
 
 export interface LessonNavMeta {
   id: LessonId;
@@ -20,12 +21,18 @@ export interface LessonNavMeta {
   chapter: string;
   title: string;
   guideUrl: string;
+  guideCtaDescription?: string;
 }
 
 export const LESSON_CATALOG: readonly LessonNavMeta[] = [
   { id: 'interface', code: '0.1', chapter: '00 入门', title: '认识界面', guideUrl: '/features/basics/interface/' },
   { id: 'setup', code: '1.1', chapter: '01 开局设置', title: '装好先调的：设置与积分', guideUrl: '/features/setup/settings/' },
   { id: 'know-you', code: '1.2', chapter: '01 开局设置', title: '让它更懂你：分组、记忆、指令', guideUrl: '/features/setup/memory/' },
+  {
+    id: 'custom-model', code: '1.3', chapter: '01 开局设置',
+    title: '配置自定义模型（以 GPT 为例）', guideUrl: '/features/setup/custom-model/',
+    guideCtaDescription: '跟着泊舟用练习数据添加模型、测试连接，再亲手切换并核对回复下方的模型标签。',
+  },
   { id: 'attach', code: '2.1', chapter: '02 发任务', title: '给它资料：+、@ 和资料库', guideUrl: '/features/send-task/attach/' },
   { id: 'send', code: '2.2', chapter: '02 发任务', title: '发出一个任务：模式、权限、写清、看过程', guideUrl: '/features/send-task/task-brief/' },
   { id: 'review', code: '2.3', chapter: '02 发任务', title: '检查和修改', guideUrl: '/features/send-task/review/' },
@@ -37,7 +44,7 @@ export const LESSON_CATALOG: readonly LessonNavMeta[] = [
   { id: 'assistant', code: '4.2', chapter: '04 自动化', title: '助理：手机遥控电脑', guideUrl: '/features/automation/assistant/' },
 ];
 
-export type SettingsTab = 'general' | 'memory' | 'personalization';
+export type SettingsTab = 'general' | 'memory' | 'personalization' | 'models';
 
 export type GuidedTargetId =
   | 'avatar'
@@ -47,6 +54,10 @@ export type GuidedTargetId =
   | 'settings.tab.general'
   | 'settings.tab.memory'
   | 'settings.tab.personalization'
+  | 'settings.tab.models'
+  | 'customModel.add'
+  | 'customModel.provider'
+  | 'customModel.save'
   | 'settings.changePath'
   | 'settings.enableNotify'
   | 'settings.toggleCloudMemory'
@@ -80,6 +91,7 @@ export type GuidedTargetId =
   | 'permMenu.toggleFullAccess'
   | 'composer.model'
   | 'modelMenu.pickFree'
+  | 'modelMenu.pickCustom'
   | 'composer.send'
   | 'approval.cancel'
   | 'approval.askPlain'
@@ -296,6 +308,8 @@ export interface GuidedShellState {
   // 1.5 模型与积分
   selectedModel: string;
   creditBalance: number;
+  /** 只存网页生成的演示值和练习进度，表单输入不进课程快照。 */
+  customModelPractice?: { demoKey: string; formOpen: boolean; customSelected: boolean; saved: boolean };
   // 2.x 发任务（模式 / @ 引用 / 权限 / 对话内二次修改）
   planOn: boolean;
   askOn: boolean;
@@ -428,7 +442,10 @@ export interface GuidedStep {
     target: GuidedTargetId;
     callout: string;
     label: string;
+    /** 设置后先让学员自己找，点「给我提示」才显示蓝圈和这句提示。 */
+    hint?: string;
   };
+  quiz?: { prompt: string; choices: readonly string[]; answer: string; retry: string };
   onEnter?: (s: GuidedShellState) => Partial<GuidedShellState>;
   onAction?: (s: GuidedShellState) => Partial<GuidedShellState>;
   runChat?: (s: GuidedShellState) => ChatRunSpec;
@@ -449,6 +466,8 @@ export interface GuidedLessonDef {
   guideUrl: string;
   initialState: () => GuidedShellState;
   steps: GuidedStep[];
+  /** 可选的常驻教学步骤，一个步骤可以跨多个实际控件操作。 */
+  checkpoints?: ReadonlyArray<{ stepId: string; title: string; shortHint: string }>;
   /** 由几个小段拼成时，各段的脚本名、标题和起始步骤下标（进度条按小段显示；旧链接按脚本名直达该段） */
   parts?: Array<{ key: string; title: string; startIdx: number }>;
 }

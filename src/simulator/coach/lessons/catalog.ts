@@ -49,12 +49,13 @@ const COMPOSITION: Record<Exclude<LessonId, 'interface'>, PartLoader[]> = {
   choose: [{ title: '判断练习', load: async () => (await import('./choose')).chooseLesson }],
   schedule: [{ title: '定时任务', load: async () => (await import('./schedule')).scheduleLesson }],
   assistant: [{ title: '助理', load: async () => (await import('./assistant')).assistantLesson }],
+  'custom-model': [{ title: '配置自定义模型', load: async () => (await import('./customModel')).customModelLesson }],
 };
 
 /** 课程目录里排在这节后面的那节（最后一节返回 null） */
 function nextOf(id: LessonId) {
   const idx = LESSON_CATALOG.findIndex((l) => l.id === id);
-  return idx >= 0 && idx + 1 < LESSON_CATALOG.length ? LESSON_CATALOG[idx + 1] : null;
+  return idx >= 0 ? (LESSON_CATALOG[idx + 1] ?? null) : null;
 }
 
 /**
@@ -111,6 +112,7 @@ export function composeLesson(id: Exclude<LessonId, 'interface'>, parts: Array<{
     // 课程初始界面 = 第一段的初始界面
     initialState: parts[0].def.initialState,
     steps,
+    checkpoints: multi ? undefined : parts[0].def.checkpoints,
     parts: multi ? partMarks : undefined,
   };
 }

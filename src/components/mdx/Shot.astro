@@ -6,14 +6,19 @@ interface Props {
   src: ImageMetadata;
   alt: string;
   caption?: string;
+  original?: boolean;
 }
 
-const { src, alt, caption } = Astro.props;
+const { src, alt, caption, original = false } = Astro.props;
 ---
 
 <figure class="wbl-shot not-content">
-  <div class="wbl-shot-frame">
-    <Image src={src} alt={alt} format="webp" quality={86} width={1440} class="wbl-shot-img" />
+  <div class:list={['wbl-shot-frame', { 'wbl-shot-frame--original': original }]}>
+    {original ? (
+      <img src={src.src} width={src.width} height={src.height} alt={alt} class="wbl-shot-img" loading="lazy" decoding="async" />
+    ) : (
+      <Image src={src} alt={alt} format="webp" quality={86} width={1440} class="wbl-shot-img" />
+    )}
   </div>
   {caption && <figcaption class="wbl-shot-caption">{caption}</figcaption>}
 </figure>
@@ -28,6 +33,11 @@ const { src, alt, caption } = Astro.props;
     border: 1px solid #e6e6e3;
     overflow: hidden;
     background: #f4f4f2;
+  }
+
+  .wbl-shot-frame--original {
+    border-radius: 0;
+    overflow: visible;
   }
 
   .wbl-shot-img {

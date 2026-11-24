@@ -16,7 +16,8 @@ interface CoachButton {
   onClick: () => void;
 }
 
-export interface ExploreProgressState {
+export interface StepProgressState {
+  steps: ReadonlyArray<{ id: string; title: string; shortHint: string; done: boolean }>;
   currentIndex: number;
   stepPhase: 'prompt' | 'explained';
   onSelectStep: (index: number) => void;
@@ -34,8 +35,8 @@ interface CoachRailProps {
   waitPrompt: string | null;
   buttons: CoachButton[];
   onFocusArea?: (areaId: AreaId) => void;
-  /** 第 1 课「认识界面」顶部常驻单步进度条 */
-  exploreProgress?: ExploreProgressState | null;
+  /** 顶部常驻单步进度条，仅已完成步骤可回看。 */
+  stepProgress?: StepProgressState | null;
   subtitle?: string;
   /** 可回跳的已完成阶段索引（用于点击 4 段进度条或底部「上一阶段」） */
   jumpablePhases?: PhaseIndex[];
@@ -62,7 +63,7 @@ export function CoachRail({
   waitPrompt,
   buttons,
   onFocusArea,
-  exploreProgress = null,
+  stepProgress = null,
   subtitle = '左边真界面哪里都能点，点了就讲',
   jumpablePhases = [],
   partLabel,
@@ -74,7 +75,7 @@ export function CoachRail({
   // 切步或退出探索阶段时自动收起步骤目录，保持消息区清爽
   useEffect(() => {
     setDrawerOpen(false);
-  }, [exploreProgress?.currentIndex, Boolean(exploreProgress)]);
+  }, [stepProgress?.currentIndex, Boolean(stepProgress)]);
 
   // 悬浮小窗坐标与尺寸（支持拖拽移动 + 拖拽缩放 + 快捷放大/还原）
   const [floatBox, setFloatBox] = useState(() => {
@@ -413,11 +414,11 @@ export function CoachRail({
         </div>
       </div>
 
-      {/* 第 1 课常驻单步进度条（点开可回看已认过的项，未认项按顺序解锁、不可跳过） */}
-      {exploreProgress && (() => {
-        const total = EXPLORE_AREAS.length;
-        const curIdx = exploreProgress.currentIndex;
-        const curArea = EXPLORE_AREAS[curIdx];
+      {/* 常驻单步进度条（可回看已完成步骤，未完成项按顺序解锁）。 */}
+      {stepProgress && (() => {
+        const { steps, currentIndex: curIdx } = stepProgress;
+        const total = steps.length;
+        const curArea = steps[curIdx];
         if (!curArea) return null;
         return (
           <div className="shrink-0 border-b border-[#eeeeeb] bg-[#fafaf9]">
@@ -438,14 +439,14 @@ export function CoachRail({
                   {drawerOpen ? '收起 ▴' : '目录 ▾'}
                 </span>
               </div>
-              <div className="mt-1.5 grid grid-cols-7 gap-1" aria-hidden="true">
-                {EXPLORE_AREAS.map((area, idx) => {
-                  const done = exploredAreas.has(area.id);
+              <div className="mt-1.5 flex gap-1" aria-hidden="true">
+                {steps.map((area, idx) => {
+                  const done = area.done;
                   const isCur = idx === curIdx;
                   return (
                     <span
                       key={area.id}
-                      className={`h-1.5 rounded-full transition-colors ${
+                      className={`h-1.5 flex-1 rounded-full transition-colors ${
                         done
                           ? 'bg-accent-600'
                           : isCur
@@ -460,8 +461,8 @@ export function CoachRail({
 
             {drawerOpen && (
               <div className="sim-pop-down border-t border-[#eeeeeb] bg-white divide-y divide-[#f2f2ef] max-h-[240px] overflow-y-auto">
-                {EXPLORE_AREAS.map((area, idx) => {
-                  const done = exploredAreas.has(area.id);
+                {steps.map((area, idx) => {
+                  const done = area.done;
                   const isCur = idx === curIdx;
                   // 只允许回看已完成的步骤，或点击当前步，不能跳过前面步骤
                   const canJump = done && !isCur;
@@ -473,7 +474,7 @@ export function CoachRail({
                       onClick={() => {
                         if (canJump) {
                           setDrawerOpen(false);
-                          exploreProgress.onSelectStep(idx);
+                          stepProgress.onSelectStep(idx);
                         }
                       }}
                       className={`w-full border-0 text-left px-4 py-2 flex items-center justify-between gap-2 transition-colors ${
@@ -495,7 +496,7 @@ export function CoachRail({
                       </div>
                       {isCur ? (
                         <span className="text-[10.5px] font-semibold text-accent-600 bg-white border border-accent-200 rounded-full px-2 py-0.5 shrink-0">
-                          {exploreProgress.stepPhase === 'explained' ? '已看完' : '当前步'}
+                          {stepProgress.stepPhase === 'explained' ? '已看完' : '当前步'}
                         </span>
                       ) : done ? (
                         <span className="text-[10.5px] font-medium text-[#047857] bg-[#ecfdf5] rounded-full px-2 py-0.5 shrink-0">

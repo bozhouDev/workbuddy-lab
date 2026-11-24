@@ -1,0 +1,206 @@
+---
+title: 配置自定义模型（以 GPT 为例）
+description: "第一次配置也可以跟着做。我们先在设置里添加一个自定义 GPT 模型，测试并保存，再回到聊天框选中它，发一条消息确认能用。"
+clientVersion: "5.11.3"
+verifiedAt: 2026-11-24
+simRoute: custom-model
+sidebar:
+  order: 6
+---
+
+import Shot from '../../../../components/mdx/Shot.astro';
+import Warning from '../../../../components/mdx/Warning.astro';
+import imgStep01 from '../../../../assets/shots/features/setup/custom-model/01-打开头像菜单.png';
+import imgStep02 from '../../../../assets/shots/features/setup/custom-model/02-打开设置.png';
+import imgStep03 from '../../../../assets/shots/features/setup/custom-model/03-找到模型设置.png';
+import imgStep04 from '../../../../assets/shots/features/setup/custom-model/04-添加模型.png';
+import imgStep05 from '../../../../assets/shots/features/setup/custom-model/05-展开供应商列表.png';
+import imgStep06 from '../../../../assets/shots/features/setup/custom-model/06-选择自定义.png';
+import imgStep07 from '../../../../assets/shots/features/setup/custom-model/07-填写模型信息.png';
+import imgStep08 from '../../../../assets/shots/features/setup/custom-model/08-查看高级配置.png';
+import imgStep09 from '../../../../assets/shots/features/setup/custom-model/09-测试连接.png';
+import imgStep10 from '../../../../assets/shots/features/setup/custom-model/10-确认连接成功.png';
+import imgStep11 from '../../../../assets/shots/features/setup/custom-model/11-保存模型.png';
+import imgStep12 from '../../../../assets/shots/features/setup/custom-model/12-打开聊天模型下拉列表.png';
+import imgStep13 from '../../../../assets/shots/features/setup/custom-model/13-选中自定义模型.png';
+import imgStep14 from '../../../../assets/shots/features/setup/custom-model/14-验证对话结果.png';
+
+## 开始前准备这三样
+
+**接口地址**  这就是服务商给你的接口基础地址，也可能写成 Base URL。WorkBuddy 的「自定义」选项要求服务商提供 OpenAI 兼容协议的 API。
+
+**API Key**  API Key 是服务商签发的访问密钥，用于让 WorkBuddy 连接这个服务。请从你使用的服务商后台获取，填写和截图时保持隐藏。
+
+**模型 ID**  模型 ID 是接口用来识别模型的名称。到服务商的模型列表或文档里找可以调用的完整 ID。以上三项应来自同一个服务。
+
+## 1. 在首页找到头像
+
+打开 WorkBuddy，看到中间有一个可以输入任务的大文本框，就说明你到了首页。先看窗口左下角，找到自己的头像和昵称，点一下。弹出账号菜单后继续下一步。
+
+<Shot
+  src={imgStep01}
+  alt={"首页左下角红框里的头像是账号菜单入口"}
+  caption={"图 1  首页左下角红框里的头像是账号菜单入口"}
+  original
+/>
+
+## 2. 从账号菜单打开设置
+
+菜单会从头像上方展开。往中间看，找到带齿轮图标的「设置」，点它后会打开设置窗口。图里的「外观」在它下一行，可以用来确认自己找对了位置。
+
+<Shot
+  src={imgStep02}
+  alt={"在头像展开的菜单里点「设置」"}
+  caption={"图 2  在头像展开的菜单里点「设置」"}
+  original
+/>
+
+## 3. 在设置左侧打开模型页
+
+刚进设置时，右侧显示的是「通用」。在左侧栏向下看到「功能」分组，找到「模型」并点一下。打开后，右侧最上方会出现「自定义模型」区域。
+
+<Shot
+  src={imgStep03}
+  alt={"从设置左侧「功能」分组进入「模型」"}
+  caption={"图 3  从设置左侧「功能」分组进入「模型」"}
+  original
+/>
+
+## 4. 点击添加模型
+
+在右侧「自定义模型」区域，点右上角的「添加模型」，打开配置表单。下方的「辅助任务模型」用于生成标题、会话摘要等任务，先保持原样。聊天要用哪个模型，我们保存后回首页再选。
+
+<Shot
+  src={imgStep04}
+  alt={"在「自定义模型」卡片右上角点「添加模型」"}
+  caption={"图 4  在「自定义模型」卡片右上角点「添加模型」"}
+  original
+/>
+
+## 5. 展开供应商列表
+
+在弹出的「添加模型」窗口里，最上面一项叫「供应商」。图中默认显示「腾讯云 Token Plan / 通用 Token Plan（个人版）」。点这一行右侧的小箭头展开列表，先别在默认选项下填密钥。
+
+<Shot
+  src={imgStep05}
+  alt={"点击顶部的供应商下拉框"}
+  caption={"图 5  点击顶部的供应商下拉框"}
+  original
+/>
+
+## 6. 在其他分组里选自定义
+
+在供应商列表里向下找「其他」分组，再点它下面的「自定义」。列表收起后，确认顶部供应商显示「自定义」，下方也出现了「接口地址」输入框。这时就可以填自己的服务信息了。
+
+<Shot
+  src={imgStep06}
+  alt={"在供应商下拉列表的「其他」分组里选择「自定义」"}
+  caption={"图 6  在供应商下拉列表的「其他」分组里选择「自定义」"}
+  original
+/>
+
+## 7. 填好接口地址和模型信息
+
+选完「自定义」后，按从上到下的顺序填下面三项。可以直接复制服务商提供的值，粘贴后检查首尾有没有带上多余的空格。
+
+**接口地址（本次演示地址为dragoncode中转站的url）**  粘贴服务商提供的 Base URL，保留它要求的路径，例如图中这个服务的地址以 `/v1` 结尾。图里的 `https://dragoncode.codes/v1` 是本次所用服务的示例，使用其他服务时填你自己的地址。
+
+**API Key**  粘贴服务商签发的密钥。输入后通常会显示成一串圆点，方便遮住真实内容。填的是密钥本身，不是登录密码，也不需要在前面额外加“API Key”等字样。
+
+**模型名称**  填服务商模型列表里的完整 ID。图中填的是 `gpt-6.2-sol`。按列表原样复制，保留连字符，别把产品名“GPT”或自己起的昵称填进去。
+
+<Shot
+  src={imgStep07}
+  alt={"红框依次标出接口地址、API Key 和模型名称"}
+  caption={"图 7  红框依次标出接口地址、API Key 和模型名称"}
+  original
+/>
+
+## 8. 按需查看高级配置
+
+在弹窗内部往下滚动，可以找到「高级配置」。如果只是先跑通一次对话，不确定的项目可以保持默认，等确认服务商和模型支持后再改。
+
+**能力开关**  截图中只勾选了「工具调用」。「图片输入」「思考模式」「自定义协议」都没勾选。按你使用的服务商说明决定是否开启相应能力，不需要把开关全打开。
+
+**输入与输出**  「输入」和「输出」下面有不同的大小选项。截图里这两栏都留空，输入框显示「使用提供商默认值」。如果服务商没有要求填写具体大小，就可以让它沿用默认值。
+
+<Shot
+  src={imgStep08}
+  alt={"高级配置示例中开启了工具调用，输入和输出沿用默认值"}
+  caption={"图 8  高级配置示例中开启了工具调用，输入和输出沿用默认值"}
+  original
+/>
+
+## 9. 点击测试连接
+
+填好三项后，先不要急着保存。找到 API Key 输入框右边的「测试连接」，点一次，等窗口给出结果。如果刚才滚到了高级配置的位置，先在弹窗里向上滚回 API Key 那一行。
+
+<Shot
+  src={imgStep09}
+  alt={"点 API Key 右侧的「测试连接」"}
+  caption={"图 9  点 API Key 右侧的「测试连接」"}
+  original
+/>
+
+## 10. 确认出现连接成功
+
+点击后看窗口顶部。出现绿色对勾和「连接成功」，说明这一轮连接测试通过，可以继续保存。有时提示一闪就过去，注意看弹窗上方。这一步只确认设置里的连接测试，还要到聊天框发一条消息确认实际使用。
+
+<Shot
+  src={imgStep10}
+  alt={"窗口顶部出现绿色对勾和「连接成功」"}
+  caption={"图 10  窗口顶部出现绿色对勾和「连接成功」"}
+  original
+/>
+
+## 11. 保存刚填好的模型
+
+确认测试通过后，点弹窗右下角的黑色「保存」按钮。别点旁边的「取消」，也别只关弹窗。保存后回到 WorkBuddy 首页，下一步再从聊天模型列表里选它。
+
+<Shot
+  src={imgStep11}
+  alt={"测试通过后点表单右下角的「保存」"}
+  caption={"图 11  测试通过后点表单右下角的「保存」"}
+  original
+/>
+
+<Warning title={"如果没有看到连接成功"}>
+  先按这三个位置排查。提示鉴权或权限问题时，核对密钥是否来自这家服务商、是否仍有效。提示模型找不到时，把模型 ID 和服务商列表逐字对一遍。提示连不上或超时时，先确认网络和 Base URL，尤其别漏掉服务商要求的路径。改完后再点「测试连接」。
+</Warning>
+
+## 12. 回首页打开聊天模型列表
+
+回到 WorkBuddy 首页，看任务输入框的右下角，麦克风图标左边会显示当前使用的模型。截图里这一项是 `Hy4 flash`。点模型名或旁边的小箭头，展开聊天模型列表。你看到的当前模型名可能不同，按位置找就行。
+
+<Shot
+  src={imgStep12}
+  alt={"在首页任务输入框右下角点当前模型名"}
+  caption={"图 12  在首页任务输入框右下角点当前模型名"}
+  original
+/>
+
+## 13. 选中刚保存的自定义模型
+
+展开后，在模型列表内向下滚动，找到「自定义模型」分组。点刚添加的模型，例如 `gpt-6.2-sol`。选中后，再看输入框右下角，确认原来的模型名已经换成新模型名。如果列表里找不到，先确认是否已经滚到「自定义模型」，再回设置看看模型有没有保存。
+
+<Shot
+  src={imgStep13}
+  alt={"在「自定义模型」分组下选择刚添加的 gpt-6.2-sol"}
+  caption={"图 13  在「自定义模型」分组下选择刚添加的 gpt-6.2-sol"}
+  original
+/>
+
+## 14. 发一条消息确认能用
+
+在输入框里发一条简短消息。图里发的是「你好，你是什么模型」。等它正常回复后，看回复下方操作按钮旁的模型标签，再看输入框右下角。截图里两处都显示 `gpt-6.2-sol`，这就完成了 WorkBuddy 里的配置和试跑。
+
+<Shot
+  src={imgStep14}
+  alt={"收到回复后核对回复下方和输入框右下角的模型名"}
+  caption={"图 14  收到回复后核对回复下方和输入框右下角的模型名"}
+  original
+/>
+
+## 一句话记住
+
+**先填同一家服务商的接口地址、密钥和模型 ID，测试成功后保存，再回首页切换模型，发一条消息看它能不能正常回。**

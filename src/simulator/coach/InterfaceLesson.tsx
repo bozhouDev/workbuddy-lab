@@ -657,16 +657,17 @@ export default function InterfaceLesson({
     onSelectLesson,
   ]);
 
-  const exploreProgress = useMemo(
+  const stepProgress = useMemo(
     () =>
       stage === 'explore'
         ? {
+            steps: EXPLORE_AREAS.map((area) => ({ ...area, done: exploredAreas.has(area.id) })),
             currentIndex: exploreIndex,
             stepPhase,
             onSelectStep: (idx: number) => goToExploreStep(idx, 'jump'),
           }
         : null,
-    [stage, exploreIndex, stepPhase, goToExploreStep]
+    [stage, exploreIndex, stepPhase, exploredAreas, goToExploreStep]
   );
 
   return (
@@ -711,7 +712,7 @@ export default function InterfaceLesson({
         feed={feed}
         isTyping={isTyping}
         exploredAreas={exploredAreas}
-        exploreProgress={exploreProgress}
+        stepProgress={stepProgress}
         subtitle="跟着蓝圈一步一步认，点开一块讲一块"
         waitPrompt={waitPrompt}
         buttons={buttons}

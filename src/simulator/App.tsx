@@ -210,7 +210,7 @@ export default function App() {
               >
                 {/* 章节按课程目录自动分组，加课不用再改这里 */}
                 {[...new Set(LESSON_CATALOG.map((l) => l.chapter))].map((chapter) => (
-                  <div key={chapter} className="mb-1 last:mb-0">
+                  <div key={chapter} role="group" aria-label={chapter} className="mb-1 last:mb-0">
                     <div className="px-2.5 pt-1.5 pb-1 text-[11px] font-medium text-gray-400">
                       {chapter}
                     </div>
