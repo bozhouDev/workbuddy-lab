@@ -87,10 +87,18 @@ function isAlreadySatisfiedByState(target: GuidedTargetId | undefined, s: Guided
   return false;
 }
 
-interface SavedSnapshot {
+interface CheckpointSnapshot {
   stepIdx: number;
   shell: GuidedShellState;
+  feedCount: number;
+}
+
+interface SavedSnapshot {
+  stepIdx: number;
+  stepId?: string;
+  shell: GuidedShellState;
   feed: FeedItem[];
+  checkpoints?: Record<string, CheckpointSnapshot>;
 }
 
 function readSaved(lessonId: string): SavedSnapshot | null {
@@ -126,6 +134,16 @@ function clearSaved(lessonId: string) {
   }
 }
 
+/** 图文入口仅在这次打开时重来，之后刷新仍能续练。 */
+function consumeGuideStart(lessonId: string): boolean {
+  if (lessonId !== 'custom-model') return false;
+  const url = new URL(window.location.href);
+  if (url.searchParams.get('route') !== lessonId || url.searchParams.get('start') !== 'beginning') return false;
+  url.searchParams.delete('start');
+  window.history.replaceState(window.history.state, '', url);
+  return true;
+}
+
 interface GuidedLessonPlayerProps {
   lessonId: Exclude<LessonId, 'interface'>;
   coachMode: CoachMode;
@@ -153,6 +171,7 @@ export default function GuidedLessonPlayer({
   const [isTyping, setIsTyping] = useState(false);
   const [isRunningChat, setIsRunningChat] = useState(false);
   const [urgent, setUrgent] = useState(false);
+  const [hintedStepId, setHintedStepId] = useState<string | null>(null);
   /** 已到达过的阶段快照键（见 snapKey），进度条只显示当前小段能回跳的阶段 */
   const [snapKeys, setSnapKeys] = useState<string[]>([]);
 
@@ -168,6 +187,7 @@ export default function GuidedLessonPlayer({
     runSpec: ChatRunSpec;
   } | null>(null);
   const phaseSnapshotsRef = useRef<Record<string, SavedSnapshot>>({});
+  const checkpointSnapshotsRef = useRef<Record<string, CheckpointSnapshot>>({});
   const prevRestartRef = useRef(restartSignal);
 
   /**
@@ -188,6 +208,12 @@ export default function GuidedLessonPlayer({
     pendingSayRef.current = null;
   }, []);
 
+  const appendFeed = useCallback((items: FeedItemInput[]) => {
+    const entries = items.map((item): FeedItem => ({ ...item, id: nextId() }));
+    feedRef.current = [...feedRef.current, ...entries];
+    setFeed((prev) => [...prev, ...entries]);
+  }, []);
+
   /** 把上一步还没打出来的消息立刻按原顺序补上，并执行它的收尾（如更新路径条） */
   const flushPendingSay = useCallback(() => {
     const pending = pendingSayRef.current;
@@ -196,11 +222,11 @@ export default function GuidedLessonPlayer({
     for (const id of pending.timers) window.clearTimeout(id);
     const rest = pending.items.slice(pending.next);
     if (rest.length > 0) {
-      setFeed((prev) => [...prev, ...rest.map((item) => ({ ...item, id: nextId() }) as FeedItem)]);
+      appendFeed(rest);
     }
     setIsTyping(false);
     pending.onDone?.();
-  }, []);
+  }, [appendFeed]);
 
   const schedule = useCallback((fn: () => void, ms: number) => {
     const id = window.setTimeout(fn, ms);
@@ -226,7 +252,7 @@ export default function GuidedLessonPlayer({
         const id = schedule(() => {
           // 已被补发或作废的旧序列不再输出
           if (pendingSayRef.current !== pending) return;
-          setFeed((prev) => [...prev, { ...item, id: nextId() } as FeedItem]);
+          appendFeed([item]);
           pending.next = idx + 1;
           if (idx === items.length - 1) {
             pendingSayRef.current = null;
@@ -237,7 +263,7 @@ export default function GuidedLessonPlayer({
         pending.timers.push(id);
       });
     },
-    [schedule, flushPendingSay]
+    [schedule, flushPendingSay, appendFeed]
   );
 
   /** 在 feed 中原地更新当前带路路径条（不刷屏发一堆「你点了 X」） */
@@ -288,6 +314,7 @@ export default function GuidedLessonPlayer({
       lastAsideRef.current = null;
       setStepIdx(targetIdx);
       setUrgent(false);
+      setHintedStepId(null);
 
       let nextShell = workingShell;
       if (step.onEnter) {
@@ -312,10 +339,17 @@ export default function GuidedLessonPlayer({
         setSnapKeys(Object.keys(phaseSnapshotsRef.current));
       }
 
+      const checkpointIndex = def.checkpoints?.findIndex((point) => point.stepId === step.id) ?? -1;
+      if (checkpointIndex >= 0 && !checkpointSnapshotsRef.current[step.id]) {
+        checkpointSnapshotsRef.current[step.id] = { stepIdx: targetIdx, shell: nextShell, feedCount: feedRef.current.length };
+      }
+      const stepPrefix = def.checkpoints && checkpointIndex >= 0
+        ? `<b>第 ${checkpointIndex + 1}/${def.checkpoints.length} 步：</b>`
+        : '';
       const sayLines = [...(step.sayFrom ? step.sayFrom(nextShell) : []), ...step.say];
-      const items: FeedItemInput[] = sayLines.map((html) => ({
+      const items: FeedItemInput[] = sayLines.map((html, index) => ({
         kind: 'coach',
-        html,
+        html: index === 0 ? stepPrefix + html : html,
       }));
       if (step.card) {
         items.push({ kind: 'card', card: step.card });
@@ -350,9 +384,12 @@ export default function GuidedLessonPlayer({
     clearAllTimers();
     activeRunRef.current = null;
     phaseSnapshotsRef.current = {};
+    checkpointSnapshotsRef.current = {};
     setSnapKeys([]);
     setLesson(null);
+    setHintedStepId(null);
     setFeed([]);
+    feedRef.current = [];
     setIsTyping(false);
     setIsRunningChat(false);
 
@@ -362,6 +399,8 @@ export default function GuidedLessonPlayer({
 
     loadLessonDef(lessonId).then((def) => {
       if (cancelled) return;
+      const startFromBeginning = consumeGuideStart(lessonId);
+      if (startFromBeginning) clearSaved(lessonId);
       const collapsed =
         typeof window !== 'undefined' &&
         coachMode === 'docked' &&
@@ -380,30 +419,47 @@ export default function GuidedLessonPlayer({
         return;
       }
 
-      const saved = isExplicitRestart ? null : readSaved(lessonId);
-      if (saved && saved.stepIdx < def.steps.length) {
+      const saved = isExplicitRestart || startFromBeginning ? null : readSaved(lessonId);
+      const savedIdx = saved?.stepId ? def.steps.findIndex((step) => step.id === saved.stepId) : (saved?.stepIdx ?? -1);
+      if (saved && savedIdx >= 0 && savedIdx < def.steps.length && (!def.checkpoints || saved.checkpoints)) {
+        // 旧版在切换模型时直接进入小测。从第 6 步回到带练，保留已保存的配置。
+        const modelSwitch = def.id === 'custom-model' && !saved.stepId ? saved.checkpoints?.['back-to-home'] : undefined;
+        const replay = modelSwitch && savedIdx > modelSwitch.stepIdx ? modelSwitch : undefined;
+        const restoredIdx = replay?.stepIdx ?? savedIdx;
+        const savedFeed = replay ? saved.feed.slice(0, replay.feedCount) : saved.feed;
+        // 消息编号只用于渲染。刷新后重新分配，避免旧编号与之后的新消息冲突。
+        const restoredFeed = savedFeed.map((item) => ({ ...item, id: nextId() }));
+        const savedShell = replay?.shell ?? saved.shell;
+        const initial = def.initialState();
+        if (initial.customModelPractice && savedShell.customModelPractice) {
+          initial.customModelPractice.demoKey = savedShell.customModelPractice.demoKey;
+        }
         const restoredShell: GuidedShellState = {
-          ...def.initialState(),
-          ...saved.shell,
+          ...initial,
+          ...savedShell,
           sidebarCollapsed: collapsed,
-          chatPhase: saved.shell.activeChat ? 'done' : 'idle',
+          chatPhase: savedShell.activeChat ? 'done' : 'idle',
         };
         setLesson(def);
-        setStepIdx(saved.stepIdx);
+        setStepIdx(restoredIdx);
         setShell(restoredShell);
         shellRef.current = restoredShell;
-        setFeed(saved.feed);
-        feedRef.current = saved.feed;
+        setFeed(restoredFeed);
+        feedRef.current = restoredFeed;
+        checkpointSnapshotsRef.current = replay
+          ? Object.fromEntries(Object.entries(saved.checkpoints ?? {}).filter(([, point]) => point.stepIdx <= restoredIdx))
+          : saved.checkpoints ?? {};
         // 至少允许从当前小段的开头重新开始（第 2 段起的开头一步会自己换成该段的初始界面）
-        const part = partIndexOf(def, saved.stepIdx);
+        const part = partIndexOf(def, restoredIdx);
         const startIdx = def.parts?.[part]?.startIdx ?? 0;
         const startKey = snapKey(part, def.steps[startIdx]?.phase ?? 0);
         phaseSnapshotsRef.current[startKey] = {
           stepIdx: startIdx,
-          shell: { ...def.initialState(), sidebarCollapsed: collapsed },
+          shell: { ...initial, sidebarCollapsed: collapsed },
           feed: [],
         };
         setSnapKeys([startKey]);
+        if (replay) enterStep(def, restoredIdx, restoredShell);
         return;
       }
 
@@ -424,7 +480,13 @@ export default function GuidedLessonPlayer({
   // 自动保存当前稳定进度到 sessionStorage，刷新浏览器不丢进度（泊舟打字动画中途刷新也能续上当前步）
   useEffect(() => {
     if (!lesson || !shell || isRunningChat) return;
-    writeSaved(lesson.id, { stepIdx, shell, feed });
+    writeSaved(lesson.id, {
+      stepIdx,
+      stepId: lesson.steps[stepIdx]?.id,
+      shell,
+      feed,
+      checkpoints: lesson.checkpoints ? checkpointSnapshotsRef.current : undefined,
+    });
   }, [lesson, stepIdx, shell, feed, isRunningChat]);
 
   // 停靠/小窗切换或窗口缩放时自动适配侧栏折叠（1280px 保持展开）
@@ -572,7 +634,7 @@ export default function GuidedLessonPlayer({
       flushPendingSay();
       // 非带路步骤保留一条简洁确认，带路步骤直接勾选路径条不再刷屏
       if (!step.navLabel) {
-        setFeed((prev) => [...prev, { id: nextId(), kind: 'did', text: step.wait!.label }]);
+        appendFeed([{ kind: 'did', text: step.wait.label }]);
       }
 
       let updatedShell = workingShell;
@@ -596,7 +658,7 @@ export default function GuidedLessonPlayer({
         enterStep(lesson, nextIdx, updatedShell);
       }
     },
-    [lesson, stepIdx, isRunningChat, finishActiveRunNow, markLastNavTrailDone, runChatAnimation, enterStep, flushPendingSay]
+    [lesson, stepIdx, isRunningChat, finishActiveRunNow, markLastNavTrailDone, runChatAnimation, enterStep, flushPendingSay, appendFeed]
   );
 
   // 允许在「最近」中自由切换历史对话回看对比（不破坏课程当前进度）
@@ -653,16 +715,22 @@ export default function GuidedLessonPlayer({
     [isRunningChat, handleTargetClick]
   );
 
-  // 点击顶部已完成阶段胶囊，干净回跳到该阶段
-  const handleJumpPhase = useCallback(
-    (targetPhase: PhaseIndex) => {
+  const rewindTo = useCallback(
+    (snap: SavedSnapshot) => {
       if (!lesson) return;
-      const snap = phaseSnapshotsRef.current[snapKey(partIndexOf(lesson, stepIdx), targetPhase)];
-      if (!snap) return;
       clearAllTimers();
       activeRunRef.current = null;
       setIsRunningChat(false);
       setIsTyping(false);
+      if (lesson.checkpoints) {
+        checkpointSnapshotsRef.current = Object.fromEntries(
+          Object.entries(checkpointSnapshotsRef.current).filter(([, point]) => point.stepIdx <= snap.stepIdx),
+        );
+        phaseSnapshotsRef.current = Object.fromEntries(
+          Object.entries(phaseSnapshotsRef.current).filter(([, phase]) => phase.stepIdx <= snap.stepIdx),
+        );
+        setSnapKeys(Object.keys(phaseSnapshotsRef.current));
+      }
       const collapsed = coachMode === 'docked' && window.innerWidth < AUTO_COLLAPSE_WIDTH;
       const restored = { ...snap.shell, sidebarCollapsed: collapsed };
       setShell(restored);
@@ -671,7 +739,27 @@ export default function GuidedLessonPlayer({
       feedRef.current = snap.feed;
       enterStep(lesson, snap.stepIdx, restored);
     },
-    [lesson, stepIdx, clearAllTimers, coachMode, enterStep]
+    [lesson, clearAllTimers, coachMode, enterStep]
+  );
+
+  const handleJumpPhase = useCallback(
+    (targetPhase: PhaseIndex) => {
+      if (!lesson) return;
+      const snap = phaseSnapshotsRef.current[snapKey(partIndexOf(lesson, stepIdx), targetPhase)];
+      if (snap) rewindTo(snap);
+    },
+    [lesson, stepIdx, rewindTo]
+  );
+
+  const handleJumpCheckpoint = useCallback(
+    (index: number) => {
+      const stepId = lesson?.checkpoints?.[index]?.stepId;
+      const snap = stepId ? checkpointSnapshotsRef.current[stepId] : undefined;
+      if (snap && snap.stepIdx < stepIdx) {
+        rewindTo({ stepIdx: snap.stepIdx, shell: snap.shell, feed: feedRef.current.slice(0, snap.feedCount) });
+      }
+    },
+    [lesson, stepIdx, rewindTo]
   );
 
   /** 不推进课程、只改左边界面状态（自由逛菜单、判断练习里随手挂东西），同步更新 shellRef 供点击推进时读取 */
@@ -688,6 +776,16 @@ export default function GuidedLessonPlayer({
     [isRunningChat]
   );
 
+  const handlePracticeGuide = useCallback((html: string) => {
+    flushPendingSay();
+    const last = feedRef.current[feedRef.current.length - 1];
+    if (last?.kind === 'coach' && last.html === html) return;
+    appendFeed([{ kind: 'coach', html }]);
+  }, [appendFeed, flushPendingSay]);
+
+  const stepHint = currentStep?.wait?.hint;
+  const showTargetHint = !stepHint || hintedStepId === currentStep?.id;
+
   // 点到非目标控件时的友好虚线解释（连点同一状态不刷屏，切换选项/开关后给出新反馈）
   const handleAsideClick = useCallback(
     (label: string, explain: string) => {
@@ -695,13 +793,22 @@ export default function GuidedLessonPlayer({
       const dedupeKey = `${label}::${explain}`;
       if (lastAsideRef.current === dedupeKey) return;
       lastAsideRef.current = dedupeKey;
-      const hint = !currentStep?.wait
-        ? '点右边底部按钮继续下一步。'
-        : currentStep.wait.target === 'composer.mention'
-          ? '看完了在左边输入框里按键盘输入 <b>@</b> 继续。'
-          : currentStep.wait.target === 'composer.slash'
-            ? '看完了在左边输入框里按键盘输入 <b>/</b> 继续。'
-            : `看完了点蓝圈里的 <b>${currentStep.wait.label}</b> 继续。`;
+      const wait = currentStep?.wait;
+      let hint = wait ? `看完了点蓝圈里的 <b>${wait.label}</b> 继续。` : '点右边底部按钮继续下一步。';
+      switch (wait?.target) {
+        case 'composer.mention':
+          hint = '看完了在左边输入框里按键盘输入 <b>@</b> 继续。';
+          break;
+        case 'composer.slash':
+          hint = '看完了在左边输入框里按键盘输入 <b>/</b> 继续。';
+          break;
+        case 'customModel.save':
+          hint = '看完了，沿弹窗里的蓝圈继续当前操作。';
+          break;
+      }
+      if (wait?.hint) {
+        hint = showTargetHint ? '沿左边的蓝圈继续。' : '再自己试一下，卡住可以点「给我提示」。';
+      }
       setFeed((prev) => [
         ...prev,
         {
@@ -712,12 +819,28 @@ export default function GuidedLessonPlayer({
         },
       ]);
     },
-    [isRunningChat, currentStep]
+    [isRunningChat, currentStep, showTargetHint]
   );
 
   const buttons = useMemo(() => {
-    if (!lesson || !shell || !currentStep?.buttons || isRunningChat) return [];
-    return currentStep.buttons.map((b) => ({
+    if (!lesson || !shell || !currentStep || isRunningChat) return [];
+    const advance = () => {
+      const nextIdx = stepIdx + 1;
+      if (nextIdx < lesson.steps.length) enterStep(lesson, nextIdx, shellRef.current ?? shell);
+    };
+    const quiz = currentStep.quiz;
+    if (quiz) {
+      return quiz.choices.map((label) => ({
+        label,
+        onClick: () => {
+          flushPendingSay();
+          appendFeed([{ kind: 'mine', text: label }]);
+          if (label === quiz.answer) advance();
+          else handlePracticeGuide(quiz.retry);
+        },
+      }));
+    }
+    const actions = (currentStep.buttons ?? []).map((b) => ({
       label: b.label,
       primary: b.primary,
       onClick: () => {
@@ -733,6 +856,7 @@ export default function GuidedLessonPlayer({
           clearAllTimers();
           clearSaved(lesson.id);
           phaseSnapshotsRef.current = {};
+          checkpointSnapshotsRef.current = {};
           setSnapKeys([]);
           const collapsed = coachMode === 'docked' && window.innerWidth < AUTO_COLLAPSE_WIDTH;
           const init = { ...lesson.initialState(), sidebarCollapsed: collapsed };
@@ -743,18 +867,40 @@ export default function GuidedLessonPlayer({
           enterStep(lesson, 0, init);
           return;
         }
-        setFeed((prev) => [...prev, { id: nextId(), kind: 'mine', text: b.label }]);
-        const nextIdx = stepIdx + 1;
-        if (nextIdx < lesson.steps.length) {
-          enterStep(lesson, nextIdx, shellRef.current ?? shell);
-        }
+        appendFeed([{ kind: 'mine', text: b.label }]);
+        advance();
       },
     }));
-  }, [lesson, shell, currentStep, isRunningChat, onSelectLesson, clearAllTimers, coachMode, enterStep, stepIdx]);
+    if (stepHint && !showTargetHint) {
+      actions.push({
+        label: '给我提示',
+        primary: false,
+        onClick: () => {
+          setHintedStepId(currentStep.id);
+          handlePracticeGuide(stepHint);
+        },
+      });
+    }
+    return actions;
+  }, [lesson, shell, currentStep, isRunningChat, onSelectLesson, clearAllTimers, coachMode, enterStep, stepIdx, appendFeed, flushPendingSay, handlePracticeGuide, stepHint, showTargetHint]);
 
+  const isCustomModelPractice = Boolean(shell?.customModelPractice);
   const waitPrompt = useMemo(() => {
-    if (isRunningChat) return 'WorkBuddy 正在执行任务并统计积分…';
+    if (isRunningChat) {
+      return isCustomModelPractice ? '正在生成模拟回复…' : 'WorkBuddy 正在执行任务并统计积分…';
+    }
+    if (currentStep?.quiz) return currentStep.quiz.prompt;
+    if (stepHint) return showTargetHint ? '沿左边的蓝圈继续' : '先自己试一下，卡住可以点「给我提示」';
     if (currentStep?.wait) {
+      if (currentStep.wait.target === 'customModel.provider') {
+        return '展开供应商，在「其他」里选「自定义」';
+      }
+      if (currentStep.wait.target === 'customModel.save') {
+        return '按弹窗里的蓝圈逐项填写、测试并保存';
+      }
+      if (isCustomModelPractice && currentStep.wait.target === 'composer.send') {
+        return '练习问题已填好，在左边点「发送」';
+      }
       if (currentStep.wait.target === 'composer.mention') {
         return '在左边蓝圈的输入框里，用键盘输入 @';
       }
@@ -766,7 +912,7 @@ export default function GuidedLessonPlayer({
       return `在左边点蓝圈里的 ${currentStep.wait.label}`;
     }
     return null;
-  }, [isRunningChat, currentStep, shell?.view]);
+  }, [isRunningChat, currentStep, shell?.view, isCustomModelPractice, stepHint, showTargetHint]);
 
   // 当前小段：进度条只回跳本段已走过的阶段，并显示「第几段」
   const partIdx = lesson ? partIndexOf(lesson, stepIdx) : 0;
@@ -786,12 +932,26 @@ export default function GuidedLessonPlayer({
     );
   }
 
+  const checkpointIndex = lesson.checkpoints?.reduce(
+    (latest, point, index) => checkpointSnapshotsRef.current[point.stepId] ? index : latest,
+    -1,
+  ) ?? -1;
+  const checkpointCompleted = currentStep?.phase === 3 && stepIdx === lesson.steps.length - 1;
+  const checkpoints = lesson.checkpoints?.map((point, index) => ({
+    id: point.stepId,
+    title: point.title,
+    shortHint: point.shortHint,
+    done: index < checkpointIndex || (checkpointCompleted && index === checkpointIndex),
+  }));
+  const showPrevious = checkpointIndex > 0 && !isRunningChat;
+
   return (
     <>
       <GuidedWorkBuddy
         shell={shell}
         waitTarget={isRunningChat ? null : (currentStep?.wait?.target ?? null)}
-        waitCallout={isRunningChat ? null : (currentStep?.wait?.callout ?? null)}
+        waitCallout={isRunningChat || !showTargetHint ? null : (currentStep?.wait?.callout ?? null)}
+        showTargetHint={showTargetHint}
         urgent={urgent}
         onTargetClick={handleTargetClick}
         onToggleSidebar={() =>
@@ -805,6 +965,7 @@ export default function GuidedLessonPlayer({
         onNewTask={handleNewTask}
         onBackToView={handleBackToView}
         onAsideClick={handleAsideClick}
+        onPracticeGuide={handlePracticeGuide}
         onSelectPlusSubmenu={(sub) => patchShell((p) => ({ plusSubmenu: sub }))}
         onFreeMount={(chip) =>
           patchShell((p) => {
@@ -831,7 +992,16 @@ export default function GuidedLessonPlayer({
         feed={feed}
         isTyping={isTyping}
         waitPrompt={waitPrompt}
-        buttons={buttons}
+        buttons={showPrevious ? [
+          { label: '← 上一步', onClick: () => handleJumpCheckpoint(checkpointIndex - 1) },
+          ...buttons,
+        ] : buttons}
+        stepProgress={checkpoints && checkpointIndex >= 0 ? {
+          steps: checkpoints,
+          currentIndex: checkpointIndex,
+          stepPhase: checkpointCompleted ? 'explained' : 'prompt',
+          onSelectStep: handleJumpCheckpoint,
+        } : null}
         subtitle={`${lesson.code} ${lesson.title} · 左边随时可点`}
         jumpablePhases={jumpablePhases}
         onJumpPhase={handleJumpPhase}

@@ -5,7 +5,7 @@
  * 任何一处改了另一处没跟上，用户会从图文点进别的课，或者课程走到一半卡住，这里统一兜住。
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { extname, join, relative } from 'node:path';
+import { extname, join, relative, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 import { LESSON_CATALOG, type GuidedLessonDef, type LessonId } from '../guidedTypes';
@@ -43,7 +43,7 @@ function readSimRoute(file: string): string | undefined {
 
 /** 文章文件路径 → 站点地址，例如 features/setup/groups.mdx → /features/setup/groups/ */
 function docUrl(file: string): string {
-  return `/${relative(DOCS_DIR, file).replace(/\.mdx?$/, '')}/`;
+  return `/${relative(DOCS_DIR, file).split(sep).join('/').replace(/\.mdx?$/, '')}/`;
 }
 
 describe('课程目录', () => {
@@ -88,8 +88,8 @@ describe.each(LESSONS.map((l) => [l.id, l] as const))('课程：%s', (_id, lesso
 
   it('每一步都有推进方式，不会卡住', () => {
     for (const step of lesson.steps) {
-      const canAdvance = Boolean(step.wait || step.buttons?.length || step.runChat);
-      expect(canAdvance, `步骤 ${step.id} 没有 wait / buttons / runChat`).toBe(true);
+      const canAdvance = Boolean(step.wait || step.buttons?.length || step.runChat || step.quiz?.choices.includes(step.quiz.answer));
+      expect(canAdvance, `步骤 ${step.id} 没有等待目标、推进按钮、模拟对话或可答对的小测`).toBe(true);
     }
   });
 
