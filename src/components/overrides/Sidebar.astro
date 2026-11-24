@@ -39,6 +39,9 @@ function splitGroupLabel(label: string): { num: string | null; text: string } {
       );
     }
 
+    // 分组里一篇都没有时不显示标题：实战篇的页面在写完前都是 draft，生产构建会被过滤成空组
+    if (entry.entries.length === 0) return null;
+
     const { num, text } = splitGroupLabel(entry.label);
     return (
       <div class="wbl-side-group">
