@@ -109,33 +109,36 @@ const chapters: { n: string; t: string; items: ChapterItem[] }[] = [
 ];
 
 const cases = [
+  // href 有值的卡片可点进图文；还在实测的不放链接，只显示「实测中」
   {
     n: '实战 1',
-    tag: '图文 + 模拟器',
+    tag: '图文',
     t: '数据分析与看板',
     d: '先让它发现问题再计算，口径先确认，公式留在表里，最后出一个能点的 HTML 看板。',
-    ph: '真机看板案例筹备中',
+    ph: '真机看板可在文中直接点',
+    href: '/practice/data-analysis/',
   },
   {
     n: '实战 2',
     tag: '图文',
     t: '汇报 PPT',
-    d: '先定大纲、找参考，用技能和专家生成，再局部修改指定页面。',
-    ph: 'PPT 实测案例筹备中',
+    d: '拿实战 1 的结论，先定大纲、定风格，生成可编辑的 .pptx，再只改指定页。',
+    ph: '截图实测补充中',
+    href: '/practice/ppt/',
   },
   {
     n: '实战 3',
     tag: '图文',
     t: '健身打卡小程序',
-    d: '需求、HTML 原型、调 Skills 实现、真机测试、备案上线，走一遍 AI 编程完整流程。',
-    ph: '小程序原型筹备中',
+    d: '需求、HTML 原型、调 Skills 实现、真机测试、发体验版，走一遍 AI 编程完整流程。',
+    ph: '实测中',
   },
   {
     n: '实战 4',
     tag: '图文',
-    t: '定时任务 + 手机遥控',
-    d: '手动跑满意 3 次再设成自动，出门用手机微信发任务让家里电脑干活。',
-    ph: '自动化案例筹备中',
+    t: '简历变个人网页',
+    d: '把一份简历做成能发给别人的网页：说清给谁看、核对没编经历、手机上看、发布拿链接。',
+    ph: '实测中',
   },
 ];
 ---
@@ -471,10 +474,14 @@ const cases = [
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {cases.map((k, idx) => (
-            <div
+            <a
+              href={k.href}
               data-reveal
               style={`--rd: ${idx * 65}ms;`}
-              class="flex sm:flex-col gap-3.5 p-3.5 sm:p-6 border border-gray-200 rounded-[14px] bg-white text-gray-900"
+              class:list={[
+                'flex sm:flex-col gap-3.5 p-3.5 sm:p-6 border border-gray-200 rounded-[14px] bg-white text-gray-900',
+                k.href && 'no-underline hover:border-gray-400 transition-colors',
+              ]}
             >
               <div class="w-16 h-16 sm:w-full sm:h-[132px] shrink-0 rounded-[10px] bg-gray-100 border border-[#eeeeeb] flex items-center justify-center text-[11px] sm:text-[12px] text-gray-500 text-center px-2">
                 <span class="hidden sm:inline">{k.ph}</span>
@@ -490,7 +497,7 @@ const cases = [
                 <span class="text-[16px] sm:text-[18px] font-bold">{k.t}</span>
                 <span class="text-[13.5px] sm:text-[14px] leading-[1.65] text-gray-600">{k.d}</span>
               </div>
-            </div>
+            </a>
           ))}
         </div>
       </section>
