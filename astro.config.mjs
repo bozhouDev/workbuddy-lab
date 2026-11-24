@@ -34,6 +34,8 @@ export default defineConfig({
         { label: '02 发任务', items: [{ autogenerate: { directory: 'features/send-task' } }] },
         { label: '03 能力扩展', items: [{ autogenerate: { directory: 'features/extend' } }] },
         { label: '04 自动化', items: [{ autogenerate: { directory: 'features/automation' } }] },
+        // 实战篇：页面写完前是 draft，生产构建会自动跳过
+        { label: '实战 动手做出成果', items: [{ autogenerate: { directory: 'practice' } }] },
       ],
     }),
     react(),
